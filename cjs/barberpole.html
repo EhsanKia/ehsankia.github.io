@@ -1,0 +1,105 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0; background-color: #888888}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = 600;
+		var h = 600;
+		var gui, p;
+
+		var Params = function() {
+			this.angle = 45;
+			this.width = 75;
+			this.distance = 75;
+			this.speed = 1;
+			this.portrait = false;
+		};
+
+		window.onresize = function(){
+			cvs.style.top = (window.innerHeight - cvs.height) / 2 + "px";
+			cvs.style.left = (window.innerWidth - cvs.width) / 2 + "px";
+		}
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+
+				gui.add(p, 'angle', 0, 90);
+				gui.add(p, 'width', 25, 150);
+				gui.add(p, 'distance', 25, 150);
+				gui.add(p, 'speed', 0.1, 10);
+				gui.add(p, 'portrait');
+			}
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+
+			window.onresize();
+
+			animate();
+		}
+		window.onload();
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			rid = requestAnimationFrame( animate );
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		function draw(e) {
+			c = (c + e*p.speed/20) % h;
+
+			ctx.fillStyle = "#FFFFFF";
+			ctx.fillRect(0, 0, w, h);
+
+			ctx.fillStyle = "#000000";
+			ctx.save();
+			ctx.rotate(-p.angle * Math.PI / 180);
+			for (var y= -w-h; y < w + h; y += p.distance + p.width){
+				ctx.fillRect(-w, y + c, w + h, p.width);
+			}
+			ctx.restore();
+
+			ctx.fillStyle = "#888888";
+			if (!p.portrait){
+				ctx.fillRect(0, 0, 200, h);
+				ctx.fillRect(400, 0, w, h);
+			}
+			else{
+				ctx.fillRect(0, 0, w, 200);
+				ctx.fillRect(0, 400, w, h);
+			}
+
+		}
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>

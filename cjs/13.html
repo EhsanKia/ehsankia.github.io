@@ -1,0 +1,136 @@
+<html> 
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var tcanvas = document.createElement('canvas');
+	
+	var trail = tcanvas.getContext('2d');
+	var ctx = canvas.getContext('2d');
+
+	var mx, my;
+	
+	var canvasWidth = 800, canvasHeight = 800;
+	
+	var bx = canvasWidth/2, by = canvasHeight/4, bc = 5;
+	var bvx = 3, bvy = 0, bax = 0, bay = 0;
+	var qx = [], qy = [], qc = [];
+	var a = 0, r = 0;
+	var t = -Math.PI/2;
+	
+	var hx = 400, hy = 200;	
+	
+	qx[0] = 400;
+	qx[1] = 400;
+	
+	qy[0] = 375;
+	qy[1] = 400;
+	
+	qc[0] = 5;
+	qc[1] = -20;
+	
+	window.onload = window.onresize = function() {
+		canvas.style.position = "fixed";
+		canvas.width = tcanvas.width = canvasWidth;
+		canvas.height = tcanvas.height = canvasHeight;
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	};
+	window.onload();
+		
+	canvas.onmousemove = function (e) {
+		mx = e.clientX - canvas.offsetLeft;
+		my = e.clientY - canvas.offsetTop;
+	};	
+	
+	var rid = setInterval(function () {      	
+	
+		ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+		
+		bax = bay = 0;
+		
+		for(i=0;i<qx.length;i++){
+			a = Math.PI - Math.atan2(qy[i]-by,qx[i]-bx);
+			r = Math.sqrt(Math.pow(qx[i] - bx,2) + Math.pow(qy[i] - by,2));
+			
+		
+			if(r != 0){
+				bax += (bc * qc[i] / r) * Math.cos(a) * -1;
+				bay += (bc * qc[i] / r) * Math.sin(a);
+			}
+		}
+		
+		bvx += -bax/5;
+		bvy += -bay/5;
+		
+		bx += bvx;
+		by += bvy;
+		
+		t += 0.02;
+		qy[0] = 325 - 50 * Math.sin(t);		
+			
+		ctx.fillStyle = "rgb(0,0,0)";
+		ctx.beginPath();
+		ctx.arc(bx,by,6,0,Math.PI*2,true);
+		ctx.fill();
+		ctx.closePath();
+		
+		ctx.fillStyle = "rgb(200,0,0)";
+		ctx.beginPath();
+		ctx.arc(qx[0],qy[0],10,0,Math.PI*2,true);
+		ctx.fill();
+		ctx.closePath();
+		
+		ctx.fillStyle = "rgb(0,0,200)";
+		ctx.beginPath();
+		ctx.arc(qx[1],qy[1],20,0,Math.PI*2,true);
+		ctx.fill();
+		ctx.closePath();
+		
+		
+		ctx.fillStyle = "rgb(128,0,128)";
+		ctx.save();
+		ctx.translate(bx,by);
+		ctx.rotate(Math.PI + Math.atan2(bay,bax));
+		ctx.fillRect(0,-1,Math.sqrt(Math.pow(bax,2)+Math.pow(bay,2))*100,2);
+		ctx.restore();
+		
+		ctx.fillStyle = "rgb(0,128,128)";
+		ctx.save();
+		ctx.translate(bx,by);
+		ctx.rotate(Math.atan2(bvy,bvx));
+		ctx.fillRect(0,-1,Math.sqrt(Math.pow(bvx,2)+Math.pow(bvy,2))*20,2);
+		ctx.restore();
+	
+	
+		ctx.fillStyle = "rgb(255,255,255)";
+		ctx.fillText("+"+Math.abs(qc[0]),qx[0]-6,qy[0]+3);
+		ctx.fillText("-"+Math.abs(qc[1]),qx[1]-7,qy[1]+4);
+		
+		trail.strokeStyle = "rgba(0,0,0,0.5)";
+		
+		trail.beginPath();
+		trail.moveTo(hx,hy);
+		trail.lineTo(bx,by);
+		trail.stroke();
+		trail.closePath();
+		
+		ctx.drawImage(tcanvas,0,0);
+		
+		hx = bx;
+		hy = by;
+	
+	}, 20);
+	
+	function terminate(){
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

@@ -1,0 +1,141 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="processing.js"></script>
+	<script language="javascript" src="init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script>
+	
+		window.onload = function() {
+			var canvas = document.getElementById("processing");
+						
+			canvas.setAttribute("width", window.innerWidth);
+			canvas.setAttribute("height", window.innerHeight);		
+		}
+		
+		shuffle = function(v){
+			for(var j, x, i = v.length; i; j = parseInt(Math.random() * i), x = v[--i], v[i] = v[j], v[j] = x);
+			return v;
+		};
+		
+	</script>
+	
+	<script type="application/processing">
+	
+		boolean clear = true;
+
+		int xOff;
+		int yOff;
+		int numX;
+		int numY;
+		
+		int cSize = 40;
+		
+		ArrayList box;
+
+		void setup(){
+		
+			//Size set to fullscreen
+			size( window.innerWidth, window.innerHeight );
+			
+			//Computes offset
+			xOff = width  % cSize;
+			yOff = height % cSize;
+			
+			//Number of cells in X and Y
+			numX = (width  - xOff)/cSize - 2;
+			numY = (height - yOff)/cSize - 2;
+			
+			xOff = int(xOff/2) + cSize;
+			yOff = int(yOff/2) + cSize;
+			
+			frameRate(30);
+		}
+		
+		void draw(){
+		
+			if (clear)
+				resetGrid();
+				
+			else if (box.toArray().length>0)
+			{
+					b = box.get(0);
+					drawWalls( b[0] , b[1] , b[2] , b[3] );
+					box.remove(0);
+			}
+				
+		
+		}
+		
+		void drawWalls(int x1,int y1,int xSize,int ySize){
+		
+			int xLine = int(random(1,xSize));
+			int yLine = int(random(1,ySize));
+			
+			fill(0);
+			rect(x1, y1 + cSize*yLine - 1, cSize*xSize, 2);
+			rect(x1 + cSize*xLine - 1, y1, 2, cSize*ySize);	
+			
+			int[] hole = new int[4];
+			
+			hole[0] = int(random(0,xLine));
+			hole[1] = int(random(0,yLine));
+			hole[2] = int(random(xLine,ySize));
+			hole[3] = int(random(yLine,xSize));
+			
+			fill(255);
+			int[] r = shuffle([0,1,2,3]).slice(0,3);
+			
+			for (int i in r)
+			{
+				if (r[i]%2 == 0)
+					rect(x1 + cSize*hole[r[i]] + 1, y1 + cSize*yLine - cSize/2 + 1, cSize-2, cSize-2);
+				
+				else
+					rect(x1 + cSize*xLine - cSize/2 + 1, y1 + cSize*hole[r[i]] + 1, cSize-2, cSize-2);			
+			}			
+			
+			
+			if (xLine>1 && yLine>1)
+				box.add( [x1,y1,xLine,yLine] );
+				
+			if (xLine>1 && ySize-yLine>1)
+				box.add( [x1,y1+cSize*yLine,xLine,ySize-yLine] );
+				
+			if (xSize-xLine>1 && yLine>1)
+				box.add( [x1+cSize*xLine,y1,xSize-xLine,yLine] );
+			
+			if (xSize-xLine>1 && ySize-yLine>1)
+				box.add( [x1+cSize*xLine,y1+cSize*yLine,xSize-xLine,ySize-yLine] );
+				
+		}
+		
+		void resetGrid(){
+		
+			background(0,0,100);
+			
+			stroke(0);
+			strokeWeight(2);
+
+			fill(255);						
+			rect(xOff,yOff,cSize*numX,cSize*numY);	
+			
+			box = new ArrayList();
+			box.add( [xOff,yOff,numX,numY] );
+			
+			noStroke();
+			
+			clear = false;
+			
+		}	
+
+	</script>
+
+<canvas id="processing"></canvas>
+
+</body>
+</html>

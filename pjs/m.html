@@ -1,0 +1,235 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="processing.js"></script>
+	<script language="javascript" src="init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script>
+		window.onload = function() {
+			var canvas = document.getElementById("processing");
+						
+			canvas.setAttribute("width", window.innerWidth);
+			canvas.setAttribute("height", window.innerHeight);		
+		}		
+	</script>
+	
+	<script type="application/processing">
+
+		double cycle = 0;	
+		int[] mPos = {0,0};
+		int[] mV = {0,0};
+		int[] fPos = {0,0};
+		int[] lPos = {0,0};
+		int[] wPos = {0,0};		
+		
+		String[] tList = {"I weeeeeeeeeeen","k","no","yup","nice","fantastic","whatever","You kidding me?"};
+		String t = tList[0];
+		
+		void setup(){		
+		
+			size( window.innerWidth, window.innerHeight );
+			
+			mPos	=	{ random( 50, width-50 ), random( 100, height-100), 0 };
+			fPos 		= 	{ random( 90, width-90 ), random( 100, height-100), 0 };
+			wPos 	=	{ random( 50, width-50 ), random( 100, height-100), 0 };
+			lPos 		= 	{ random( 40, width-40 ), random( 250, height-250), 0 };
+				
+			text("",0,0); 
+			
+		}
+		
+		void draw(){
+			background(0);
+			
+			fill(sin(cycle)*255,cos(cycle/3)*255,sin(cycle*2)*255,10);
+			textSize(height/3);
+			text("HAPPY", width/2 - textWidth("HAPPY")/2, 2*height/5  );
+			text("BIRTHDAY", width/2 - textWidth("BIRTHDAY")/2, 4*height/5  );
+			
+			drawFatty( fPos[0], fPos[1], fPos[2], cycle);
+			drawWavy( wPos[0], wPos[1], wPos[2], cycle);
+			drawLongy( lPos[0], lPos[1], lPos[2], cycle);
+			drawMichelle( mPos[0], mPos[1],  mPos[2], cycle);
+			
+			mPos[0] += mV[0];
+			mPos[1] += mV[1];
+			
+			mV[0] -= (mPos[0]-width/2)/20000+r(0.5);
+			mV[1] -= (mPos[1]-height/2)/20000+r(0.3);
+			
+			if (mPos[0] > width || mPos[0] < 0)
+				mV[0] = -mV[0];
+				
+			if (mPos[1] > height || mPos[1] < 0)
+				mV[1] = -mV[1];
+				
+			if ( abs(mV[0]) > 10)
+				mV[0] /= 5;
+				
+			if ( abs(mV[1]) > 10)
+				mV[1] /= 4;
+			
+			// mPos[1] += d(mPos,wPos)/200*cos(mPos[2]/3);
+			// mPos[2] += d(mPos,fPos)/10000;
+			
+			fPos[0] += (mPos[0] - fPos[0])/350;
+			fPos[1] += (mPos[1] - fPos[1])/350;
+			fPos[0] -= 20/(wPos[0] - fPos[0]) * random(0.5,5);
+			fPos[1] -= 20/(wPos[1] - fPos[1]) * random(0.5,5);
+			fPos[0] -= 20/(lPos[0] - fPos[0]) * random(0.5,5);
+			fPos[1] -= 20/(lPos[1] - fPos[1]);
+			fPos[2] += (mPos[0] - lPos[0])/20000;
+			
+			wPos[0] += (mPos[0] - wPos[0])/350;
+			wPos[1] += (mPos[1] - wPos[1])/350;
+			wPos[0] -= 20/(fPos[0] - wPos[0]) * random(0.5,5);
+			wPos[1] -= 20/(fPos[1] - wPos[1]) * random(0.5,5);
+			wPos[0] -= 20/(lPos[0] - wPos[0]) * random(0.5,5);
+			wPos[1] -= 20/(lPos[1] - wPos[1]) * random(0.5,5);
+			
+			lPos[0] += (mPos[0] - lPos[0])/350;
+			lPos[1] += (mPos[1] - lPos[1])/350;
+			lPos[0] -= 20/(wPos[0] - lPos[0]) * random(0.5,5);
+			lPos[1] -= 20/(wPos[1] - lPos[1]) * random(0.5,5);
+			lPos[0] -= 20/(fPos[0] - lPos[0]) * random(0.5,5);
+			lPos[1] -= 20/(fPos[1] - lPos[1]) * random(0.5,5);
+			lPos[2] = (mPos[0] - lPos[0])/10000;
+			
+			cycle += 0.04;
+			
+			if (cycle>2*PI){
+				t = tList[int(random(8))];
+				cycle -= 2*PI;
+			}
+			
+		}
+		
+		void drawMichelle( int x, int y, double a, double c){
+			translate(x,y);
+			int j = 20;
+			
+			strokeWeight(3);
+			stroke(255,210,175);
+			fill(255,210,175);
+			ellipse(0,-100,80,100);
+			
+			fill( 10,200,150, 150 );		
+			ellipse(-20,-110,20,15);
+			ellipse(20,-110,20,15);
+			line(0,-50,0,0);
+			
+			fill( random(255), random(255), random(255));
+			rotate( sin(c)/2+PI/6 );
+			line(0,0,0,50);
+			ellipse(-10,50,30,10);
+			rotate( -PI/3 - sin(c)/2 - cos(c)/2 );
+			line(0,0,0,50);
+			ellipse(10,50,30,10);
+			rotate( cos(c)/2 + PI/6 );
+			
+			line(0,-25,40,-80);
+			line(0,-25,-40,-80);
+			
+			fill(0,0,0,0);
+			stroke(220,150,70);
+			
+			
+			for (int i=0; i<5; i++)
+				bezier(0, -150, -90+r(j), -140+r(j), 0+r(j), -50+r(j), -80+r(j), 0+r(j));
+			scale(-1,1);	
+			for (int i=0; i<5; i++)
+				bezier(0, -150, -90+r(j), -140+r(j), 0+r(j), -50+r(j), -80+r(j), 0+r(j));
+			scale(-1,1);
+			strokeCap(ROUND);
+			stroke(0);
+			line(-25,-80,25,-80);
+			
+			stroke(0,0,0,0);
+			fill(255);
+			ellipse(125,-130,150,40);
+			beginShape();
+			vertex(70, -140);
+			vertex(50, -100);
+			vertex(90, -130);
+			endShape();
+			
+			textSize(16);
+			fill(0);
+			text(t, 125-textWidth(t)/2, -126);
+
+			translate(-x,-y);
+
+		}
+		
+		void drawLongy( int x, int y, double a, double c){
+			translate(x,y);
+			rotate(a);
+			
+			fill(255,210,175);
+			stroke(255,210,175);
+			strokeWeight(3);
+			
+			ellipse(0,-200,40+10*sin(c*1.5),40-10*sin(c*1.5));
+			line(0,-200,0,200);
+			line(0,-140,-20,-150);
+			line(0,-140,20,-150);
+			line(0,200,10,220);
+			line(0,200,-10,220);
+		
+			rotate(-a);
+			translate(-x,-y);
+		}
+		
+		void drawWavy( int x, int y, double a, double c){
+			translate(x,y);
+			
+			fill(255,210,175);
+			stroke(255,210,175);
+			strokeWeight(3);
+			
+			for (int i=0; i<25; i++)
+				line(10*cos(i/4-2*c),-75+i*5,10*cos((i+1)/4-2*c),-75+(i+1)*5);
+				
+			ellipse(10*cos(-2*c),-75,20,20);
+			line(10*cos(9/4-2*c),-30,10*cos(5/4-2*c)-30,-50);
+			line(10*cos(9/4-2*c),-30,10*cos(5/4-2*c)+30,-50);
+			line(10*cos(25/4-2*c),50,20,80);
+			line(10*cos(25/4-2*c),50,-20,80);
+			
+			translate(-x,-y);
+		
+		}
+		
+		void drawFatty( int x, int y, double a, double c){
+			translate(x,y);
+			rotate(a);
+			
+			fill(255,210,175);
+			stroke(255,210,175);
+			strokeWeight(3);
+			ellipse(0,0,200+5*sin(c/2),200+5*sin(c/2));
+			ellipse(0,-105,20,20);
+			line(0,0,50,110);
+			line(0,0,-50,110);
+			line(0,0,100,-70);			
+			line(0,0,-100,-70);
+			
+			rotate(-a);
+			translate(-x,-y);
+		}
+		
+		int r(int r){
+			return random(-r,r);
+		}
+		
+		
+	</script>
+
+<canvas id="processing"></canvas>
+
+</body>
+</html>

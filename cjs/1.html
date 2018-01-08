@@ -1,0 +1,62 @@
+<html>
+ <head>
+     <style type="text/css">
+	canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var mx = 0, my = 0;
+	var canvasWidth, canvasHeight;
+
+	window.onload = window.onresize = function() {
+		canvasWidth = window.innerWidth;
+		canvasHeight = window.innerHeight;
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = 0;
+		canvas.style.left = 0;
+	};
+	window.onload();
+
+	canvas.onmousemove = function (e) {
+		mx = e.clientX - canvas.offsetLeft;
+		my = e.clientY - canvas.offsetTop;
+	};
+
+	var rid = setInterval(function () {
+		var ctx = canvas.getContext('2d');
+
+		ctx.clearRect(0,0,canvasWidth,canvasHeight);
+
+		for(var i=0;i<=canvasWidth/40;i++){
+			for(var j=0;j<=canvasHeight/40;j++){
+
+			var r = 0
+			if (((20+j*40)-my)!=0)
+				r = -Math.atan(((20+i*40)-mx)/((20+j*40)-my));
+			else
+				r = Math.PI/2;
+
+			ctx.save();
+			ctx.translate(20+i*40,20+j*40);
+			ctx.rotate(r + Math.PI/2);
+			ctx.beginPath();
+			ctx.moveTo(-16,0);
+			ctx.lineTo(16,0);
+			ctx.stroke();
+			ctx.restore();
+			}
+		}
+	}, 16);
+
+	function terminate(){
+		clearInterval( rid );
+	}
+
+  </script>
+ </body>
+</html>

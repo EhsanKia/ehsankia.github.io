@@ -1,0 +1,111 @@
+<html> 
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	
+	var canvasWidth = 800, canvasHeight = 600;
+	var p1 = p2 = canvasHeight/2;
+	var bx = canvasWidth/2, by = canvasHeight/2;
+	var bvx = bvy = r = s1 = s2 = 0;
+
+	r = Math.floor(Math.random() * Math.PI*2);
+	bvx = 5;
+	bvy = 5 * Math.cos(r);
+
+	window.onload = window.onresize = function() {		
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+		
+	}
+	window.onload();
+	
+	var upDown = false;
+	var downDown = false;
+
+	window.onkeydown = function(e) {	
+		if (e.keyCode == 40) downDown = true;
+		else if (e.keyCode == 38) upDown = true;
+	};
+	
+	window.onkeyup = function(e) {	
+		if (e.keyCode == 40) downDown = false;	
+		else if (e.keyCode == 38) upDown = false;	  
+	};
+
+	
+	var rid = setInterval(function () {      	
+		
+		if(p2 >= 50) if(p2+25 > by) p2 -= (s1+5)/2;
+		if(p2 <= canvasHeight-55) if(p2-25 < by) p2 += (s1+5)/2;
+		
+		
+	
+		if(p1 >= 55 && upDown) p1 -= 5;
+		if(p1 <= canvasHeight-55 && downDown) p1 += 5;
+		
+		if(by+bvy+10>canvasHeight || by+bvy-10 < 0) bvy = -bvy;
+		bx += bvx;
+		by += bvy;
+		
+		if( bx+bvx-8 < 40 && bx+bvx-8 > 20 && by >= p1-50 && by <= p1 + 50 ){
+			bvx *= -1.05;
+			bvx *= 1.05;
+			if(upDown) bvy -= 1;
+			if(downDown) bvy += 1;
+		}
+		
+		if( bx+bvx+8 > canvasWidth-40 && bx+bvx+8 < canvasWidth-20 && by >= p2-50 && by <= p2 + 50 ) bvx = -bvx*1.1;
+
+		ctx.fillStyle = "rgb(255,255,255)";
+		ctx.fillRect(0,0,canvasWidth,canvasHeight);
+		
+		ctx.fillStyle = "rgb(0,0,0)";
+		ctx.fillRect(20,p1-50,20,100);
+		ctx.fillRect(canvasWidth-20,p2-50,-20,100);
+		
+		ctx.beginPath();
+		ctx.arc(bx,by,10,0,Math.PI*2,true);
+		ctx.fill();
+		ctx.closePath();
+		
+		ctx.textAlign = 'center';
+		ctx.fillText(s1,canvasWidth/2-20,20);
+		ctx.fillText(s2,canvasWidth/2+20,20);
+		
+		if(bx < 0) s2++;
+		if(bx > canvasWidth) s1++;
+		
+		if(bx < 0 || bx > canvasWidth){
+			bx = canvasWidth/2, by = canvasHeight/2;
+			r = Math.floor(Math.random() * Math.PI*2);
+			bvx = 5;
+			bvy = 5 * Math.cos(r);
+		}
+		
+		if(s1 < s2){
+			ctx.fillText("Game Over", canvasWidth/2, canvasHeight/2);
+			bx = canvasWidth/2;
+			by = -100;
+			bvx = bvy = 0;
+		}
+
+	}, 15);
+	
+	function terminate(){
+		document.onkeydown = null;
+		document.onkeyup = null;
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

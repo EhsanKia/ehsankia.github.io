@@ -1,0 +1,67 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	var px = [], py = [], vx = [], vy = [], d = [];
+	var canvasWidth = 1000, canvasHeight = 500;
+	var ss = "rgba(0,0,0,0.5)", fs = "rgba(255,255,255,0.1)";
+
+	window.onresize = function() {		
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	
+	window.onload = function() {
+	
+		for(var i=0;i<20;i++){
+			d[i]=[];
+			px[i]=Math.floor(Math.random()*canvasWidth + 1);
+			py[i]=Math.floor(Math.random()*canvasHeight + 1);
+			vx[i]=vy[i]=Math.floor(Math.random()*20 + 1)/4;
+		}
+		
+		window.onresize();
+
+	}
+	window.onload();
+	
+	var rid = setInterval(function () {
+		
+		ctx.strokeStyle = ss;
+		ctx.fillStyle = fs;
+		ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+		
+		for(var i=0;i<px.length;i++){
+		
+			if(px[i]+vx[i] >= canvasWidth  || px[i]+vx[i] <= 0) vx[i] = -vx[i];
+			if(py[i]+vy[i] >= canvasHeight || py[i]+vy[i] <= 0) vy[i] = -vy[i];			
+			px[i] += vx[i];
+			py[i] += vy[i];
+			
+			for(var j=i;j<px.length;j++){
+				d[i][j]=Math.sqrt(Math.pow((px[j]-px[i]),2)+Math.pow((py[j]-py[i]),2));
+				ctx.beginPath();
+				ctx.arc(px[i],py[i],d[i][j],0,Math.PI*2,true);
+				ctx.stroke();
+				ctx.closePath();
+			}
+		}
+			
+	}, 15);
+	
+	function terminate(){
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

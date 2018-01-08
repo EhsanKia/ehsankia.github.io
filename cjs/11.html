@@ -1,0 +1,119 @@
+<html> 
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+	<div style="margin: auto; text-align: center">Click to move</div>
+	<script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	canvas.addEventListener('click', onMouseClick, false);
+	var ctx = canvas.getContext('2d');
+	var px = [], py = [], vx = [], vy = [], r = [], d=[];
+	var mx = my = 0;
+	var canvasWidth = 1000, canvasHeight = 500;
+
+	window.onresize = function() {
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	
+	window.onload = function() {
+		
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		window.onresize();
+		
+		px[0] = canvasWidth/2;
+		py[0] = canvasHeight/2;
+		r[0] = 25;
+		vx[0]=vy[0]=0;
+		d[0] = [];
+		
+		for(var i=1;i<=10;i++){
+			d[i]=[];
+			r[i]=Math.floor(Math.random()*40 + 5);
+			while (true){
+				px[i]=Math.floor(Math.random()*(canvasWidth-2*r[i]) + r[i]);
+				py[i]=Math.floor(Math.random()*(canvasHeight-2*r[i]) + r[i]);
+				
+				if (Math.sqrt(Math.pow((px[0]-px[i]),2)+Math.pow((py[0]-py[i]),2)) > 2*(r[i]+r[0]))
+					break;
+			}
+			vx[i]=Math.pow(-1,i)*Math.floor(Math.random()*200/r[i] + 1)/10;
+			vy[i]=Math.pow(-1,i)*Math.floor(Math.random()*200/r[i] + 1)/10;
+			if(i%4==0) vy[i] = -vy[i];
+		}		
+
+	}
+	window.onload();
+	
+	function onMouseClick(e) {
+		mx = e.clientX - canvas.offsetLeft;
+		my = e.clientY - canvas.offsetTop;
+		vx[0] += ((px[0] - mx)/200);
+		vy[0] += ((py[0] - my)/200);
+	}
+	
+	var rid = setInterval(function () {      	
+		
+		for(var i=0;i<px.length;i++){		
+			if(r[i]>0){		
+				if(px[i]+vx[i] >= canvasWidth-r[i]  || px[i]+vx[i] <= r[i]) vx[i] = -vx[i];
+				if(py[i]+vy[i] >= canvasHeight-r[i] || py[i]+vy[i] <= r[i]) vy[i] = -vy[i];
+				
+				px[i] += vx[i];
+				py[i] += vy[i];
+			}
+		}
+		
+		for(var i=0;i<px.length;i++){
+			for(var j=i+1;j<px.length;j++){
+				if(r[i]>0 && r[j]>0){
+					d[i][j]=Math.sqrt(Math.pow((px[j]-px[i]),2)+Math.pow((py[j]-py[i]),2));
+					if(d[i][j] < r[i]+r[j]){
+						if(r[i] >= r[j]){
+							r[i] += (r[i]+r[j]-d[i][j]);
+							r[j] -= (r[i]+r[j]-d[i][j]);
+						}
+						if(r[i] < r[j]){
+							r[j] += (r[i]+r[j]-d[i][j]);
+							r[i] -= (r[i]+r[j]-d[i][j]);
+						}						
+					}
+				}
+			}
+		}
+		
+		ctx.strokeStyle = "rgba(0,0,0,0.75)";
+		ctx.fillStyle = "rgb(255,255,255)";
+		ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+		
+		for(var i=1;i<px.length;i++){
+			if(r[i]>0){
+				ctx.beginPath();
+				ctx.arc(px[i],py[i],r[i],0,Math.PI*2,true);
+				ctx.stroke();
+				ctx.closePath();
+			}
+		}		
+		
+		if ( r[0] > 0 ){
+			ctx.strokeStyle = "rgba(255,0,0,0.75)";
+			ctx.beginPath();
+			ctx.arc(px[0],py[0],r[0],0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.closePath();
+		}
+			
+	}, 15);
+    
+	function terminate(){
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

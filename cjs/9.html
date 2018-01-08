@@ -1,0 +1,90 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	var px = [], py = [], vx = [], vy = [], d = [], m = [],	b = [];
+	var canvasWidth = 1000, canvasHeight = 500;
+
+	var viewportWidth = window.innerWidth;
+	var viewportHeight = window.innerHeight;
+	
+	window.onresize = function() {		
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	
+	window.onload = function() {
+	
+		for(var i=0;i<5;i++){
+			d[i]=[];
+			m[i]=[];
+			b[i]=[];
+			px[i]=Math.floor(Math.random()*canvasWidth + 1);
+			py[i]=Math.floor(Math.random()*canvasHeight + 1);
+			vx[i]=vy[i]=Math.floor(Math.random()*20 + 1)/4;
+		}
+		
+		window.onresize();
+
+	}
+	window.onload();
+	
+	var rid = setInterval(function () {     	
+		
+		for(var k=0;k<px.length;k++){			
+			if(px[k]+vx[k] >= canvasWidth  || px[k]+vx[k] <= 0) vx[k] = -vx[k];
+			if(py[k]+vy[k] >= canvasHeight || py[k]+vy[k] <= 0) vy[k] = -vy[k];
+			
+			px[k] += vx[k];
+			py[k] += vy[k];
+		}
+		
+		for(var i=0;i<px.length;i++){
+				for(var j=i;j<px.length;j++){
+					d[i][j]=Math.sqrt(Math.pow((px[j]-px[i]),2)+Math.pow((py[j]-py[i]),2));
+					m[i][j]=-1/((py[i]-py[j]) / (px[i]-px[j]));
+					b[i][j]=(py[i] + (py[j]-py[i])/2) - m[i][j] * (px[i] + (px[j]-px[i])/2);
+				}
+			}
+		
+		ctx.strokeStyle = "rgba(0,0,0,0.5)";
+		ctx.fillStyle = "rgba(255,255,255,0.1)";
+		ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+		
+		for(var i=0;i<px.length;i++){
+			for(var j=i+1;j<px.length;j++){
+				ctx.beginPath();
+				ctx.moveTo(0,b[i][j]);
+				ctx.lineTo(canvasWidth, m[i][j]*canvasWidth+b[i][j]);
+				ctx.stroke();
+				ctx.closePath();
+				
+				ctx.beginPath();
+				ctx.arc(px[i],py[i],d[i][j],0,Math.PI*2,true);
+				ctx.stroke();
+				ctx.closePath();
+			}
+			ctx.beginPath();
+			ctx.arc(px[i],py[i],3,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.closePath();
+		}		
+					
+	}, 15);
+	
+	function terminate(){
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

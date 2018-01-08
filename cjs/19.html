@@ -1,0 +1,138 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.min.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+    	var cvs2 = document.createElement("canvas")
+    	var ctx2 = cvs2.getContext("2d");
+
+
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+		var gui, p;
+
+		var Params = function() {
+			this.orbitDistance = 70;
+			this.orbitRadius = 60;
+			this.circleRadius = 8;
+			this.viewOrbit = true;
+			this.perspective = false;
+			this.xOffset = 250;
+			this.yOffset = 250;
+			this.lockOffset = true;
+			this.period = 500;
+			this.partyMode = false;
+		};
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+				gui.add(p, 'circleRadius', 5, 20);
+				gui.add(p, 'perspective');
+				var or = gui.add(p, 'orbitRadius', 40, 100);
+				var od = gui.add(p, 'orbitDistance', 50, 100);
+				gui.add(p, 'viewOrbit');
+				var xo = gui.add(p, 'xOffset', 100, 750);
+				var yo = gui.add(p, 'yOffset', 100, 750);
+				gui.add(p, 'lockOffset');
+				gui.add(p, 'period', 100, 1000);
+				gui.add(p, 'partyMode');
+
+				xo.listen();
+				yo.listen();
+				xo.onChange(function(value) { if (p.lockOffset) p.yOffset = value; });
+				yo.onChange(function(value) { if (p.lockOffset) p.xOffset = value; });
+				od.onChange(function(value) { redrawOrbit(); });
+				or.onChange(function(value) { redrawOrbit(); });
+			}
+
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+
+			cvs2.setAttribute("width", w);
+			cvs2.setAttribute("height", h);
+
+			ctx2.strokeStyle = "rgba(0,0,0,0.5)";
+			redrawOrbit();
+
+			animate();
+		}
+		window.onload();
+
+		function redrawOrbit(){
+			ctx2.clearRect(0, 0, w, h);
+			for (var x = -p.orbitDistance; x <= w + p.orbitDistance; x += p.orbitDistance) {
+				for (var y = -p.orbitDistance; y <= w + p.orbitDistance; y += p.orbitDistance) {
+					ctx2.save();
+					ctx2.translate(x, y);
+					ctx2.beginPath();
+					ctx2.arc(0, 0, p.orbitRadius, 0, Math.PI*2, false);
+					ctx2.stroke();
+					ctx2.closePath();
+					ctx2.restore();
+				};
+			};
+		}
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+			console.log(elapsed);
+
+			rid = requestAnimationFrame( animate );
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		function draw(e) {
+			c += e/p.period % Math.PI;
+			ctx.clearRect(0, 0, w, h);
+			if (p.viewOrbit) ctx.drawImage(cvs2, 0, 0);
+			for (var x = -p.orbitDistance; x <= w + p.orbitDistance; x += p.orbitDistance) {
+				for (var y = -p.orbitDistance; y <= w + p.orbitDistance; y += p.orbitDistance) {
+					ctx.save();
+					ctx.translate(x, y);
+					var a = c + x/p.xOffset + y/p.yOffset;
+					ctx.rotate(a);
+					ctx.beginPath();
+					var r = p.circleRadius;
+					if (p.perspective) r -= Math.sin(a) * r/4;
+					ctx.arc(p.orbitRadius, 0, r, 0, Math.PI*2, false);
+					if (p.partyMode) ctx.fillStyle = "hsl(" + ((c + x/p.xOffset + y/p.yOffset)/Math.PI/2*360) + ", 100%, 50%)";
+					ctx.fill()
+					ctx.closePath();
+					ctx.restore();
+				};
+			};
+
+		}
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>

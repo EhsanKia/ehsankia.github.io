@@ -1,0 +1,282 @@
+<html>
+ <head>
+ 	<title>BlockWorld</title>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = 400;
+		var h = 400;
+		var gui, p, current;
+		var board;
+
+		var playerX, playerY;
+
+		var Params = function() {
+			this.rows = 4;
+			this.cols = 4;
+			this.blocks = 3;
+		};
+
+		Array.prototype.copy = function(){
+			return this.map(function(arr) { return arr.slice(); });
+		}
+
+		LETTERS = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+		function genBoard(){
+			board = [];
+			for(var i=0; i<current.rows; i++) {
+				board[i] = [];
+				for(var j=0; j<current.cols; j++) {
+					board[i][j] = " ";
+				}
+			}
+
+			places = randomSubset(range(current.cols*current.rows), current.blocks + 1);
+			for(var i=0; i<current.blocks + 1; i++) {
+				var x = places[i] % current.rows;
+				var y = Math.floor(places[i] / current.cols);
+				if (i == current.blocks){
+					board[x][y] = "☺";
+					playerX = x;
+					playerY = y;
+				}
+				else board[x][y] = LETTERS[i];
+			}
+		}
+
+		function score(b){
+			total = 0;
+			for(var i=0; i<current.rows; i++) {
+				for(var j=0; j<current.cols; j++) {
+					var d = b[i][j].charCodeAt(0) - 65;
+					if (d > 9000 || d < 0) continue;
+					total += Math.abs(i - (d % current.rows));
+					total += Math.abs(j - Math.floor(d / current.cols));
+				}
+			}
+
+			return total;
+		}
+
+		function solve(){
+			var tmp, s;
+			var snow = score(board);
+			if (snow == 0) return;
+			var chosen = board;
+			var k = 1;
+			var newX = playerX;
+			var newY = playerY;
+
+			if (playerY > 0){
+				var bu = board.copy();
+				tmp = bu[playerX][playerY];
+				bu[playerX][playerY] = bu[playerX][playerY-1];
+				bu[playerX][playerY-1] = tmp;
+				s = score(bu);
+				if (s < snow || (s == snow && Math.random() < 1.0/k) || temp(s, snow) > Math.random()){
+					if (s == snow) k += 1;
+					snow = s;
+					chosen = bu;
+					newX = playerX;
+					newY = playerY-1;
+				}
+			}
+
+			if (playerX > 0){
+				var bl = board.copy();
+				tmp = bl[playerX][playerY];
+				bl[playerX][playerY] = bl[playerX-1][playerY];
+				bl[playerX-1][playerY] = tmp;
+				s = score(bl);
+				if (s < snow || (s == snow && Math.random() < 1.0/k) || temp(s, snow) > Math.random()){
+					if (s == snow) k += 1;
+					snow = s;
+					chosen = bl;
+					newX = playerX-1;
+					newY = playerY;
+				}
+			}
+
+			if (playerY < current.cols - 1){
+				var bd = board.copy();
+				tmp = bd[playerX][playerY];
+				bd[playerX][playerY] = bd[playerX][playerY+1];
+				bd[playerX][playerY+1] = tmp;
+				s = score(bd);
+				if (s < snow || (s == snow && Math.random() < 1.0/k) || temp(s, snow) > Math.random()){
+					if (s == snow) k += 1;
+					snow = s;
+					chosen = bd;
+					newX = playerX;
+					newY = playerY+1;
+				}
+			}
+
+			if (playerX < current.rows - 1){
+				var br = board.copy();
+				tmp = br[playerX][playerY];
+				br[playerX][playerY] = br[playerX+1][playerY];
+				br[playerX+1][playerY] = tmp;
+				s = score(br);
+				if (s < snow || (s == snow && Math.random() < 1.0/k) || temp(s, snow) > Math.random()){
+					if (s == snow) k += 1;
+					snow = s;
+					chosen = br;
+					newX = playerX+1;
+					newY = playerY;
+				}
+			}
+
+			playerX = newX;
+			playerY = newY;
+			board = chosen;
+			console.log(snow);
+			setTimeout(function(){solve()}, 33);
+		}
+
+		function temp(d1,d2){
+			return Math.exp(-Math.abs(d1-d2)/(d2/20));
+		}
+
+		window.onresize = function(){
+			cvs.style.top  = (window.innerHeight - cvs.height) / 2 + "px";
+			cvs.style.left = (window.innerWidth  - cvs.width)  / 2 + "px";
+		}
+
+		window.onload = function() {
+			terminate();
+			window.onresize();
+
+			if (gui == undefined){
+				p = new Params();
+				current = new Params();
+				gui = new dat.GUI();
+				var r = gui.add(p, 'rows', 2, 6).step(1);
+				var c = gui.add(p, 'cols', 2, 6).step(1);
+				var b = gui.add(p, 'blocks', 1, p.rows*p.cols-1).step(1);
+				f = function(){
+					b.max(p.rows*p.cols-1);
+					if (p.blocks > p.rows*p.cols-1)
+						p.blocks = p.rows*p.cols-1;
+				}
+				r.onChange(f);
+				c.onChange(f);
+				b.listen();
+
+				p.generate = function(){
+					current.rows = p.rows;
+					current.cols = p.cols;
+					current.blocks = p.blocks;
+					genBoard();
+					w = p.cols * SIZE;
+					h = p.rows * SIZE;
+					cvs.setAttribute("width", w);
+					cvs.setAttribute("height", h);
+					window.onresize();
+				}
+				gui.add(p, 'generate');
+			}
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+
+			p.generate();
+			animate();
+		}
+		window.onload();
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			rid = requestAnimationFrame(animate);
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		var PAD = 5;
+		var SIZE = 100;
+		function draw(e) {
+			c += e/p.period % Math.PI;
+			ctx.clearRect(0, 0, w, h);
+
+			ctx.strokeStyle = "#000";
+			ctx.lineWidth = 1;
+			ctx.font = "50px Helvetica";
+			for (var i = 0; i < current.cols; i++) {
+				for (var j = 0; j < current.rows; j++) {
+					if (board[i][j] == "☺"){
+						ctx.fillStyle = "#D9D9D9";
+						ctx.fillRect(i*SIZE, j*SIZE, SIZE, SIZE);
+						ctx.fillStyle = "black";
+						ctx.fillText(board[i][j], (i+0.25)*SIZE, (j+0.65)*SIZE);
+					}
+					else if (board[i][j] != " "){
+						ctx.fillStyle = "#8DB3E2";
+						ctx.fillRect(i*SIZE, j*SIZE, SIZE, SIZE);
+						ctx.fillStyle = "black";
+						ctx.fillText(board[i][j], (i+0.33)*SIZE, (j+0.66)*SIZE);
+					}
+					ctx.strokeRect(i*SIZE, j*SIZE, SIZE, SIZE);
+				};
+			};
+
+			ctx.strokeStyle = "gray";
+			ctx.lineWidth = PAD*2;
+			ctx.strokeRect(0, 0, w, h)
+		}
+
+
+		document.onkeydown = function(e) {
+			var oldX = playerX;
+			var oldY = playerY;
+			if (e.keyCode == 39 && playerX < current.cols - 1) playerX++;
+			else if (e.keyCode == 37 && playerX > 0) playerX--;
+			else if (e.keyCode == 40 && playerY < p.rows - 1) playerY++;
+			else if (e.keyCode == 38 && playerY > 0) playerY--;
+
+			var tmp = board[oldX][oldY];
+			board[oldX][oldY] = board[playerX][playerY];
+			board[playerX][playerY] = tmp;
+		};
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+
+		function randomSubset(arr, size) {
+			var shuffled = arr.slice(0), i = arr.length, temp, index;
+			while (i--) {
+				index = Math.floor(i * Math.random());
+				temp = shuffled[index];
+				shuffled[index] = shuffled[i];
+				shuffled[i] = temp;
+			}
+			return shuffled.slice(0, size);
+		}
+
+		function range(n){
+			return Array.apply(null, Array(n)).map(function (_, i) {return i;});
+		}
+  </script>
+ </body>
+</html>

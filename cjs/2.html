@@ -1,0 +1,57 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+	<script type="text/javascript">
+		var canvas = document.getElementById('canvas');
+		var mx = [], my = [];
+
+		window.onload = window.onresize = function() {
+			var canvasWidth = window.innerHeight - 200;
+			var canvasHeight = window.innerHeight - 200;
+			
+			canvas.style.position = "fixed";
+			canvas.setAttribute("width", canvasWidth);
+			canvas.setAttribute("height", canvasHeight);
+			canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+			canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+		}
+		window.onload();
+
+		canvas.onmousemove = function (e) {
+			mx[0] = e.clientX - canvas.offsetLeft;
+			my[0] = e.clientY - canvas.offsetTop;
+		};
+
+		var rid = setInterval(function () {      
+			var ctx = canvas.getContext('2d');
+			
+			for(var i=20;i>0;i--){
+				mx[i] = mx[i-1];
+				my[i] = my[i-1];
+			}
+
+			ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+				
+				for(var j=20;j>=0;j--){
+					ctx.shadowBlur = 20;
+					ctx.shadowColor = "rgb(38,57,76)";
+					ctx.fillStyle = "rgb(38,57,76)";
+					ctx.beginPath();
+					ctx.arc(mx[j],my[j],30-j,0,Math.PI*2,true);
+					ctx.fill();
+				}
+				
+			
+		}, 5);
+
+		function terminate(){
+			clearInterval( rid );
+		}
+	</script>
+ </body>
+</html>

@@ -1,0 +1,85 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>
+	<script language="javascript" src="../pjs/processing.js"></script>
+	<script language="javascript" src="../pjs/init.js"></script>
+</head>
+
+<body style="margin:0">
+
+	<script>
+		window.onload = function() {
+			var canvas = document.getElementById("processing");
+
+			canvas.setAttribute("width", window.innerWidth);
+			canvas.setAttribute("height", window.innerHeight);
+		}
+	</script>
+
+	<script type="application/processing">
+
+		int r = 30;
+		int x, y, w, h;
+		int o;
+
+		int[] mx = new int[r];
+		int[] my = new int[r];
+
+		void setup(){
+
+			size( window.innerWidth, window.innerHeight );
+
+			for (int i=0; i<r; i++)
+			{
+				mx[i] = width/2;
+				my[i] = height/2;
+			}
+
+			stroke(0,0,0,0);
+			colorMode(HSB,r);
+
+		}
+
+		void draw(){
+			mx[r-1] += (mouseX-mx[r-1])/r;
+			my[r-1] += (mouseY-my[r-1])/r;
+
+			for (int i=0; i<r-1; i++)
+			{
+				mx[i] = mx[i+1];
+				my[i] = my[i+1];
+			}
+
+			o+=r/250;
+
+			if( o>r )
+				o=0;
+
+			for (int i=0; i<r; i++)
+			{
+				x = i*width/(r*2);
+				y = i*height/(r*2);
+				w = width - 2 * x;
+				h = height - 2 * y;
+
+				y -= y * 2 * (height/2 - my[i])/height;
+				x -= x * 2 * (width/2 - mx[i])/width;
+
+				fill( (i+o)%r , r/2 , r-i );
+
+				rect( x, y, w, h);
+			}
+
+		}
+	</script>
+
+<canvas id="processing"></canvas>
+
+
+  	<script type="text/javascript">
+		Processing.reload();
+	</script>
+
+</body>
+</html>

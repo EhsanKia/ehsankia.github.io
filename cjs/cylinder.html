@@ -1,0 +1,120 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+		var heights = [], offsets = [];
+		var gui, p;
+
+		var Params = function() {
+			this.numSquares = 200;
+			this.orbitRadius = w/6;
+			this.secondOrbit = false;
+			this.orbitVelocity1 = 3;
+			this.orbitVelocity2 = 6;
+		};
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+
+				gui.add(p, 'numSquares', 100, 500)
+					.onChange(function(v) { genRandomData(v) });
+				gui.add(p, 'orbitRadius', w/16, w/4);
+				gui.add(p, 'secondOrbit');
+				gui.add(p, 'orbitVelocity1', 1, 10);
+				gui.add(p, 'orbitVelocity2', 1, 10);
+			}
+
+			genRandomData(p.numSquares);
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+
+			animate();
+		}
+		window.onload();
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			rid = requestAnimationFrame( animate );
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		var c1 = 0;
+		var c2 = 0;
+		function draw(e) {
+			c1 += p.orbitVelocity1/5000 * e % Math.PI;
+			c2 += p.orbitVelocity2/5000 * e % Math.PI;
+
+			ctx.fillStyle = "#888888";
+			ctx.fillRect(0, 0, w, h);
+
+			for (var i = 0; i < heights.length/2; i++) {
+				var x = w/2 + p.orbitRadius * Math.sin(c1 + offsets[2*i]);
+				var y = heights[2*i];
+
+				if (y % 2) ctx.fillStyle = "#DDDDDD";
+				else ctx.fillStyle = "#333333";
+				ctx.fillRect(x, y, 8, 8);
+			};
+
+			if (!p.secondOrbit) return;
+
+			for (var i = 0; i < heights.length/2; i++) {
+				var x = w/2 + p.orbitRadius * Math.sin(c2 + offsets[2*i+1]);
+				var y = heights[2*i+1];
+				if (y % 2) ctx.fillStyle = "#DDDDDD";
+				else ctx.fillStyle = "#333333";
+				ctx.fillRect(x, y, 8, 8);
+			};
+		}
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+
+		function genRandomData(size){
+			while (heights.length < 2*size){
+				heights.push(Math.floor(h/10 + Math.random()*0.8*h));
+				offsets.push(Math.random()*2*Math.PI);
+				heights.push(Math.floor(h/10 + Math.random()*0.8*h));
+				offsets.push(Math.random()*2*Math.PI);
+			}
+
+			while (heights.length > 2*size){
+				heights.pop();
+				offsets.pop();
+				heights.pop();
+				offsets.pop();
+			}
+		}
+  </script>
+ </body>
+</html>

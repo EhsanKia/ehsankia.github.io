@@ -1,0 +1,173 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+ 	<div style="text-align: center; margin-top: 20px">Arrow keys to move</div>
+	<canvas id="canvas" onkeypress="return key(event)"></canvas>
+	<audio id="snd_jump" src="jump.ogg">
+
+	<script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var px = 500, py = 0;
+	var vx = 0, vy = 0;
+	var jump = 0, size = 0, duck = 0;
+	var test = 0;
+
+	var rightDown = false;
+	var leftDown = false;
+
+	document.onkeydown = function(e) {
+		if (e.keyCode == 39) rightDown = true;
+		else if (e.keyCode == 37) leftDown = true;
+		else if (e.keyCode == 40) duck = 20;
+		else if (e.keyCode == 38 && jump < 1){
+			document.getElementById('snd_jump').play();
+			vy = 15;
+			jump += 1;
+			if(px == 10) vx = 10;
+			if(px == 990) vx = -10;
+		}
+	};
+
+	document.onkeyup = function(e) {
+		if (e.keyCode == 39) rightDown = false;
+		else if (e.keyCode == 40) duck = 0;
+		else if (e.keyCode == 37) leftDown = false;
+	}
+
+	window.onload = window.onresize = function() {
+		var canvasWidth = 1000;
+		var canvasHeight = 500;
+
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	window.onload();
+
+	var rid = setInterval(function () {
+		var ctx = canvas.getContext('2d');
+
+		//clear screen
+		ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+
+		//reset jump count when touching walls
+		if(px == 10 || px == 990) jump = 0;
+
+		//sppeeding up to left or right
+		if(rightDown && vx <= 7-(duck/5)) vx += 2;
+		if(leftDown && vx >= -7+(duck/5)) vx -= 2;
+
+		//friction
+		if(!leftDown && !rightDown || duck > 0){
+			if(vx>0) vx-= 1;
+			if(vx<0) vx+= 1;
+		}
+
+		//ceiling
+		if(py>450){
+			vy = 0;
+			py = 450;
+		}
+
+		//left wall
+		if(px+vx <= 10)
+		{
+			px = 10;
+			vx = 0;
+		}
+
+		//right wall
+		if(px+vx >= 990)
+		{
+			px = 990;
+			vx = 0;
+		}
+
+		//floor and gravity
+		if(py+vy <= 0 && vy != 0){
+			py = 0;
+			vy = 0;
+		}
+		else if(py > 0) vy -= 1;
+
+		//reset jump count on floor
+		if(py == 0) jump = 0;
+
+		//smooth ducking
+		if (size > duck) size-=4;
+		if (size < duck) size+=4;
+
+		//applies velocity on position
+		px += vx;
+		py += vy;
+
+		//body
+		ctx.fillStyle = "rgb(240,210,90)";
+		ctx.fillRect(px-10,450-py+size,20,50-size);
+
+
+		ctx.fillStyle = "rgb(255,255,255)";
+
+		//smile
+		ctx.beginPath();
+		ctx.moveTo(px-7,465-py+size);
+		ctx.arc(px,465-py+size,7,0,Math.PI,false);
+		ctx.stroke();
+		ctx.fill();
+		ctx.closePath();
+
+		//legs
+		if(jump==1){
+			ctx.fillRect(px-10,480-py+size,20,20-size);
+			ctx.fillStyle = "rgb(240,210,90)";
+			ctx.fillRect(px-30,475-py+size,20,5);
+			ctx.fillRect(px+10,475-py+size,20,5);
+		}
+		else if(py > 0){
+			ctx.fillRect(px-10,480-py+size,20,20-size);
+			ctx.fillStyle = "rgb(240,210,90)";
+			ctx.beginPath();
+			ctx.moveTo(px-10,480-py+size);
+			ctx.lineTo(px-24,494-py+size);
+			ctx.lineTo(px-20,498-py+size);
+			ctx.lineTo(px-4,480-py+size);
+			ctx.moveTo(px+10,480-py+size);
+			ctx.lineTo(px+24,494-py+size);
+			ctx.lineTo(px+20,498-py+size);
+			ctx.lineTo(px+4,480-py+size);
+			ctx.fill();
+		}
+		else ctx.fillRect(px-5,480-py+size,10,20-size);
+
+		//hair
+		ctx.fillStyle = "rgba(0,0,0,0.75)";
+		ctx.beginPath();
+		ctx.arc(px,455-py+size,15,0,Math.PI,true);
+		ctx.lineTo(px+15,455-py+size);
+		ctx.fill();
+
+		//eyes
+		ctx.fillStyle = "rgb(40,153,118)";
+		ctx.beginPath();
+		ctx.arc(px+5,460-py+size,3,0,Math.PI*2,true);
+		ctx.arc(px-5,460-py+size,3,0,Math.PI*2,true);
+		ctx.fill();
+		ctx.closePath();
+
+	}, 15);
+
+    	function terminate(){
+		document.onkeydown = null;
+		document.onkeyup = null;
+		clearInterval( rid );
+	}
+
+  </script>
+ </body>
+</html>

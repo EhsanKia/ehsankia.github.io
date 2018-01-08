@@ -1,0 +1,184 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.min.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+		var gui, p;
+
+		var Params = function() {
+			this.pause = false;
+			this.period1 = 5;
+			this.period2 = 5;
+			this.lockPeriods = true;
+			this.bars = 9;
+			this.width = 18;
+			this.separation = 0.2;
+			this.maincolor1 = "#fff";
+			this.subcolor1 = "#ccc";
+			this.maincolor2 = "#000";
+			this.subcolor2 = "#444";
+			this.quad = false;
+			this.clockwise = true;
+		};
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+				gui.add(p, 'pause');
+				var p1 = gui.add(p, 'period1', 1, 20);
+				var p2 = gui.add(p, 'period2', 1, 20);
+				gui.add(p, 'lockPeriods');
+				gui.add(p, 'bars', 2, 50).step(1);
+				gui.add(p, 'width', 5, 40).step(1);
+				gui.add(p, 'separation', 0, 1);
+				gui.addColor(p, 'maincolor1');
+				gui.addColor(p, 'subcolor1');
+				gui.addColor(p, 'maincolor2');
+				gui.addColor(p, 'subcolor2');
+				gui.add(p, 'quad');
+				gui.add(p, 'clockwise');
+
+				p1.listen();
+				p2.listen();
+				p1.onChange(function(value) { if (p.lockPeriods) p.period2 = value; });
+				p2.onChange(function(value) { if (p.lockPeriods) p.period1 = value; });
+			}
+
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+
+			animate();
+		}
+		window.onload();
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			draw(elapsed);
+
+			rid = requestAnimationFrame(animate);
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		function draw(e) {
+			var diff = e/1000 % Math.PI;
+			if (p.pause) diff = 0;
+			if (p.clockwise) c += diff;
+			else c -= diff;
+
+			ctx.fillStyle = "#888"
+			ctx.fillRect(0, 0, w, h);
+
+			var s = p.width * (p.separation + 1);
+
+			ctx.save();
+			ctx.translate(window.innerWidth/2, window.innerHeight/2);
+			ctx.rotate(Math.PI/4)
+
+			ctx.save();
+			ctx.lineWidth = p.width;
+			ctx.strokeStyle = p.maincolor1;
+			for (var x = 1; x <= p.bars; x++) {
+				ctx.rotate(c/p.period1);
+				ctx.beginPath();
+				if (p.quad) {
+					ctx.arc(0, 0, x * s, 0, Math.PI/2, false);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(0, 0, x * s, Math.PI, 3*Math.PI/2, false);
+				} else {
+					ctx.arc(0, 0, x * s, 0, Math.PI/2, false);
+				}
+				ctx.stroke();
+			};
+			ctx.restore();
+
+			ctx.save();
+			ctx.lineWidth = p.width;
+			ctx.strokeStyle = p.maincolor2;
+			for (var x = 1; x <= p.bars; x++) {
+				ctx.rotate(c/p.period2);
+				ctx.beginPath();
+				if (p.quad) {
+					ctx.arc(0, 0, x * s, Math.PI/2, Math.PI, false);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(0, 0, x * s, 3*Math.PI/2, 2 * Math.PI, false);
+				} else {
+					ctx.arc(0, 0, x * s, Math.PI, 3*Math.PI/2, false);
+				}
+				ctx.stroke();
+			};
+			ctx.restore();
+
+			ctx.save();
+			ctx.lineWidth = p.width/5;
+			ctx.strokeStyle = p.subcolor1;
+			for (var x = 1; x <= p.bars; x++) {
+				ctx.rotate(c/p.period1);
+				ctx.beginPath();
+				if (p.quad) {
+					ctx.arc(0, 0, x * s - p.width/2, 0, Math.PI/2, false);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(0, 0, x * s - p.width/2, Math.PI, 3*Math.PI/2, false);
+				} else {
+					ctx.arc(0, 0, x * s - p.width/2, 0, Math.PI/2, false);
+				}
+				ctx.stroke();
+
+			};
+			ctx.restore();
+
+			ctx.save();
+			ctx.lineWidth = p.width/5;
+			ctx.strokeStyle = p.subcolor2;
+			for (var x = 1; x <= p.bars; x++) {
+				ctx.rotate(c/p.period2);
+				ctx.beginPath();
+				if (p.quad) {
+					ctx.arc(0, 0, x * s - p.width/2, Math.PI/2, Math.PI, false);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(0, 0, x * s - p.width/2, 3*Math.PI/2, 2 * Math.PI, false);
+				} else {
+					ctx.arc(0, 0, x * s - p.width/2, Math.PI, 3*Math.PI/2, false);
+				}
+				ctx.stroke();
+			};
+			ctx.restore();
+			ctx.restore();
+
+		}
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>

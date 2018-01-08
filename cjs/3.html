@@ -1,0 +1,117 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var mx = 130, my = 200;
+
+	window.onload = window.onresize = function() {
+		
+		var canvasWidth = 500;
+		var canvasHeight = 500;
+		
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	window.onload();
+	
+	canvas.onmousemove = function (e) {
+		mx = e.clientX - canvas.offsetLeft;
+		my = e.clientY - canvas.offsetTop;
+	};
+	
+	var rid = setInterval(function () {      
+		var ctx = canvas.getContext('2d');
+		
+		
+		var px = [];
+		var py = []; 
+		
+		
+		px[0] = 250 + 150 * Math.sin(Math.PI/125*mx);
+		px[1] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2);
+		px[2] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2 * 2);
+		px[3] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2 * 3);
+		
+		py[0] = 250 + 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx);
+		py[1] = 250 + 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx + Math.PI/2);
+		py[2] = 250 + 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx - Math.PI);
+		py[3] = 250 + 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx - Math.PI/2);
+		
+		px[4] = 250 + 150 * Math.sin(Math.PI/125*mx);
+		px[5] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2);
+		px[6] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2 * 2);
+		px[7] = 250 + 150 * Math.sin(Math.PI/125*mx + Math.PI/2 * 3);
+		
+		py[4] = 250 - 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx); 
+		py[5] = 250 - 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx + Math.PI/2);
+		py[6] = 250 - 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my) * Math.cos(Math.PI/125*mx - Math.PI);
+		py[7] = 250 - 106 * Math.sin(Math.PI/125*my) + 150 * Math.cos(Math.PI/125*my)* Math.cos(Math.PI/125*mx - Math.PI/2);
+		
+
+		ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+		
+				
+		ctx.beginPath();
+		ctx.moveTo(px[0],py[0]);
+		ctx.lineTo(px[4],py[4]);
+		ctx.moveTo(px[1],py[1]);
+		ctx.lineTo(px[5],py[5]);
+		ctx.moveTo(px[2],py[2]);
+		ctx.lineTo(px[6],py[6]);
+		ctx.moveTo(px[3],py[3]);
+		ctx.lineTo(px[7],py[7]);
+		ctx.stroke();
+		ctx.closePath();
+		
+		
+		ctx.beginPath();
+		ctx.moveTo(px[0],py[0]);
+		ctx.lineTo(px[1],py[1]);
+		ctx.lineTo(px[2],py[2]);
+		ctx.lineTo(px[3],py[3]);
+		ctx.lineTo(px[0],py[0]);
+		ctx.fillStyle = "rgba(125,125,0,0.5)";
+		ctx.fill();
+		ctx.stroke();
+		ctx.closePath();
+		
+		ctx.beginPath();
+		ctx.lineTo(px[4],py[4]);
+		ctx.lineTo(px[5],py[5]);
+		ctx.lineTo(px[6],py[6]);
+		ctx.lineTo(px[7],py[7]);
+		ctx.lineTo(px[4],py[4]);
+		ctx.fillStyle = "rgba(125,0,125,0.5)";
+		ctx.fill();
+		ctx.stroke();
+		ctx.closePath();
+
+		ctx.beginPath();
+		ctx.moveTo(px[2],py[2]);
+		ctx.lineTo(px[3],py[3]);
+		ctx.lineTo(px[7],py[7]);
+		ctx.lineTo(px[6],py[6]);
+		ctx.lineTo(px[2],py[2]);
+		ctx.fillStyle = "rgba(0,125,125,0.5)";
+		ctx.fill();
+		ctx.stroke();
+		ctx.closePath();
+
+	}, 5);
+    
+    	function terminate(){
+		clearInterval( rid );
+	}
+    
+  </script>
+ </body>
+</html>

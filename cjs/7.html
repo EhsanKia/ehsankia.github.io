@@ -1,0 +1,120 @@
+<html>
+ <head>
+ 	<title>Wavy Waves</title>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.js"></script>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+		#container {margin: auto; margin-top: 20%; width: 1200px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+   <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = 500;
+		var h = 720;
+		var cycle = 0;
+		var rid = null;
+		var gui, p;
+
+		var Params = function() {
+			this.oscillation = 75;
+			this.sliding = 55;
+			this.height = 150;
+			this.width = 50;
+			this.period = 500;
+			this.wtf = false;
+			this.wtfOffset = 0;
+			this.wtfMultiplier = 6;
+		};
+
+		window.onresize = function(){
+			cvs.style.top = (window.innerHeight - cvs.height) / 2 + "px";
+			cvs.style.left = (window.innerWidth - cvs.width) / 2 + "px";
+		}
+
+		window.onload = function() {
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+
+				gui.add(p, 'oscillation', 10, 100);
+				gui.add(p, 'sliding', 0, 250);
+				gui.add(p, 'height', 25, 300);
+				gui.add(p, 'width', 5, 250);
+				gui.add(p, 'period', 100, 3000);
+				gui.add(p, 'wtf');
+				gui.add(p, 'wtfOffset', -1, 1);
+				gui.add(p, 'wtfMultiplier', 1, 12).step(1);
+			}
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+			window.onresize();
+
+			ctx.lineWidth = 3;
+			ctx.fillStyle = "white";
+
+			terminate();
+			animate();
+		}
+		window.onload();
+
+
+
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			rid = requestAnimationFrame(animate);
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		function draw(e) {
+			if ( !isNaN(e) )
+				cycle = (cycle + e/p.period) % (2*Math.PI);
+
+
+			var ao = p.oscillation;
+			var as = p.sliding;
+			var ah = p.height;
+			var aw = p.width;
+
+			var wtf = p.wtf ? p.wtfMultiplier/6 * p.oscillation / Math.PI + p.wtfOffset : 1000;
+
+			for (var i=0; i<90; i++){
+				var cx = w/2 + Math.sin(cycle+i*ao/wtf)*w/3;
+				var cy = i*8;
+				var ch = Math.abs(Math.sin(cycle+i*as/wtf))*ah;
+				var cw = aw + ch/4;
+
+				ctx.beginPath();
+				ctx.moveTo( -2, cy);
+				ctx.lineTo( cx-cw, cy);
+				ctx.bezierCurveTo( cx-cw/4, cy, cx-cw/4, cy-ch, cx, cy-ch);
+				ctx.bezierCurveTo( cx+cw/4, cy-ch, cx+cw/4, cy, cx+cw, cy);
+				ctx.lineTo( w+2, cy);
+				ctx.lineTo( w+2, cy+8);
+				ctx.lineTo( -2, cy+8 );
+				ctx.lineTo( -2, cy );
+				ctx.closePath();
+				ctx.stroke();
+				ctx.fill();
+			}
+		}
+
+		function terminate(){
+			clearTimeout(rid);
+			cancelAnimationFrame(rid);
+		}
+  </script>
+ </body>
+</html>

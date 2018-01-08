@@ -1,0 +1,213 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.min.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+		var maxLen = Math.sqrt(w*w + h*h) / 1.5;
+		var gui, p;
+
+		var Params = function() {
+			this.invert = false;
+			this.size = 50;
+			this.speed = 3;
+			this.wavelength = 20;
+			this.segments = 100;
+			this.offset = 0.04;
+			this.sides = 6;
+			this.waveWidth = 1;
+			this.segmentWidth = 1;
+			this.hideCenter = false;
+			this.color1 = '#fff';
+			this.color2 = '#000';
+			this.color3 = '#888';
+			this.rotateSpeed = 0;
+		};
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+				gui.add(p, 'invert');
+				gui.add(p, 'speed', 0, 10);
+				gui.add(p, 'wavelength', 0, 100);
+				gui.add(p, 'segments', 0, 200);
+				gui.add(p, 'offset', -0.1, 0.1).step(0.01);
+				gui.add(p, 'sides', 3, 12).step(1);
+				gui.add(p, 'size', 10, 100);
+				gui.add(p, 'waveWidth', 0, 5);
+				gui.add(p, 'segmentWidth', 0, 10);
+				gui.add(p, 'hideCenter');
+				gui.addColor(p, 'color1');
+				gui.addColor(p, 'color2');
+				gui.addColor(p, 'color3');
+				gui.add(p, 'rotateSpeed', 0, 1);
+			}
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+			animate();
+		}
+		window.onload();
+
+		var rid;
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			draw(elapsed);
+
+			rid = requestAnimationFrame(animate);
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		var r = 0;
+		function draw(e) {
+			var diff = e/1000 % Math.PI;
+			c += diff * p.speed;
+			r += p.rotateSpeed * diff;
+
+			const radius = p.size;
+			const miniRadius = Math.sqrt(radius) / 2;
+			const polyDist = radius / Math.tan(Math.PI / p.sides);
+			const linePieces = Math.max(10, Math.floor(p.wavelength * 5));
+			const bgColor = p.invert ? p.color2 : p.color1;
+			const fgColor1 = p.invert ? p.color1 : p.color2;
+			const fgColor2 = p.color3;
+			var height, freq, dist;
+
+			ctx.fillStyle = bgColor;
+			ctx.fillRect(0, 0, w, h);
+			ctx.fillStyle = fgColor1;
+
+			ctx.save();
+			ctx.translate(window.innerWidth/2, window.innerHeight/2);
+			ctx.rotate(r);
+
+			// segments
+			ctx.save();
+			ctx.beginPath();
+			for (var x = 1; x > p.offset; x -= 1 / p.segments) {
+				if (p.segmentWidth === 0) break;
+				for (var i = 0; i < p.sides; i++) {
+					freq = c - i * 2 * Math.PI / p.sides - x * p.wavelength;
+					height = radius * Math.sin(freq);
+					if (i === 0) ctx.moveTo(polyDist + x * maxLen, height);
+					else ctx.lineTo(polyDist + x * maxLen, height);
+					ctx.rotate(2 * Math.PI / p.sides);
+				}
+				ctx.closePath();
+			}
+			ctx.strokeStyle = fgColor2;
+			ctx.lineWidth = p.segmentWidth;
+			ctx.stroke();
+			ctx.restore();
+
+			ctx.strokeStyle = fgColor1;
+
+			// Wave lines
+			ctx.lineWidth = p.waveWidth;
+			for (var i = 0; i < p.sides; i++) {
+				if (p.waveWidth === 0) break;
+				ctx.translate(polyDist, 0);
+				ctx.beginPath();
+				ctx.moveTo(maxLen, 0)
+				for (var x = linePieces; x >= Math.min(0, p.offset * linePieces); x--) {
+					freq = c - i * 2 * Math.PI / p.sides - x / linePieces * p.wavelength;
+					height = radius * Math.sin(freq);
+					ctx.lineTo(x * maxLen / linePieces, height);
+				}
+				ctx.stroke();
+				ctx.translate(-polyDist, 0);
+				ctx.rotate(2 * Math.PI / p.sides);
+			}
+
+			// Polygon
+			if (!p.hideCenter) {
+				ctx.save();
+				ctx.beginPath();
+				for (var i = 0; i < p.sides; i++) {
+					ctx.translate(polyDist, 0);
+					if (i === 0) ctx.moveTo(0, -radius);
+					ctx.lineTo(0, radius);
+					ctx.translate(-polyDist, 0);
+					ctx.rotate(2 * Math.PI / p.sides);
+				}
+				ctx.fillStyle = bgColor;
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+			}
+
+			// Balls
+			if (!p.hideCenter) {
+				for (var i = 0; i < p.sides; i++) {
+					ctx.translate(polyDist, 0);
+					freq = c - i * 2 * Math.PI / p.sides;
+					height = radius * Math.sin(freq);
+					fillCircle(0, height, miniRadius);
+					ctx.translate(-polyDist, 0);
+					ctx.rotate(2 * Math.PI / p.sides);
+				}
+			}
+
+
+			ctx.lineWidth = 1;
+
+			if (!p.hideCenter) {
+				ctx.beginPath();
+				ctx.arc(0, 0, radius, 0, 2 * Math.PI, false);
+				ctx.stroke();
+				ctx.closePath();
+
+				ctx.beginPath();
+				for (var i = 0; i < p.sides; i++) {
+					dist = radius * Math.cos(c - i * 2 * Math.PI / p.sides);
+					height = radius * Math.sin(c - i * 2 * Math.PI / p.sides);
+					ctx.moveTo(dist, height);
+					ctx.lineTo(polyDist, height);
+					ctx.rotate(2 * Math.PI / p.sides)
+				}
+				ctx.strokeStyle = fgColor2;
+				ctx.stroke();
+
+				ctx.rotate(c);
+				ctx.translate(radius, 0);
+				fillCircle(0, 0, miniRadius);
+			}
+
+			ctx.restore();
+		}
+
+		function fillCircle(x, y, r) {
+			ctx.beginPath();
+			ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+			ctx.fill();
+		}
+
+		function terminate(){
+			cancelAnimationFrame( rid );
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>

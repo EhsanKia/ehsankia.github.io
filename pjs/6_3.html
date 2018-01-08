@@ -1,0 +1,114 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="processing.js"></script>
+	<script language="javascript" src="init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script>
+		window.onload = function() {
+			var canvas = document.getElementById("processing");
+						
+			canvas.setAttribute("width", window.innerWidth);
+			canvas.setAttribute("height", window.innerHeight);		
+		}		
+	</script>
+	
+	<script type="application/processing">
+
+		float x;
+		float y;
+		
+		float x2;
+		float y2;
+		
+		float a;
+		float d;
+		
+		float shift = 4.5;
+		
+		float[] hx = new float[3];
+		float[] hy = new float[3];
+		float offset = 10;
+		
+		boolean start = true;
+		
+		
+		void setup(){
+		
+			size( window.innerWidth, window.innerHeight );
+
+			//noLoop();		
+			
+		}
+		
+		void draw(){
+			
+			load(3,shift);
+
+			
+			for (int j=1; j<300; j++){
+				a = atan2( hy[0]-y, hx[0]-x ) + cos(shift/20)/100;
+				d = sqrt( pow( hx[0]-x, 2) + pow( hy[0]-y, 2) );
+				
+				x2 = x + cos(a) * d * 1.05;
+				y2 = y + sin(a) * d * 1.05;
+				
+				//stroke( random(255), random(255), random(255) );
+				line(x, y, x2, y2);
+				
+				x = x2;
+				y = y2;
+
+				for(int i=1; i<hx.length; i++)
+				{
+					hx[i-1] = hx[i];
+					hy[i-1] = hy[i];
+				}
+				
+				hx[ hx.length-1 ] = x;
+				hy[ hy.length-1 ] = y;				
+			}
+			
+			shift -= 1;
+
+		}
+		
+		void load(int c, int o)
+		{
+			background(255);
+			
+			x = int(width/2);
+			y = int(height/2);
+			
+			for (int i=0; i<c; i++)
+			{
+				x2 = x + cos( radians(360/c*i+o) ) * 5;
+				y2 = y - sin( radians(360/c*i+o) ) * 5;
+			
+				line(x, y, x2, y2);	
+				
+				x = x2;
+				y = y2;
+				
+				hx[i] = x;
+				hy[i] = y;	
+			}
+			
+			start = false;
+		}
+
+		void mousePressed() 
+		{
+			redraw();
+		}
+
+	</script>
+
+<canvas id="processing"></canvas>
+
+</body>
+</html>

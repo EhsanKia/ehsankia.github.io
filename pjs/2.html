@@ -1,0 +1,116 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="../pjs/processing.js"></script>
+	<script language="javascript" src="../pjs/init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script type="application/processing">
+
+	int yCount;
+	int xCount;
+	int cellSize;
+	
+	int xOff;
+	int yOff;
+	
+	int xPos;
+	int yPos;
+	
+	boolean toggle = true;
+	
+	char[] moves;
+	
+		void setup(){
+		
+			size( window.innerWidth, window.innerHeight );
+			
+			yCount = 50;
+			
+			cellSize = int(height/yCount);
+			xCount = int(width/cellSize)-1;
+			
+			xOff = (width - xCount*cellSize)/2;
+			yOff = (height - yCount*cellSize)/2;		
+
+			yPos = int(yCount/2);
+			xPos = 1;
+		}
+		
+		void draw(){
+					
+			stroke(200);
+			
+			for (int i=0; i < xCount; i++)
+				for (int j=0; j < yCount; j++) 
+					rect(xOff+i*cellSize, yOff+j*cellSize, cellSize, cellSize);		
+			
+			if (toggle)
+				moves = "01030".toCharArray();
+				
+			else
+				moves = "0000".toCharArray();
+				
+			toggle = !toggle;
+			xPos-=1;
+			
+			for (i in moves)
+				drawLine( parseInt(moves[i])-48 );	
+
+		}
+		
+		void drawLine(int d)
+		{
+		
+			stroke(0);
+			strokeWeight(2);
+		
+			int x = xOff + xPos*cellSize;
+			int y = yOff + yPos*cellSize;
+			int w = cellSize;
+		
+			if (d==0)
+			{
+				line(x, y, x+w, y);
+				xPos++;
+			}
+				
+			else if (d==1)
+			{
+				line(x, y, x, y-w);
+				yPos--;
+			}
+			
+			else if (d==2)
+			{
+				line(x, y, x-w, y);
+				xPos--;
+			}
+		
+			else if (d==3)
+			{
+				line(x, y, x, y+w);
+				yPos++;
+			}
+		
+		}
+			
+		void mousePressed() 
+		{
+			redraw();
+		}
+
+	</script>
+
+<canvas id="processing"></canvas>
+
+ 
+  	<script type="text/javascript">
+		Processing.reload();
+	</script>
+
+</body>
+</html>

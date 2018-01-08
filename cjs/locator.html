@@ -1,0 +1,84 @@
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script> 
+    <style type="text/css">
+		#canvas { border: 1px solid #000;}
+    </style>    
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+	
+    <script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var rid = null;
+
+		var w = 750;
+		var h = 750;
+		var wl = 10;
+		var i = 0;
+		var j = 0;
+
+		var s1 = {'x': 100, 'y': 250};
+		var s2 = {'x': 100, 'y': 500};
+
+		canvas.onmousemove = function (e) {
+			mx = e.clientX - canvas.offsetLeft;
+			my = e.clientY - canvas.offsetTop;
+		};
+
+		window.onresize = function(){
+			cvs.style.top  = (window.innerHeight - cvs.height) / 2 + "px";
+			cvs.style.left = (window.innerWidth  - cvs.width)  / 2 + "px";		
+		}
+		
+		window.onload = function() {
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+			window.onresize();	
+			ctx.fillStyle = "#000"
+			animate();			
+		}
+
+		function animate() {
+			rid = requestAnimationFrame( animate );
+			draw();
+			wl *= 1.003;
+		}
+
+
+		function draw() {
+			ctx.clearRect(0, 0, w, h);
+			ctx.fillRect(s1.x-5, s1.y-5, 10, 10);
+			ctx.fillRect(s2.x-5, s2.y-5, 10, 10);
+
+			for (i=0; i<w; i++){
+				for (j=0; j<h; j++){
+					var d1x = i - s1.x;
+					var d1y = j - s1.y;
+					var d2x = i - s2.x;
+					var d2y = j - s2.y;
+					var d1 = Math.sqrt(d1x*d1x + d1y*d1y);
+					var d2 = Math.sqrt(d2x*d2x + d2y*d2y);
+
+					if (d1 != d2)
+						op=Math.abs(d2-d1);
+
+					ctx.fillStyle = "hsl("+op+",50%,50%)";
+					ctx.fillRect(i, j, 1, 1);
+				}
+			}
+		
+		}
+
+		canvas.onmouseup = function(e){
+
+		}
+		
+		function terminate(){
+			cancelAnimationFrame( rid );
+		}
+  </script>
+ </body>
+</html>

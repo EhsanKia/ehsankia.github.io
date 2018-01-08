@@ -1,0 +1,162 @@
+
+<html>
+ <head>
+	<script type="text/javascript" src="rAF.js"></script>
+	<script type="text/javascript" src="dat.gui.js"></script>
+	<style type="text/css">
+		#canvas { border: 3px solid #eee;}
+		#container {margin: auto; width: 1300px}
+	</style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+	<canvas id="canvas2"></canvas>
+
+	<script type="text/javascript">
+		var cvs = document.getElementById('canvas');
+		var ctx = cvs.getContext('2d');
+		var cvs2 = document.getElementById('canvas2');
+		var ctx2 = cvs2.getContext('2d');
+		var h = Math.min(window.innerHeight, window.innerWidth) - 80;
+		var w = h;
+		var rid = null;
+		var p, gui;
+
+		var Params = function() {
+			this.size = 120;
+			this.count = 50;
+			this.twist = 1;
+			this.border = 1;
+			this.fill = true;
+			this.rainbow = false;
+			this.fillColor = "#ffffff";
+			this.borderColor = "#000000";
+		};
+
+		window.onresize = function(){
+			cvs.style.top  = (window.innerHeight - cvs.height + 40) / 2 + "px";
+			cvs.style.left = (window.innerWidth  - cvs.width)  / 2 + "px";
+			cvs2.style.top  = (window.innerHeight - cvs2.height*2 + 45) / 2 + "px";
+			cvs2.style.left = (window.innerWidth  - cvs2.width + 6)  / 2 + "px";
+		}
+
+		window.onload = function() {
+			terminate();
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+			cvs2.style.position = "fixed";
+			cvs2.setAttribute("width", w);
+			cvs2.setAttribute("height", h/2);
+			window.onresize();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+				gui.add(p, 'size', 10, 200);
+				gui.add(p, 'count', 10, 100);
+				gui.add(p, 'twist', -5, 5);
+				gui.add(p, 'fill');
+				gui.addColor(p, 'fillColor');
+				gui.add(p, 'border', 0, 15).step(1);
+				gui.addColor(p, 'borderColor');
+				gui.add(p, 'rainbow');
+			}
+
+			ctx.lineWidth = 1;
+			ctx.fillStyle = "white";
+			ctx2.lineWidth = 1;
+			ctx2.fillStyle = "white";
+
+			animate();
+		}
+		window.onload();
+
+		var lastTime = new Date().getTime();
+		function animate() {
+			var timeNow = new Date().getTime();
+			var elapsed = timeNow - lastTime;
+
+			rid = requestAnimationFrame( animate );
+			draw(elapsed);
+
+			lastTime = timeNow;
+		}
+
+		var c = 0;
+		var hs = 0;
+		function draw(e) {
+			ctx.clearRect(0, 0, w, h);
+			ctx2.clearRect(0, 0, w, h);
+			c = (c+e) % 900;
+			hs = (hs+e/4) % 360;
+			ctx.globalCompositeOperation='source-over';
+
+			if (!p.rainbow){
+				ctx.fillStyle = p.fillColor;
+				ctx2.fillStyle = p.fillColor;
+			}
+
+
+			ctx.lineWidth = p.border;
+			ctx2.lineWidth = p.border*2;
+
+			ctx.strokeStyle = p.borderColor;
+			ctx2.strokeStyle = p.borderColor;
+
+			for (var i=p.count; i>0; i--){
+				ctx.save();
+				ctx.translate(p.size + i*(w-2*p.size)/p.count, h-p.size);
+				ctx.rotate(Math.PI*c/1800 + i*p.twist*Math.PI/(2*p.count));
+				if (p.rainbow) ctx.fillStyle = "hsl("+(i*360/p.count+hs)+",100%,70%)";
+				if (p.fill) ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+				if (p.border != 0) ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+				ctx.restore();
+			};
+
+			ctx.lineWidth = p.border*2;
+			ctx.globalCompositeOperation='destination-over';
+			for (var i=0; i<=p.count; i++){
+				ctx.save();
+				ctx.translate(w - i*(w-2*p.size)/(2*p.count) - p.size, h-i*(h-2*p.size)/p.count-p.size);
+				ctx.rotate(Math.PI*c/1800 + i*p.twist*Math.PI/(2*p.count));
+				if (p.rainbow) ctx.fillStyle = "hsl("+(i*360/p.count+hs)+",100%,70%)";
+				if (p.fill) ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+				if (p.border != 0) ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+				ctx.restore();
+			};
+
+			ctx.globalCompositeOperation='source-over';
+			ctx.lineWidth = p.border;
+			for (var i=0; i<p.count; i++){
+				ctx.save();
+				ctx.translate(p.size + i*(w-2*p.size)/(2*p.count), h-i*(h-2*p.size)/p.count-p.size);
+				ctx.rotate(Math.PI*c/1800 + i*p.twist*Math.PI/(2*p.count));
+				if (p.rainbow) ctx.fillStyle = "hsl("+(i*360/p.count+hs)+",100%,70%)";
+				if (p.fill) ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+				if (p.border != 0) ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+				ctx.restore();
+			};
+			ctx2.globalCompositeOperation='destination-over';
+
+			for (var i=Math.round(p.count/4); p.fill && i<=p.count; i++){
+				ctx2.save();
+				ctx2.translate(w - i*(w-2*p.size)/(2*p.count) - p.size, h-i*(h-2*p.size)/p.count-p.size);
+				ctx2.rotate(Math.PI*c/1800 + i*p.twist*Math.PI/(2*p.count));
+				if (p.rainbow) ctx2.fillStyle = "hsl("+(i*360/p.count+hs)+",100%,70%)";
+				if (p.fill) ctx2.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+				if (p.border != 0) ctx2.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+				ctx2.restore();
+			};
+		}
+
+		function terminate(){
+			cancelAnimationFrame(rid);
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>

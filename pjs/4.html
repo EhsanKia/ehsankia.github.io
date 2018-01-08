@@ -1,0 +1,220 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="../pjs/processing.js"></script>
+	<script language="javascript" src="../pjs/init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script type="application/processing">
+
+	int yCount;
+	int xCount;
+	int cellSize;
+	
+	int xOff;
+	int yOff;
+	
+	int xPos;
+	int yPos;
+	
+	int xSize;
+	int ySize;
+	
+	int lvl = 0;
+
+	char[] lines;
+	
+		void setup(){
+		
+			size( window.innerWidth, window.innerHeight );
+			
+			yCount = int(height/3);
+			
+			cellSize = int(height/yCount);
+			xCount = int(width/cellSize)-1;
+			
+			xOff = (width - xCount*cellSize)/2;
+			yOff = (height - yCount*cellSize)/2;		
+			
+			frameRate(1);
+
+		}
+		
+		void draw(){
+		
+			rect(0,0,width,height);
+					
+
+			lines = generate(lvl).toCharArray();
+			
+			xSize = getWidth( lines );
+			ySize = getHeight( lines );
+			
+			xPos = int(xCount/2 - xSize/2);
+			yPos = int(yCount/2 + ySize/2);			
+			
+			for (int i in lines)
+				drawLine( parseInt(lines[i]) );	
+			
+			if (lvl < 9)
+				lvl++;
+
+			else
+				noLoop();
+
+		}
+		
+		void drawLine(int d)
+		{
+		
+			stroke(0);
+			strokeWeight(1);
+		
+			int x = xOff + xPos*cellSize;
+			int y = yOff + yPos*cellSize;
+			int w = cellSize;
+		
+			if (d=='0')
+			{
+				line(x, y, x+w, y);
+				xPos++;
+			}
+				
+			else if (d=='1')
+			{
+				line(x, y, x, y-w);
+				yPos--;
+			}
+			
+			else if (d=='2')
+			{
+				line(x, y, x-w, y);
+				xPos--;
+			}
+		
+			else if (d=='3')
+			{
+				line(x, y, x, y+w);
+				yPos++;
+			}
+		
+		}
+		
+		String generate(int level)
+		{
+			String str = "";
+		
+			if (level == 0)
+				str = "0";
+				
+			else
+			{
+				int h = getHeight( generate(level-1).toCharArray() );
+				
+				for (int i=0; i <= h; i++)
+					str += "0";
+					
+				String p = generate(level-1);
+				int s = p.length();
+					
+				str += rotateCCW( p.toCharArray() ).join('');
+				str += rotateCCW( p.slice(1, floor(s/2)+1).toCharArray() ).join('');
+				
+				for (int i=0; i <= h*2; i++)
+					str += "0";
+			
+				str += rotateCW( p.slice( ceil(s/2)-1, s-1 ).toCharArray() ).join('');
+				str += rotateCW( p.toCharArray() ).join('');
+				
+				for (int i=0; i <= h; i++)
+					str += "0";
+			
+			}
+			
+			return str;		
+		}
+		
+		int getHeight(char[] l)
+		{
+			int h = 0;
+			int m = 0;
+		
+			for (int i in l)
+			{
+				if ( l[i] == '1' )
+					h++;
+					
+				else if ( l[i] == '3' )
+					h--;
+					
+				if (Math.abs(h) > m)
+					m = Math.abs(h);
+					
+			}
+
+			return m;							
+		}
+		
+		int getWidth(char[] l)
+		{
+			int w = 0;
+		
+			for (int i in l)
+			{
+				if ( l[i] == '0' )
+					w++;
+					
+				else if ( l[i] == '2' )
+					w--;
+			}
+			
+			return w;							
+		}
+		
+		char[] rotateCW(char[] l)
+		{
+			for (int i in l)
+			{
+				if ( l[i] == '0' )
+					l[i] = '3';
+				else if ( l[i] == '1')
+					l[i] = '0';
+				else if ( l[i] == '2')
+					l[i] = '1';
+				else if ( l[i] == '3')
+					l[i] = '2';
+			}
+			
+			return l;		
+		}
+		
+		char[] rotateCCW(char[] l)
+		{
+			for (int i in l)
+			{
+				if ( l[i] == '0' )
+					l[i] = '1';
+				else if ( l[i] == '1')
+					l[i] = '2';
+				else if ( l[i] == '2')
+					l[i] = '3';
+				else if ( l[i] == '3')
+					l[i] = '0';
+			}
+
+			return l;		
+		}
+
+	</script>
+
+<canvas id="processing"></canvas>
+
+  	<script type="text/javascript">
+		Processing.reload();
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,121 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>      
+	<script language="javascript" src="../pjs/processing.js"></script>
+	<script language="javascript" src="../pjs/init.js"></script>
+</head>
+
+<body style="margin:0">
+	
+	<script>
+		window.onload = function() {
+			var canvas = document.getElementById("processing");
+						
+			canvas.setAttribute("width", window.innerWidth);
+			canvas.setAttribute("height", window.innerHeight);		
+		}		
+	</script>
+	
+	<script type="application/processing">
+
+		int x;
+		int y;
+		
+		int x2;
+		int y2;
+		
+		int a;
+		int d;
+		
+		int[] hx = new int[4];
+		int[] hy = new int[4];
+		
+		boolean start = true;
+		
+		
+		void setup(){
+		
+			size( window.innerWidth, window.innerHeight );
+
+			//noLoop();
+			
+			x = 0;
+			y = int(height/2);
+			
+			hx[0] = x;
+			hy[0] = y;		
+			
+		}
+		
+		void draw(){
+			
+			if (start)
+				load();
+				
+			else
+			{		
+				a = atan2( hy[0]-y, hx[0]-x );
+				d = sqrt( pow( hx[0]-x, 2) + pow( hy[0]-y, 2) );
+				
+				x2 = x + cos(a) * d + 2;
+				y2 = y + sin(a) * d * 1.005;
+				
+				line(x, y, x2, y2);
+				
+				x = x2;
+				y = y2;
+				
+				hx[0] = hx[1]
+				hy[0] = hy[1]
+				hx[1] = hx[2]
+				hy[1] = hy[2]
+				hx[2] = x
+				hy[2] = y
+			}
+		}
+		
+		void load()
+		{
+			background(255);
+			x2 = x + cos( radians(60) ) * 10;
+			y2 = y - sin( radians(60) ) * 10;
+		
+			line(x, y, x2, y2);	
+			
+			x = x2;
+			y = y2;
+			
+			hx[1] = x;
+			hy[1] = y;	
+			
+			x2 = x + cos( radians(-60) ) * 10;
+			y2 = y - sin( radians(-60) ) * 10;
+			
+			line(x, y, x2, y2);
+			
+			x = x2;
+			y = y2;
+			
+			hx[2] = x;
+			hy[2] = y;					
+			
+			start = false;
+		}
+
+		void mousePressed() 
+		{
+			redraw();
+		}
+
+	</script>
+
+<canvas id="processing"></canvas>
+
+ 
+  	<script type="text/javascript">
+		Processing.reload();
+	</script>
+
+</body>
+</html>

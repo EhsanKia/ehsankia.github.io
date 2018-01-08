@@ -1,0 +1,280 @@
+<html>
+
+<head>
+	<title>Processing.js Experiments</title>
+	<script language="javascript" src="../pjs/processing.js"></script>
+	<script>
+
+		shuffle = function(v){
+			for(var j, x, i = v.length; i; j = parseInt(Math.random() * i), x = v[--i], v[i] = v[j], v[j] = x);
+			return v;
+		};
+
+	</script>
+</head>
+
+<body style="margin:0">
+	<script type="application/processing">
+		boolean clear = true;
+		boolean solving = false;
+		boolean[][] visited;
+		int[][] wall;
+
+		int xOff;
+		int yOff;
+		int numX;
+		int numY;
+
+		int sat = 10;
+		int maxR;
+
+		int cSize = 50;
+
+		int[] cell;
+		int[] dir;
+
+		ArrayList cells;
+
+		void setup(){
+			//Size set to fullscreen
+			size( window.innerWidth, window.innerHeight );
+
+			//Computes offset
+			xOff = width % cSize;
+			yOff = height % cSize;
+
+			//Number of cells in X and Y
+			numX = (width - xOff)/cSize - 1;
+			numY = (height - yOff)/cSize - 1;
+
+			//Fix offset
+			xOff /= 2;
+			yOff /= 2;
+
+			maxR = int(numX*numY/2);
+			colorMode(HSB, maxR);
+
+			frameRate(60);
+		}
+
+		void draw(){
+
+			if (clear)
+				resetGrid();
+
+
+			if (!cells.isEmpty() && !solving)
+			{
+				cell = cells.get( cells.toArray().length - 1 );
+
+				int tmpX = cell[0];
+				int tmpY = cell[1];
+
+				dir = shuffle([0,1,2,3]);
+
+				for (var i in dir)
+				{
+					switch(dir[i]){
+						case 0:
+							tmpY -= 1;
+							break;
+
+						case 1:
+							tmpX += 1;
+							break;
+
+						case 2:
+							tmpY += 1;
+							break;
+
+						case 3:
+							tmpX -= 1;
+							break;
+					}
+
+					if ( tmpX > 0 && tmpX < numX && tmpY > 0 && tmpY < numY && !visited[ tmpX ][ tmpY ] )
+					{
+						int s = (tmpY - cell[1]) * (cSize-2) + (tmpX - cell[0]) * (cSize-2);
+						int x = xOff + cell[0]*cSize + cSize/2;
+						int y = yOff + cell[1]*cSize + cSize/2;
+
+						x -= (tmpY - cell[1])*(cSize/2-1);
+						y -= (tmpX - cell[0])*(cSize/2-1);
+
+						x += (tmpX - cell[0])*(cSize/2-1);
+						y += (tmpY - cell[1])*(cSize/2-1);
+
+						rect( x , y , s , s );
+
+						cells.add( [tmpX,tmpY] );
+						visited[ tmpX ][ tmpY ] = true;
+
+						wall[ cell[0] ][ cell[1] ] += pow(2,dir[i]);
+
+						if (dir[i]==0 || dir[i]==2)
+							wall[ tmpX ][ tmpY ] += pow(2, abs(dir[i]-2));
+
+						else
+							wall[ tmpX ][ tmpY ] += pow(2, abs(dir[i]-4));
+
+						fill(0,sat++,maxR);
+						rect( xOff + tmpX*cSize + 1, yOff + tmpY*cSize + 1, cSize-2, cSize-2);
+						fill(0,0,maxR);
+
+						break;
+					}
+
+					else
+					{
+						int tmpX = cell[0];
+						int tmpY = cell[1];
+					}
+				}
+
+				if (tmpX == cell[0] && tmpY == cell[1])
+				{
+					cells.remove( cells.toArray().length - 1 );
+					rect( xOff + cell[0]*cSize + 1, yOff + cell[1]*cSize + 1, cSize-2, cSize-2);
+					sat--;
+				}
+
+			}
+
+			else if (!cells.isEmpty())
+			{
+
+				cell = cells.get( cells.toArray().length - 1 );
+				int tmpX = cell[0];
+				int tmpY = cell[1];
+
+				dir = shuffle([0,1,2,3]);
+
+				for (var i in dir)
+				{
+					switch(dir[i]){
+						case 0:
+							tmpY -= 1;
+							break;
+
+						case 1:
+							tmpX += 1;
+							break;
+
+						case 2:
+							tmpY += 1;
+							break;
+
+						case 3:
+							tmpX -= 1;
+							break;
+					}
+
+
+					if ( tmpX > 0 && tmpX < numX && tmpY > 0 && tmpY < numY && wall[ cell[0] ][ cell[1] ] & pow(2,dir[i]) && !visited[ tmpX ][ tmpY ] )
+					{
+
+						cells.add( [tmpX,tmpY] );
+						visited[ tmpX ][ tmpY ] = true;
+
+						x = xOff + cSize/2 + cell[0]*cSize - 2;
+						y = yOff + cSize/2 + cell[1]*cSize - 2;
+
+						w = (tmpX - cell[0])*cSize + (tmpY - cell[1])*2;
+						h = (tmpY - cell[1])*cSize + (tmpX - cell[0])*2;
+
+						fill(2*maxR/3,maxR,maxR);
+						rect(x,y,w,h);
+
+						if( tmpX == numX-1 && tmpY == numY-1 )
+							noLoop();
+
+						break;
+					}
+
+					else
+					{
+						int tmpX = cell[0];
+						int tmpY = cell[1];
+					}
+				}
+
+				if (tmpX == cell[0] && tmpY == cell[1])
+				{
+					cells.remove( cells.toArray().length - 1 );
+
+					int tmpX = cell[0];
+					int tmpY = cell[1];
+
+					cell = cells.get( cells.toArray().length - 1 );
+
+					x = xOff + cSize/2 + cell[0]*cSize - 2;
+					y = yOff + cSize/2 + cell[1]*cSize - 2;
+
+					w = (tmpX - cell[0])*cSize + (tmpY - cell[1])*2;
+					h = (tmpY - cell[1])*cSize + (tmpX - cell[0])*2;
+
+					fill(0,0,maxR);
+					rect(x,y,w,h);
+				}
+
+
+			}
+
+			else if (!solving)
+			{
+				solving = true;
+
+				fill(maxR/3,maxR,maxR);
+				ellipse(xOff + 5*cSize/4, yOff + 5*cSize/4, 5, 5);
+				fill(0,maxR,maxR);
+				ellipse(width - xOff - 5*cSize/4, height - yOff - 5*cSize/4, 5, 5);
+
+				cells.add( [1,1] );
+
+				visited = new boolean[numX][numY];
+				visited[1][1] = true;
+			}
+
+
+
+		}
+
+		void resetGrid(){
+
+			background(0,0,maxR/4);
+
+			//Sets attributes
+			stroke(0);
+			strokeWeight(2);
+
+			fill(0,0,maxR);
+
+			for (int i=1; i<numX; i++)
+				for (int j=1; j<numY; j++)
+					rect(xOff+i*cSize,yOff+j*cSize,cSize,cSize);
+
+			clear = false;
+
+
+			cell = [ int(random(1,numX)) , int(random(1,numY)) ];
+
+			cells = new ArrayList();
+			cells.add( cell );
+
+			visited = new boolean[numX][numY];
+			visited[ cell[0] ][ cell[1] ] = true;
+
+			wall = new int[numX][numY];
+
+			noStroke();
+		}
+	</script>
+
+<canvas id="processing"></canvas>
+
+	<script type="text/javascript">
+		Processing.reload();
+	</script>
+
+</body>
+</html>

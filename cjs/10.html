@@ -1,0 +1,50 @@
+<html>
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	var d = a = 0;
+	var r = 8;
+	
+	var canvasWidth = 750, canvasHeight = 750;
+	canvas.style.position = "fixed";
+	canvas.setAttribute("width", canvasWidth);
+	canvas.setAttribute("height", canvasHeight);
+
+
+	window.onload = window.onresize = function() {
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	window.onload();
+ 
+	var rid = setInterval(function () {      	
+		
+		if(d < canvasHeight){
+			ctx.save();
+			ctx.translate(canvasWidth/2,canvasWidth/2);
+			ctx.rotate(a);
+			ctx.translate(d,0);
+			ctx.beginPath();
+			ctx.arc(0,0,3,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.restore();
+			r += 0.005;
+			d += 1/r;
+			a += 1.618;
+		}
+
+    }, 1);
+    
+	function terminate(){
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>

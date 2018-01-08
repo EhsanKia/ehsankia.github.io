@@ -1,0 +1,179 @@
+<html> 
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	
+	var p1 = -1.0, p2 = 2.0, p3 = 0.5;
+	var a, b, c, q, root;
+	
+	var canvasWidth = 800, canvasHeight = 800;
+	
+	window.onload = window.onresize = function() {
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+
+		ctx.font = "30px serif";
+		text = "Muller Method on x^3 - x - 1";
+		ctx.fillText(text,(canvasWidth-ctx.measureText(text).width)/2,canvasHeight/2);
+		ctx.font = "10px arial";
+	}
+	window.onload()
+	
+	function f(x)
+	{
+		return Math.pow(x,3) - x - 1;
+	}
+		
+	function p(x)
+	{
+		return a*Math.pow(x,2) + b*x + c;
+	}
+	
+	function sgn(x)
+	{
+		if(x>0) return 1;
+		else if(x<0) return -1;
+		else return 0;
+	}
+		
+	function computeMuller(){
+		q = (p3-p2)/(p2-p1);
+		a = q*f(p3) - q*(1+q)*f(p2) + q*q*f(p1);
+		b = (2*q+1)*f(p3) - (1+q)*(1+q)*f(p2) + q*q*f(p1);
+		c = (1+q) * f(p3);
+
+		p1 = p2;
+		p2 = p3;
+		p3 = p2-(p2-p1)*2*c/(b+sgn(b)*Math.sqrt(b*b-4*a*c));
+
+		a = (f(p3)-f(p2))/((p3-p2)*(p3-p1)) - (f(p1)-f(p2))/((p1-p2)*(p3-p1));
+		b = a*(p2*p2-p1*p1) + f(p1) - f(p2);
+		b /= p1 - p2;
+		c = f(p1) - a*p1*p1 - b*p1;
+	}
+
+	var rid = setInterval(function () {
+		computeMuller();	
+		ctx.clearRect(0,0,canvasHeight,canvasWidth);
+		
+		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+		ctx.lineWidth = 0.25;
+		ctx.textAlign = 'center';
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
+		
+		for (var i = 1; i<20; i++)
+		{
+			//Vertical Grid
+			ctx.beginPath();
+			ctx.moveTo(i*50,0);
+			ctx.lineTo(i*50,800);
+			ctx.closePath();
+			ctx.stroke();
+			
+			ctx.fillText(i/4-1.75,i*50+10,410);
+		
+			//Horizontal Grid
+			ctx.beginPath();
+			ctx.moveTo(0,i*50);
+			ctx.lineTo(800,i*50);
+			ctx.closePath();
+			ctx.stroke();
+			
+			if (i!=8)
+				ctx.fillText(8 - i,340,i*50+10);		
+			
+		}
+		
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = 'rgba(0,0,0,1)';
+		
+		//Y-Axis
+		ctx.beginPath();
+		ctx.moveTo(350,0);
+		ctx.lineTo(350,800);
+		ctx.closePath();
+		ctx.stroke();
+		
+		//X-Axis
+		ctx.beginPath();
+		ctx.moveTo(0,400);
+		ctx.lineTo(800,400);
+		ctx.closePath();
+		ctx.stroke();
+		
+		for (var i = 0; i<100; i++)
+		{
+			x1=i/25-1.75
+			x2=(i+1)/25-1.75
+			ctx.beginPath();
+			ctx.moveTo(x1*200+350,f(x1)*-50+400);
+			ctx.lineTo(x2*200+350,f(x2)*-50+400);
+			ctx.closePath();
+			ctx.stroke();
+		}
+		
+		ctx.fillStyle = 'rgb(0,0,255)';
+		ctx.strokeStyle = 'rgba(0,0,255,0.5)';
+
+
+		ctx.beginPath();
+		ctx.moveTo(p1*200+350,400);
+		ctx.lineTo(p1*200+350,f(p1)*-50+400);
+		ctx.moveTo(p2*200+350,400);
+		ctx.lineTo(p2*200+350,f(p2)*-50+400);
+		ctx.moveTo(p3*200+350,400);
+		ctx.lineTo(p3*200+350,f(p3)*-50+400);
+		ctx.stroke();
+		ctx.closePath();
+		
+		ctx.strokeStyle = 'rgb(255,0,0)';
+		
+		for (var j = 0; j<100; j++)
+		{
+			y1=j/25-1.75
+			y2=(j+1)/25-1.75
+			ctx.beginPath();
+			ctx.moveTo(y1*200+350,p(y1)*-50+400);
+			ctx.lineTo(y2*200+350,p(y2)*-50+400);
+			ctx.closePath();
+			ctx.stroke();
+		}
+
+		if (Math.abs(p3-p1) < 0.01){
+			ctx.strokeStyle = "green";
+			ctx.save();
+			ctx.translate(p3*200+350,400);
+			ctx.font = "16px serif";
+			ctx.fillText("Root at x \u2248 "+p3.toFixed(5),-80,-80);
+			ctx.rotate(Math.PI/4);
+			ctx.beginPath();
+			ctx.moveTo(-100,0);
+			ctx.lineTo(-10,0);
+			ctx.lineTo(-20,-10);
+			ctx.moveTo(-10,0);
+			ctx.lineTo(-20,10);
+			ctx.stroke();
+			ctx.restore();		
+			clearInterval( rid );
+		}
+		
+	}, 2000);
+	
+	function terminate(){
+		clearInterval( rid );
+	}
+	
+  </script>
+ </body>
+</html>

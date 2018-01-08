@@ -1,0 +1,245 @@
+body {
+	margin: 0;
+}
+
+h3{
+	margin: 8px;
+	margin-bottom: 4px;
+}
+
+canvas{
+	z-index: -2;
+}
+
+#home{
+	margin: 5px 15px 0 0;
+	float:right;
+}
+
+a:link , a:visited {
+	color: #999;
+}
+
+a:active, a:hover{
+	color: #555;
+}
+
+#sidemenu{
+	position: fixed;
+	float: left;
+	top:2%;
+	width: 280px;
+	height: 96%;
+	max-height: 690px;
+	
+	transition: margin 0.75s;
+	-moz-transition: margin 0.75s; /* Firefox */
+	-webkit-transition: margin 0.75s; /* Safari and Chrome */
+	-o-transition: margin 0.75s; /* Opera */
+
+}
+
+#content{
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;	
+	z-index: -3;	
+}
+
+#items{
+	position:relative;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	background: url(bg.png) repeat;	
+	
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+	box-shadow: 0px 0px 20px #BBB;
+	border:1px solid #aaa;
+}
+
+div.open{
+	margin-left: 0;
+}
+
+div.close{
+	margin-left: -275px;;
+}
+
+img{
+	margin: 0 0 4px 8px;
+	padding:1px;
+	border:1px solid #333;
+	background-color: #ccc;
+}
+
+
+
+button.minimal {
+	position: relative;
+	float: left;
+	left: 265px;
+	top: 10px;
+	
+	margin-bottom: -100px;
+	
+	background: #e3e3e3;
+	border: 1px solid #bbb;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
+	-moz-box-shadow: inset 0 0 1px 1px #f6f6f6;
+	box-shadow: inset 0 0 1px 1px #f6f6f6;
+	color: #333;
+	font: bold 24px "helvetica neue", helvetica, arial, sans-serif;
+	line-height: 1;
+	padding: 0 0 5px 12px;
+	text-align: center;
+	text-shadow: 0 1px 0 #fff;
+	width: 40px; 
+	z-index: 0;
+}
+button.minimal:hover {
+	background: #d9d9d9;
+	-webkit-box-shadow: inset 0 0 1px 1px #eaeaea;
+	-moz-box-shadow: inset 0 0 1px 1px #eaeaea;
+	box-shadow: inset 0 0 1px 1px #eaeaea;
+	color: #222;
+	cursor: pointer; 
+}
+button.minimal:active {
+	background: #d0d0d0;
+	-webkit-box-shadow: inset 0 0 1px 1px #e3e3e3;
+	-moz-box-shadow: inset 0 0 1px 1px #e3e3e3;
+	box-shadow: inset 0 0 1px 1px #e3e3e3;
+	color: #000; 
+}
+
+button.open:after{
+	content: "\00AB";
+}
+
+button.close:after{
+	content: "\00BB";
+}
+
+
+
+
+.jspContainer
+{
+	overflow: hidden;
+	position: relative;
+}
+
+.jspPane
+{
+	position: absolute;
+}
+
+.jspVerticalBar
+{
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 16px;
+	height: 100%;
+	background: red;
+}
+
+.jspHorizontalBar
+{
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 16px;
+	background: red;
+}
+
+.jspVerticalBar *,
+.jspHorizontalBar *
+{
+	margin: 0;
+	padding: 0;
+}
+
+.jspCap
+{
+	display: none;
+}
+
+.jspHorizontalBar .jspCap
+{
+	float: left;
+}
+
+.jspTrack
+{
+	background: #dde;
+	position: relative;
+}
+
+.jspDrag
+{
+	background: #bbd;
+	position: relative;
+	top: 0;
+	left: 0;
+	cursor: pointer;
+}
+
+.jspHorizontalBar .jspTrack,
+.jspHorizontalBar .jspDrag
+{
+	float: left;
+	height: 100%;
+}
+
+.jspArrow
+{
+	background: #50506d;
+	text-indent: -20000px;
+	display: block;
+	cursor: pointer;
+}
+
+.jspArrow.jspDisabled
+{
+	cursor: default;
+	background: #80808d;
+}
+
+.jspVerticalBar .jspArrow
+{
+	height: 16px;
+}
+
+.jspHorizontalBar .jspArrow
+{
+	width: 16px;
+	float: left;
+	height: 100%;
+}
+
+.jspVerticalBar .jspArrow:focus
+{
+	outline: none;
+}
+
+.jspCorner
+{
+	background: #eeeef4;
+	float: left;
+	height: 100%;
+}
+
+/* Yuk! CSS Hack for IE6 3 pixel bug :( */
+* html .jspCorner
+{
+	margin: 0 -3px 0 0;
+}

@@ -1,0 +1,135 @@
+<html> 
+ <head>
+    <style type="text/css">
+		canvas { border: 1px solid #aaa;}
+    </style>
+ </head>
+ <body>
+   <canvas id="canvas"></canvas>
+   
+   <script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	
+	var mx, my;
+	var date = new Date();
+	var n = date.getTime();
+	var o = 0;
+	var bpm = 0;
+	var i = 0;
+	var d = 0;
+	var b = 0;
+	var beat = [];
+	var text = "Place mouse in the middle, wait 2 seconds, then tap on the table.";
+	var text2 = "Alternatively, you can use any keyboard button.";
+	var started = 0;
+	var t = 1;
+	var r;
+	
+	Array.prototype.avg = function() {
+		var av = 0;
+		var cnt = 0;
+		var len = this.length;
+		for (var i = 0; i < len; i++) {
+			var e = +this[i];
+			if(!e && this[i] !== 0 && this[i] !== '0') e--;
+			if (this[i] == e) {av += e; cnt++;}
+		}
+		return av/cnt;
+	}
+	
+	document.onkeypress = canvas.onmousemove = function (e) {
+		date = new Date();
+		
+		if(started){
+			if(date.getTime()-200 > n){
+				o = n;
+				n = date.getTime();		
+				b = 60000 / (n - o);
+				if(b>20 && b<400){
+					
+					t=4;
+					if(b<50){ b = b*2; t=t/2; }
+					if(b<100){ b = b*2; t=t/2; }
+					if(b>200){ b = b/2; t=t*2; }
+					
+					beat[beat.length] = b;
+					
+					bpm = beat.avg();
+				
+					d++;				
+					
+				}
+				ctx.fillStyle = "rgb(0,0,0)";
+				if(r<50){
+					started = 0;
+					beat.splice(0);
+				}
+			}
+		}
+		else{
+			o = n;
+			n = date.getTime();
+			if(n - o > 1500) started = 1;
+		}
+		
+		mx = e.clientX - canvas.offsetLeft;
+		my = e.clientY - canvas.offsetTop;
+		
+		r = Math.sqrt( Math.pow(mx - canvasWidth/2,2) + Math.pow(my-(canvasHeight/2+125),2) );
+		
+	};	
+	
+	var canvasWidth = 400, canvasHeight = 400;
+	
+	window.onload = window.onresize = function() {
+		canvas.style.position = "fixed";
+		canvas.setAttribute("width", canvasWidth);
+		canvas.setAttribute("height", canvasHeight);
+		canvas.style.top = (window.innerHeight - canvasHeight) / 2 + "px";
+		canvas.style.left = (window.innerWidth - canvasWidth) / 2 + "px";
+	}
+	window.onload();
+		
+	var rid = setInterval(function () {      	
+	
+		ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+		ctx.fillStyle = "rgb(0,0,0)";
+		
+		if(i<3) i = Math.floor(d/30);		
+		
+		if(!started){
+			ctx.font = "16px serif";
+			ctx.fillText(text,(canvasWidth-ctx.measureText(text).width)/2,canvasHeight/2-20);
+			ctx.fillText(text2,(canvasWidth-ctx.measureText(text2).width)/2,canvasHeight/2+20);
+		}
+		
+		else{
+			ctx.font = "42px serif";
+			ctx.fillText("Tap BPM",(canvasWidth-ctx.measureText("Tap BPM").width)/2,canvasHeight/2-120);
+		
+			ctx.font = "50px sans-serif";
+			ctx.fillText(bpm.toFixed(i),(canvasWidth-ctx.measureText(bpm.toFixed(i)).width)/2,canvasHeight/2);
+			ctx.font = "20px sans-serif";
+			if(beat[0]) ctx.fillText("Last: " + beat[beat.length-1].toFixed(2),(canvasWidth-ctx.measureText("Last: " + beat[beat.length-1].toFixed(2)).width)/2,canvasHeight/2+30);
+			ctx.fillText("1/" + t,(canvasWidth-ctx.measureText("1/" + t).width)/2,canvasHeight/2-50);
+			
+			ctx.fillText("Reset",(canvasWidth-ctx.measureText("Reset").width)/2,canvasHeight/2+132);
+			ctx.fillStyle = "rgba(200,0,0,0.5)";
+			ctx.beginPath();
+			ctx.arc(canvasWidth/2,canvasHeight/2+125,50,0,Math.PI*2,true);
+			ctx.fill();
+			ctx.closePath();
+		}
+		
+		ctx.fillStyle = "rgba(255,255,255,0.2)";
+			
+	}, 1);
+	
+	function terminate(){
+		document.onkeypress = null;
+		clearInterval( rid );
+	}
+  </script>
+ </body>
+</html>
