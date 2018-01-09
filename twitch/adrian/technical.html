@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Alert</title>
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+	<style>
+		@font-face {
+			font-family: Stalker;
+			src: url(stalker1.ttf);
+		}
+
+		body { margin: 0; padding: 0; overflow: hidden;}
+		video {
+			width: 100%;
+			height: 100%;
+			opacity: 0;
+			transition: opacity 0.1s;
+		}
+		#user {
+			font-family: Stalker;
+			font-size: 34pt;
+			color: transparent;
+			position: absolute;
+			top: 515px;
+			letter-spacing: 7px;
+			text-shadow: 0 0 1px rgba(255, 255, 255, 0.99);
+			text-align: center;
+			width: 100%;
+			opacity: 0;
+			transition: opacity 0.1s ease-in;
+		}
+	</style>
+</head>
+<body>
+	<video id="alert" src="alert.mp4"></video>
+	<div id="user"><span>TECHNICAL&nbsp;&nbsp;DIFFICULTIES</span></div>
+	<script type="text/javascript">
+
+		function getUrlParameter(sParam) {
+			var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+			sURLVariables = sPageURL.split('&'), sParameterName, i;
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+			}
+		}
+
+		var agent;
+		var toPause = true;
+		var video = $('#alert')[0];
+		$('#alert').on('timeupdate', function(e) {
+			var time = e.target.currentTime;
+			if (time > 5) return;
+			if (time > 1) $('#user').css('opacity', 1);
+			if (time > 2.7) $('#user').css('opacity', 0);
+			if (time < 2) toPause = true;
+			if (time > 2 && toPause) {
+				toPause = false;
+				e.target.pause();
+				setTimeout(function() {
+					e.target.play();
+				}, 4000);
+			}
+		})
+		var connected = false;
+		var subQueue = [];
+		var seen = {};
+		function startSocket(socketToken) {
+			if (connected) return;
+			connected = true;
+			console.log("Connecting to socket...");
+			var socket = io("https://aws-io.streamlabs.com?token=" + socketToken);
+			socket.on('connect', function(){
+				console.log("Connected to socket");
+				setInterval(function() {
+					socket.emit("ping");
+				}, 5000);
+
+				socket.on("subscriptions", function(data) {
+					console.log(data);
+					console.log("Got subscription alert");
+					for (var i = 0; i < data.length; i++) {
+						var name = data[i].name;
+						if (seen.hasOwnProperty(name)) continue;
+						seen[name] = true;
+						subQueue.push(name);
+					}
+					checkQueue();
+				});
+			});
+		}
+
+		var idleLock = false;
+		var checkQueue = $.throttle(10000, function() {
+			if (subQueue.length === 0) return;
+			name = subQueue.shift();
+
+			$('#user > span').text(name);
+
+			video.currentTime = 0;
+			video.play();
+
+			$('video').css('opacity', 1);
+			setTimeout(function() {
+				$('video').css('opacity', 0);
+			}, 8000);
+
+			checkQueue();
+		});
+
+		var token = getUrlParameter("token");
+		if (token !== undefined) {
+			$.ajax({
+				url: "https://streamlabs.com/service/get-socket-token",
+				dataType: "json",
+				data: {token: token}
+			}).done(function(resp) {
+				console.log("Got socket token", resp.token);
+				startSocket(resp.token);
+			});
+		}
+	</script>
+</body>
+</html>

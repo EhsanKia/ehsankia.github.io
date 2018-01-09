@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OKTV Schedule</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+	<style>
+		canvas {
+			filter: blur(0.5px);
+			position: absolute;
+			left: 0;
+			top: 0;
+		}
+		#base { filter: blur(0.5px); }
+		#c1, #c2, #c3 { mix-blend-mode: exclusion; }
+		#c2 {
+			transform: translateX(1px);
+			animation: abberation 30s linear infinite;
+		}
+		#lines {
+			mix-blend-mode: soft-light;
+			opacity: 0.2;
+		}
+		#noise {
+			width: 1920px;
+			height: 1080px;
+			overflow: hidden;
+			position: relative;
+			opacity: 0.5;
+			mix-blend-mode: color-burn;
+		}
+		#noise:after {
+			background: url(img/noise.png);
+			content: '';
+			display: block;
+			animation: grain 5s steps(10) infinite;
+			position: absolute;
+			top: -50%;
+			left: -50%;
+			width: 200%;
+			height: 200%;
+			z-index: 1;
+		}
+		#tmp { display: none; }
+
+		@keyframes abberation {
+			0%, 100% { transform: translateX(1px); }
+			50%   { transform: translateX(3px); }
+		}
+
+		@keyframes grain {
+			0%, 100% { transform: translate(0, 0); }
+			10% { transform: translate(-5%, -10%); }
+			20% { transform: translate(-15%, 5%); }
+			30% { transform: translate(7%, -25%); }
+			40% { transform: translate(21%, 25%); }
+			50% { transform: translate(-25%, 10%); }
+			60% { transform: translate(15%, 0%); }
+			70% { transform: translate(0%, 15%); }
+			80% { transform: translate(25%, 25%); }
+			90% { transform: translate(-10%, 10%); }
+		}
+	</style>
+</head>
+
+<body>
+	<canvas id="base" width="1920" height="1080"></canvas>
+	<canvas id="c1" width="1920" height="1080"></canvas>
+	<canvas id="c2" width="1920" height="1080"></canvas>
+	<canvas id="c3" width="1920" height="1080"></canvas>
+	<canvas id="lines" width="1920" height="1080"></canvas>
+	<canvas id="tmp" width="1920" height="2080"></canvas>
+	<div id="noise" src="noise.png"></div>
+	<script>
+		var schedule = {};
+		var tmpCanvas = document.getElementById('tmp');
+		var canvas = document.getElementById('base');
+		var ctx = canvas.getContext('2d');
+
+		var c1 = document.getElementById('c1').getContext('2d');
+		var c2 = document.getElementById('c2').getContext('2d');
+		var c3 = document.getElementById('c3').getContext('2d');
+		var lines = document.getElementById('lines').getContext('2d');
+		var tmp = document.getElementById('tmp').getContext('2d');
+
+		ctx.textBaseline = "top";
+		tmp.textBaseline = "top";
+
+		lines.fillStyle = 'white';
+		for (var i = 0; i < canvas.height; i += 4) {
+			lines.fillRect(0, i, canvas.width, 2);
+		}
+
+		var xPos, yPos, text;
+
+		function makeTitle() {
+			ctx.drawImage(R.title_bg, 0, 0);
+
+			ctx.font = "50px Fixedsys";
+
+			yPos = 35;
+			schedule['Title'].forEach(function(line, i) {
+				ctx.fillStyle = (i === 2) ? "yellow" : "white";
+				xPos = (533 - ctx.measureText(line).width) / 2;
+				ctx.fillText(line, xPos, yPos);
+				yPos += 70;
+			});
+		}
+
+		function makeTime() {
+			ctx.fillStyle = "yellow";
+			ctx.shadowColor = "black";
+			ctx.shadowOffsetX = 3;
+			ctx.shadowOffsetY = 5;
+			ctx.shadowBlur = 5;
+			ctx.font = "75px Tungsten";
+			canvas.style.letterSpacing = "3px";
+			['', "11:30 PM", "12:00 AM", "12:30 AM"].forEach(function(time, i) {
+				ctx.drawImage(R.time_bar, 480 * i, 480);
+				xPos = 480 * i + (480 - ctx.measureText(time).width) / 2;
+				ctx.fillText(time, xPos, 490);
+			});
+			canvas.style.letterSpacing = "0px";
+			ctx.shadowBlur = 0;
+		}
+
+		function updateTime() {
+			ctx.shadowColor = "transparent";
+			ctx.drawImage(R.time_bar, 0, 480);
+			ctx.fillStyle = "white";
+			ctx.shadowColor = "black";
+			ctx.shadowOffsetX = 3;
+			ctx.shadowOffsetY = 5;
+			ctx.shadowBlur = 5;
+			ctx.font = "75px Tungsten";
+			canvas.style.letterSpacing = "3px"
+			var time = moment().format('h:mm:ss');
+			xPos = (480 - ctx.measureText(time).width) / 2;
+			ctx.fillText(time, xPos, 490);
+			ctx.shadowBlur = 0;
+			canvas.style.letterSpacing = "0px"
+		}
+
+		function makeEvents() {
+			tmp.fillStyle = "#090B2A";
+			tmp.fillRect(0, 0, 1920, 480);
+			tmp.drawImage(R['okay_logo'], 0, 0);
+			tmp.fillRect(0, 1600, 1920, 480);
+			tmp.drawImage(R['okay_logo'], 0, 1600);
+
+			yPos = 480;
+			tmp.shadowOffsetX = 0;
+			tmp.shadowOffsetY = 0;
+			tmp.font = "60px Fixedsys";
+			tmp.fillStyle = "white";
+			days.forEach(function(day) {
+				xPos = 480;
+				var data = schedule[day.format('dddd')] || [{'size': 3}];
+				data.forEach(function(event) {
+					var color = event.color || 'darkblue';
+					var info = event.text || 'Off Air';
+					var size = event.size || 1;
+					var leftArrow = event.leftArrow || 0;
+					var rightArrow = event.rightArrow || 0;
+
+					var xOffset = 0;
+					var panel = `panel_${color}_${size}`
+					tmp.drawImage(R[panel], xPos, yPos);
+
+					if (leftArrow === 1) {
+						tmp.drawImage(R.arrow_left_1, xPos + 5, yPos);
+						xOffset = 40;
+					} else if (leftArrow === 2) {
+						tmp.drawImage(R.arrow_left_2, xPos + 15, yPos);
+						xOffset = 60;
+					}
+
+					if (rightArrow === 1) {
+						tmp.drawImage(R.arrow_right_1, xPos + size * 480 - 60, yPos);
+					} else if (rightArrow === 2) {
+						tmp.drawImage(R.arrow_right_2, xPos + size * 480 - 65, yPos);
+					}
+
+					text = info.split('\n');
+					if (text.length == 2) {
+						tmp.fillText(text[0], xPos + xOffset + 30, yPos + 15);
+						tmp.fillText(text[1], xPos + xOffset + 30, yPos + 80);
+					} else {
+						tmp.fillText(text[0], xPos + xOffset + 30, yPos + 50);
+					}
+
+					xPos += size * 480;
+				});
+
+				yPos += 160;
+			});
+		}
+
+		function makeDates() {
+			yPos = 480;
+			tmp.font = "70px Tungsten";
+			canvas.style.letterSpacing = "3px"
+			tmp.fillStyle = "yellow";
+			tmp.shadowOffsetX = 2;
+			tmp.shadowOffsetY = 2;
+			days.forEach(function(day) {
+				tmp.drawImage(R.panel_darkblue_1, 0, yPos);
+
+				text = day.format('MMM DD').toUpperCase();
+				xPos = 420 - tmp.measureText(text).width;
+				tmp.fillText(text, xPos, yPos + 10);
+
+				text = day.format('ddd').toUpperCase();
+				xPos = 420 - tmp.measureText(text).width;
+				tmp.fillText(text, xPos, yPos + 75);
+
+				yPos += 160;
+			});
+			canvas.style.letterSpacing = "0px"
+		}
+
+		function drawSchedule(yOffset = 0) {
+			ctx.drawImage(tmpCanvas, 0, yOffset, 1920, 480, 0, 600, 1920, 480);
+		}
+
+		function createSchedule() {
+			makeTitle();
+			makeTime();
+			makeEvents();
+			makeDates();
+			drawSchedule();
+			drawOverlay();
+		}
+
+		function updateSchedule() {
+			updateTime();
+			drawOverlay(0, 480, 480, 120);
+			setTimeout(updateSchedule, 1000);
+		}
+
+		var advanceCounter = 0;
+		var scheduleOffset = 0;
+		function continueScroll() {
+			if (advanceCounter < 40) {
+				scheduleOffset += 4;
+				advanceCounter += 1;
+				drawSchedule(scheduleOffset);
+				drawOverlay(0, 600, 1920, 480);
+				setTimeout(continueScroll, 25);
+			} else if (scheduleOffset === 1120) {
+				advanceCounter = 0;
+				setTimeout(startScroll, 10000);
+			} else {
+				advanceCounter = 0;
+				setTimeout(continueScroll, 5000);
+			}
+		}
+
+		function startScroll() {
+			if (advanceCounter < 60) {
+				scheduleOffset += 8;
+				advanceCounter += 1;
+				drawSchedule(scheduleOffset);
+				drawOverlay(0, 600, 1920, 480);
+				setTimeout(startScroll, 25);
+			} else if (scheduleOffset === 1600) {
+				advanceCounter = 0;
+				scheduleOffset = 0;
+				setTimeout(startScroll, 5000);
+			} else {
+				advanceCounter = 0;
+				setTimeout(continueScroll, 5000);
+			}
+		}
+
+		var cData32;
+
+		function drawOverlay(startX = 0, startY = 0, width = canvas.width, height = canvas.height) {
+			var imageData = ctx.getImageData(startX, startY, width, height);
+			var cData32 = new Uint32Array(imageData.data.buffer);
+			var mData = new Uint8ClampedArray(imageData.data);
+			var mData32 = new Uint32Array(mData.buffer);
+			var tData = new Uint8ClampedArray(imageData.data);
+			var tData32 = new Uint32Array(tData.buffer);
+
+			var value;
+			for (var i = 0, l = cData32.length; i < l; i++) {
+				value = cData32[i];
+				if (value >> 24 === 0) continue;
+				mData32[i] = value & 0xFFFF00FF;
+				tData32[i] = value & 0xFF00FFFF;
+				cData32[i] = value & 0xFFFFFF00;
+			}
+
+			c1.putImageData(imageData, startX, startY);
+			imageData.data.set(mData);
+			c2.putImageData(imageData, startX, startY);
+			imageData.data.set(tData);
+			c3.putImageData(imageData, startX, startY);
+		}
+
+		var R = {};
+		var IMAGES = ['okay_logo', 'title_bg', 'time_bar'];
+		['darkblue', 'lightblue', 'darkred'].forEach(color => (
+			[1, 2, 3].forEach(size => (
+				IMAGES.push(`panel_${color}_${size}`)
+			))
+		));
+		['left', 'right'].forEach(direction => (
+			[1, 2].forEach(count => (
+				IMAGES.push(`arrow_${direction}_${count}`)
+			))
+		));
+
+		var loaded = 0;
+		function afterLoad() {
+			if (++loaded === IMAGES.length + 2) {
+				createSchedule();
+				updateSchedule();
+				setTimeout(startScroll, 5000);
+			}
+		}
+
+		for (var i = 0; i < IMAGES.length; i++) {
+			var img = new Image();
+			img.src = 'img/' + IMAGES[i] + ".png";
+			R[IMAGES[i]] = img;
+			img.onload = afterLoad;
+		}
+
+		WebFont.load({
+			active: afterLoad,
+			custom: {
+				families: ['Fixedsys', 'ChicagoFLF', 'Tungsten'],
+				urls: ['fonts.css']
+			},
+		});
+
+
+		var days = [moment().subtract(12, 'h')]
+		for (var i = 0; i < 6; i++) {
+			var nextDay = days[i].clone().add(24, 'h');
+			days.push(nextDay);
+		}
+
+		$('body').keydown(function(e) {
+			if (e.which === 38) {  // Up
+
+			} else if (e.which === 40) {  // Down
+
+			} else {
+				return;
+			}
+
+			drawOverlay(0, 600, 1920, 480);
+		})
+
+		$.ajax({
+			url: "https://api.github.com/gists/f403d5ac778b3b2b86de49900b2aa490",
+			jsonp: "callback",
+			dataType: "jsonp",
+			success: function(resp) {
+				schedule = JSON.parse(resp.data.files['schedule.json'].content);
+				afterLoad();
+			}
+		});
+	</script>
+</body>
+</html>

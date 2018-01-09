@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OKTV Schedule</title>
+	<link href="https://fonts.googleapis.com/css?family=Cousine" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+	<style>
+		#time, #date {
+			color: white;
+			font-family: Cousine, monospace;
+			font-size: 20pt;
+			font-weight: bold;
+			text-shadow: 2px 2px 3px black;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="time"></div>
+	<div id="date"></div>
+	<script>
+		setInterval(function() {
+			var time = moment().format('H:mm:ss A');
+			$('#time').text(time);
+			var date = moment().format('ddd MMM DD').toUpperCase();
+			$('#date').text(date);
+		}, 100);
+	</script>
+</body>
+</html>

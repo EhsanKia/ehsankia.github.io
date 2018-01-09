@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Twitter</title>
+	<style>
+	body { overflow: hidden }
+		#twitter {
+			transform: translateX(500px);
+			transition: all 2s cubic-bezier(0.7, -0.6, 0.3, 1.7);
+			position: absolute;
+			right: 0;
+			bottom: 25px;
+		}
+
+		#actually {
+			transform: scaleX(-1);
+			transition: all 1s cubic-bezier(0.7, -0.6, 0.3, 1.7) 2s;
+			position: absolute;
+			bottom: -128px;
+			right: 10px;
+		}
+	</style>
+</head>
+<body>
+	<video id="twitter" src="twitter.mp4"></video>
+	<img id="actually" src="actually.gif" />
+	<script>
+		function getUrlParameter(sParam) {
+			var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+			sURLVariables = sPageURL.split('&'), sParameterName, i;
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+			}
+		}
+
+		var twitter = document.getElementById("twitter");
+		var actually = document.getElementById("actually");
+
+		function display() {
+			twitter.style.transform = "translateX(-25px)";
+			actually.style.bottom = "0";
+			setTimeout(function() {
+				twitter.play();
+			}, 1000);
+			setTimeout(function() {
+				actually.style.bottom = "-128px";
+			}, 1000 * 11);
+			setTimeout(function(){
+				twitter.style.transform = "translateX(500px)";
+			}, 1000 * 14);
+		}
+
+		period = parseInt(getUrlParameter('period') || 15, 10);
+
+		setInterval(display, 1000 * 60 * period);
+		setTimeout(display, 1000);
+	</script>
+</body>
+</html>
