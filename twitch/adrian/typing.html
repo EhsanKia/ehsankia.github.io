@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Typing</title>
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/1.1.4/typed.min.js"></script>
+
+	<style>
+		#typing {
+			font-family: "Comic Sans MS";
+			font-size: 12pt;
+			color: black;
+		}
+		.typed-cursor{
+			opacity: 1;
+			animation: blink 1s infinite;
+			font-size: 14pt;
+			font-weight: bold;
+			top: -2px;
+			position: relative;
+		}
+		@keyframes blink{
+			0% { opacity:1; }
+			20% { opacity:0; }
+			40% { opacity:1; }
+			100% { opacity:1; }
+		}
+	</style>
+</head>
+<body>
+	<span id="typing"></span>
+
+	<script>
+		Array.prototype.randomElement = function () {
+			return this[Math.floor(Math.random() * this.length)]
+		}
+
+		var strings = [
+			"i put on my wizard robe and hat",
+			"i herd u liek mudkipz xD!!1",
+			"I'VE BECOME SOOO NUMMMB, I CAN'T FEEL YOU THERE!!!!",
+			"hey, if you type in your pw, it will show as stars",
+			"what the fuck is wtf",
+			"HORSE PUSSY!",
+		];
+
+		function typeRandom() {
+			console.log('call1');
+			$("#typing").typed({
+			strings: [strings.randomElement(), ""],
+				typeSpeed: 50,
+				backDelay: 1000,
+				onStringTyped: function(ind) {
+					if (ind == 0) return;
+					setTimeout(typeRandom, Math.random() * 10000 + 5000);
+				},
+			});
+
+		}
+
+		typeRandom();
+
+	</script>
+</body>
+</html>

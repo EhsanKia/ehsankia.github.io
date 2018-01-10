@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Windows Clock</title>
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
+	<style>
+		body {
+			margin: 2px;
+			background-color: #C0C0C0;
+		}
+
+		#clock {
+			color: black;
+			text-shadow: rgba(0,0,0,.01) 0 0 1px;
+			font-size: 8pt;
+			font-smooth: never;
+			-webkit-font-smoothing : none;
+			font-family: MS Sans Serif;
+		}
+	</style>
+</head>
+<body>
+<div id="clock"></div>
+<script>
+	$(document).ready(function() {
+		setInterval(function() {
+			$('#clock').html(moment().format('LT'));
+		}, 500);
+	});
+</script>
+
+</body>
+</html>
