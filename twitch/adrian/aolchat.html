@@ -440,7 +440,7 @@
                     });
                 },
                 loadSubscriberBadge: function(callback) {
-                    $.getJSON("https://api.twitch.tv/kraken/chat/" + Chat.vars.channel + "/badges?callback=?").done(function(e) {
+                    $.getJSON("https://api.twitch.tv/kraken/chat/" + Chat.vars.channel + "/badges?client_id=nvye55kh6sv8fkpsl9q9dkcsvy2sp5b&callback=?").done(function(e) {
                         callback(true);
                         if(!e.subscriber) return;
                         var $css = $('<style></style>');
