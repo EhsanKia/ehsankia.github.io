@@ -155,6 +155,11 @@
 				document.body.classList.add("animate");
 			}, 2000);
 		}
+
+		let user = getUrlParameter('test');
+		if (user) {
+			subQueue.push(getUrlParameter({'name': user, 'months': 5}));
+		}
 	</script>
 </body>
 </html>
