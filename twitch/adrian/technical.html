@@ -85,6 +85,7 @@
 					console.log(data);
 					console.log("Got subscription alert");
 					for (var i = 0; i < data.length; i++) {
+						if (data[i].months > 1) continue
 						var name = data[i].name;
 						if (seen.hasOwnProperty(name)) continue;
 						seen[name] = true;
