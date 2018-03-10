@@ -37,7 +37,7 @@ $(function () {
   var emoteTiers = {
     1: 'popcorn',
     100: 'caramel_popcorn',
-    1000: 'dinocreep',
+    1000: 'burnt_popcorn',
     5000: 'nathouleon',
     10000: 'dinocreep',
   };
@@ -302,7 +302,7 @@ $(function () {
 
     world.addBody(body);
 
-    var emoteName = emoteTiers[tier];
+    var emoteName = emoteTiers[tier] || 'dinocreep';
     if (tier === 1) emoteName += getRandomInt(1, 8);
     emoteName += '.png';
     var popcorn = new PIXI.Sprite.fromImage(emoteName);
@@ -446,7 +446,7 @@ $(function () {
     // At this point, splitMessage is a list of text fragments. Between each fragment is an emote.
     for (i = 0; i < splitMessage.length; ++i) {
       var part = splitMessage[i];
-      console.log(part);
+      console.old(part);
 
       // Then, look for givepoints objects
       var matches = part.match(givepointsRegex);
@@ -455,9 +455,9 @@ $(function () {
       // Splits is now a list of text fragments, between each of which is a givepoints command.
       for (j = 0; j < splits.length - 1; ++j) {
         var matchResults = matches[j].match(amountRegex);
-        console.log(matchResults);
+        console.old(matchResults);
         var amount = parseInt(matchResults[1], 10);
-        console.log(amount);
+        console.old(amount);
 
         if (total + amount > expected) {
           // Skip this one, as it exceeds the number of bits in the message.
