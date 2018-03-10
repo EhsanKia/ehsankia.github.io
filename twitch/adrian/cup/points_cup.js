@@ -423,8 +423,13 @@ $(function () {
 
     // Split on 0x01, which gives us a set of messages seperated by emotes.
     var splitMessage = message.split("\x01");
-    var givepointsRegex = /(?:^|\s)(?:cheer|kappa|kreygasm|swiftrage|muxy|streamlabs)(\d+)(?=$|\s)/g;
-    var amountRegex = /(?:^|\s)(?:cheer|kappa|kreygasm|swiftrage|muxy|streamlabs)(\d+)(?=$|\s)/;
+    var cheerTypes = [
+        "cheer", "okaycheer", "kappa", "dansgame", "elegiggle", "trihard", "kreygasm", "4head","swiftrage",
+        "notlikethis", "failfish", "vohiyo", "pjsalt", "mrdestructoid", "bday", "ripcheer", "streamlabs", "muxy"
+    ];
+    var cheerRegexText = '(?:^|\\s)(?:' + cheerTypes.join('|') + ')(\\d+)(?=$|\\s)';
+    var givepointsRegex = new RegExp(cheerRegexText, 'g');
+    var amountRegex = new RegExp(cheerRegexText);
 
     // Begin assembling the {prefix, emote} table.
     var messageTable = [];
@@ -441,6 +446,7 @@ $(function () {
     // At this point, splitMessage is a list of text fragments. Between each fragment is an emote.
     for (i = 0; i < splitMessage.length; ++i) {
       var part = splitMessage[i];
+      console.log(part);
 
       // Then, look for givepoints objects
       var matches = part.match(givepointsRegex);
@@ -449,7 +455,9 @@ $(function () {
       // Splits is now a list of text fragments, between each of which is a givepoints command.
       for (j = 0; j < splits.length - 1; ++j) {
         var matchResults = matches[j].match(amountRegex);
+        console.log(matchResults);
         var amount = parseInt(matchResults[1], 10);
+        console.log(amount);
 
         if (total + amount > expected) {
           // Skip this one, as it exceeds the number of bits in the message.
