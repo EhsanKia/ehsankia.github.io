@@ -446,7 +446,7 @@ $(function () {
     // At this point, splitMessage is a list of text fragments. Between each fragment is an emote.
     for (i = 0; i < splitMessage.length; ++i) {
       var part = splitMessage[i];
-      console.old(part);
+      console.log(part);
 
       // Then, look for givepoints objects
       var matches = part.match(givepointsRegex);
@@ -455,9 +455,9 @@ $(function () {
       // Splits is now a list of text fragments, between each of which is a givepoints command.
       for (j = 0; j < splits.length - 1; ++j) {
         var matchResults = matches[j].match(amountRegex);
-        console.old(matchResults);
+        console.log(matchResults);
         var amount = parseInt(matchResults[1], 10);
-        console.old(amount);
+        console.log(amount);
 
         if (total + amount > expected) {
           // Skip this one, as it exceeds the number of bits in the message.
