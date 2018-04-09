@@ -1,0 +1,427 @@
+<html>
+
+<head>
+
+	<title>WebGL Experiments</title>
+
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+	<style>
+		body, html{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		canvas{
+			border: none;
+			position: fixed;
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+
+	<script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+	<script type="text/javascript" src="js/webgl-utils.js"></script>
+	<script type="text/javascript" src="js/J3DI.js"></script>
+
+	<script id="vshader" type="x-shader/x-vertex">
+
+	    attribute vec3 aPosition;
+		attribute vec3 aNormal;
+		attribute vec2 aTexCoord;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+		uniform mat3 uNMatrix;
+
+		varying vec2 vTexCoord;
+		varying vec3 vNormal;
+		varying vec4 vPosition;
+
+		void main(void) {
+			gl_Position = uPMatrix * uMVMatrix * vec4(aPosition, 1.0);
+			vPosition = uMVMatrix * vec4(aPosition, 1.0);
+			vTexCoord = aTexCoord;
+			vNormal = uNMatrix * aNormal;
+		}
+
+	</script>
+
+	<script id="fshader" type="x-shader/x-fragment">
+
+	    #ifdef GL_ES
+		precision highp float;
+		#endif
+
+		uniform vec2 uMousePos;
+
+		varying vec2 vTexCoord;
+		varying vec3 vNormal;
+		varying vec4 vPosition;
+
+		void main(void) {
+			vec4 color;
+
+			//float cx = ( vTexCoord.s * 3.0 - 2.3 ) * ( 0.13 * sin(uZoom) + 1.0);
+			//float cy = ( vTexCoord.t * 2.0 - 1.0 ) * ( 0.13 * sin(uZoom) + 1.0);
+
+			float cx = uMousePos.s;
+			float cy = uMousePos.t;
+
+			float x1 = vTexCoord.s * 3.0 - 1.5;
+			float y1 = vTexCoord.t * 2.0 - 1.0;
+			float x2 = 0.0;
+			float y2 = 0.0;
+
+			int n = 0;
+
+			for (int i = 0; i < 360 ; ++i) {
+
+				x2 = x1*x1 - y1*y1 + float(cx);
+				y2 = 2.0 * x1 * y1 + float(cy);
+
+				x1 = x2;
+				y1 = y2;
+
+				if (n==0 && x2*x2 + y2*y2 > 64.0)
+					n = i;
+			}
+
+			if (n != 0)
+			{
+				float hp = float(n) / 60.0;
+				float c = 0.6;
+				float x = c * ( 1.0 - abs( mod( hp,2.0 ) - 1.0) );
+				float m = 1.0 - c;
+
+				if (hp < 1.0)
+					color = vec4( c+m , x+m , m , 1.0);
+
+				else if (hp < 2.0)
+					color = vec4( x+m , c+m , m , 1.0);
+
+				else if (hp < 3.0)
+					color = vec4( m , c+m , x+m , 1.0);
+
+				else if (hp < 4.0)
+					color = vec4( m , x+m , c+m , 1.0);
+
+				else if (hp < 5.0)
+					color = vec4( x+m , m , c+m , 1.0);
+
+				else
+					color = vec4( c+m , m , x+m , 1.0);
+
+			}
+
+			else{
+				color = vec4(0.0, 0.0, 0.0, 1.0);
+			}
+
+			vec3 normal = normalize(vNormal);
+			vec3 ambColor  = vec3(0.20, 0.20, 0.20);
+			vec3 specColor = vec3(0.50, 0.50, 0.50);
+			vec3 diffColor = vec3(0.70, 0.70, 0.70);
+
+			vec3 lightDirection   = normalize( vec3(5.0, 8.0, 5.0) - vPosition.xyz);
+			vec3 eyeDirection     = normalize(-vPosition.xyz);
+			vec3 reflectDirection = reflect(-lightDirection, normal);
+
+
+			float specLight = pow(max(dot(reflectDirection, eyeDirection), 0.0), 16.0);
+			float diffLight  = max(dot(normal, lightDirection), 0.0);
+
+			vec3 lightWeighting = ambColor + specColor*specLight + diffColor*diffLight;
+
+			gl_FragColor = vec4(color.rgb * lightWeighting, color.a);
+
+
+		}
+
+	</script>
+
+	<script>
+
+		var gl;
+		var ctx;
+		var canvas
+
+		function init()
+		{
+
+			canvas = document.getElementById("2d-canvas");
+			ctx = canvas.getContext('2d');
+
+			ctx.width = canvas.width;
+			ctx.height = canvas.height;
+
+			gl = initWebGL (	"webgl-canvas",							//Canvas ID
+								"vshader", "fshader",					//shader ids
+								["aPosition", "aNormal", "aTexCoord"],	//vertex attributes
+								[ 0, 0, 0, 0], 10000);					//clear color and depth
+
+			if (!gl){	//Check if initialization worked
+				document.getElementById("webgl-canvas").style.display = "none";
+				drawCanvas();
+				return;
+			}
+
+			gl.program = simpleSetup (
+						gl, "vshader", "fshader",					//shader ids
+						["aPosition", "aNormal", "aTexCoord"],	//vertex attributes
+						[ 0, 0, 0, 0], 10000);					//clear color and depth
+
+			//Create objects
+			gl.ball = makeSphere(gl, 1, 32, 32);
+
+			//Set up transformation matrices
+			gl.aspectRatio = canvas.width/canvas.height;
+			gl.pMatrix = mat4.create();
+			gl.nMatrix = mat3.create();
+			gl.mvMatrix = mat4.create();
+
+			gl.ballRotationMatrix = mat4.create();
+			mat4.identity(gl.ballRotationMatrix);
+
+			mat4.rotate(gl.ballRotationMatrix, -0.5, [0, 1, 0]);
+
+			//Get uniform locations
+			gl.uMVMatrix_Loc = gl.getUniformLocation( gl.program, "uMVMatrix" );
+			gl.uPMatrix_Loc  = gl.getUniformLocation( gl.program, "uPMatrix"  );
+			gl.uNMatrix_Loc  = gl.getUniformLocation( gl.program, "uNMatrix"  );
+			gl.uMousePos_Loc = gl.getUniformLocation( gl.program, "uMousePos"  );
+
+			//Enables Attributes
+			gl.enableVertexAttribArray(0);
+			gl.enableVertexAttribArray(1);
+			gl.enableVertexAttribArray(2);
+
+			//Attaches attributes
+			gl.bindBuffer( gl.ARRAY_BUFFER, gl.ball.vertexObject);
+			gl.vertexAttribPointer( 0, 3, gl.FLOAT, false, 0, 0);
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, gl.ball.normalObject);
+			gl.vertexAttribPointer( 1, 3, gl.FLOAT, false, 0, 0);
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, gl.ball.texCoordObject);
+			gl.vertexAttribPointer( 2, 2, gl.FLOAT, false, 0, 0);
+
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.ball.indexObject);
+
+			//Sets up mouse detectors
+			document.onmousedown = handleMouseDown;
+			document.onmouseup   = handleMouseUp;
+			document.onmousemove = handleMouseMove;
+			document.onmousewheel= handleMouseWheel;
+
+
+			//Draws on the canvas
+			drawCanvas();
+
+			//Starts the frame rendering
+			tick();
+
+		}
+
+		function tick()
+		{
+			requestAnimationFrame(tick);
+			drawFrame();
+			animateFrame();
+
+		}
+
+		function drawCanvas() {
+
+			ctx.clearRect(0,0, ctx.width, ctx.height);
+
+
+			for (var py = 0; py < ctx.height; py++)
+			{
+				for (var px = 0; px < ctx.width; px++)
+				{
+					var cx = (parseFloat(px)/ctx.width)*3.0 - 2.2;
+					var cy = (parseFloat(py)/ctx.height)*2.0 - 1.0;
+
+					var x = 0.0;
+					var y = 0.0;
+					var tmp = 0.0;
+
+					var i = 0;
+
+					while (i < 255 && x*x+y*y < 1000.0)
+					{
+						tmp = x*x - y*y + cx;
+						y = 2.0 * x * y + cy;
+						x = tmp;
+
+						i++;
+					}
+
+				ctx.fillStyle = "rgb(0,"+(Math.pow(i,2)%255)+","+i+")";
+				ctx.fillRect(px,py,1,1);
+
+				}
+				document.title = Math.round(py/ctx.height*100)+"%";
+
+			}
+
+			document.title = "WebGL Fractals";
+
+		}
+
+
+		function animateFrame()
+		{
+
+			if (!mouseDown){
+
+				var newRotationMatrix = mat4.create();
+				mat4.identity(newRotationMatrix);
+
+
+
+				mat4.rotate(newRotationMatrix, mouseVelX, [0, 1, 0]);
+				mat4.rotate(newRotationMatrix, mouseVelY, [1, 0, 0]);
+
+				mat4.multiply(newRotationMatrix, gl.ballRotationMatrix, gl.ballRotationMatrix);
+
+				mouseVelX -= mouseVelX/100;
+				mouseVelY -= mouseVelY/100;
+
+			}
+
+		}
+
+
+		var zoom = -5;
+
+		function drawFrame()
+		{
+
+			mat4.perspective( 45, gl.aspectRatio, 0.1, 1000.0, gl.pMatrix);
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+			mat4.identity ( gl.mvMatrix );
+			mat4.translate( gl.mvMatrix, [ 0.2-zoom/5 , 0 , zoom ] );
+			mat4.multiply ( gl.mvMatrix, gl.ballRotationMatrix);
+			mat4.translate( gl.mvMatrix, [ 0, 0, 0 ] );
+
+			mat4.toInverseMat3( gl.mvMatrix, gl.nMatrix );
+			mat3.transpose( gl.nMatrix );
+
+			gl.uniformMatrix4fv( gl.uPMatrix_Loc,  false, gl.pMatrix );
+			gl.uniformMatrix4fv( gl.uMVMatrix_Loc, false, gl.mvMatrix);
+			gl.uniformMatrix3fv( gl.uNMatrix_Loc,  false, gl.nMatrix );
+			gl.uniform2f( gl.uMousePos_Loc, fractalX, fractalY );
+
+			gl.drawElements(gl.TRIANGLES, gl.ball.numIndices, gl.UNSIGNED_SHORT, 0);
+
+		}
+
+		var mouseDown  = false;
+		var lastMouseX = null;
+		var lastMouseY = null;
+		var lastTime   = null;
+		var mouseVelX  = null;
+		var mouseVelY  = null;
+
+		var fractalX = -0.7;
+		var fractalY = 0.27015;
+
+		function handleMouseDown(event) {
+			mouseDown  = true;
+			lastMouseX = event.clientX;
+			lastMouseY = event.clientY;
+			lastTime   = new Date().getTime()
+		}
+
+
+		function handleMouseUp(event) {
+			mouseDown = false;
+		}
+
+
+		function handleMouseMove(event) {
+
+			fractalX = (event.clientX/ctx.width)*3.0 - 2.2;
+			fractalY = (event.clientY/ctx.height)*2.0 - 1.0;
+
+			if (!mouseDown) {
+				return;
+			}
+
+			var newRotationMatrix = mat4.create();
+			mat4.identity(newRotationMatrix);
+
+			var newX = event.clientX;
+			var newY = event.clientY;
+			var newTime = new Date().getTime();
+
+			var deltaX = (newX - lastMouseX) / 500;
+			var deltaY = (newY - lastMouseY) / 500;
+			var deltaT = newTime - lastTime;
+
+			mat4.rotate(newRotationMatrix, deltaX, [0, 1, 0]);
+			mat4.rotate(newRotationMatrix, deltaY, [1, 0, 0]);
+
+			mat4.multiply(newRotationMatrix, gl.ballRotationMatrix, gl.ballRotationMatrix);
+
+			if (deltaT != 0)
+			{
+				mouseVelX = 9*mouseVelX/10 + deltaX / deltaT;
+				mouseVelY = 9*mouseVelY/10 + deltaY / deltaT;
+			}
+
+			lastMouseX = newX
+			lastMouseY = newY;
+			lastTime   = newTime;
+		}
+
+
+		function handleMouseWheel(event) {
+			if(event.wheelDelta > 0){
+				zoom += 0.2;
+			}
+			else {
+				zoom -= 0.2;
+			}
+		}
+
+		window.onload = function() {
+			var c1 = document.getElementById("webgl-canvas");
+			var c2 = document.getElementById("2d-canvas");
+			var canvasWidth = window.innerWidth;
+			var canvasHeight = window.innerHeight;
+
+			c1.setAttribute("width", canvasWidth);
+			c1.setAttribute("height", canvasHeight);
+
+			c2.setAttribute("width", canvasWidth);
+			c2.setAttribute("height", canvasHeight);
+
+			if (!gl) {
+				init();
+			}
+
+		}
+
+		window.onresize = function() {
+			gl.aspectRatio = window.innerWidth/window.innerHeight;
+		}
+
+
+	</script>
+
+</head>
+
+
+<body>
+
+	<canvas id="2d-canvas"></canvas>
+
+    <canvas id="webgl-canvas"></canvas>
+
+</body>
+
+</html>

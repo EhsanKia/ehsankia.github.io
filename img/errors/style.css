@@ -1,0 +1,56 @@
+body {
+color:#FFFFFF;
+font:10px Georgia, "Times New Roman", Times, serif;
+background:#202020 url(http://www.ehsankia.com/img/errors/background.gif);
+margin:0;
+margin-top:15%;
+
+}
+/*Divs*/
+#error400{
+margin: 0 auto;
+height:231px;
+width:232px;
+}
+#error401{
+margin: 0 auto;
+height:231px;
+width:232px;
+}
+#error403{
+margin: 0 auto;
+height:231px;
+width:232px;
+}
+#error404{
+margin: 0 auto;
+height:231px;
+width:232px;
+}
+#error500{
+margin: 0 auto;
+height:256px;
+width:267px;
+}
+
+#errorcontact {
+margin: 0 auto;
+height:500px;
+width:500px;
+
+}
+
+/*Links*/
+a, a:link, a:visited {
+color: #202020;
+text-decoration: none;
+background:inherit;
+}
+a:hover {
+color: #3c3c3c;
+background:inherit;
+}
+a:active {
+color: #202020;
+background:inherit;
+} 

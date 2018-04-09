@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Cubeworld</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r77/three.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/tweenjs/0.6.1/tweenjs.min.js"></script>
+		<script src="js/threex.windowresize.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/stats.min.js"></script>
+
+		<style>
+			body {
+				overflow: hidden;
+				padding: 0;
+				margin: 0;
+
+				color: #222;
+				background-color: #BBB;
+				font-family: arial;
+				font-size: 100%;
+			}
+		</style>
+	</head>
+<body>
+	<!-- three.js container -->
+	<div id="container"></div>
+
+	<script type="text/javascript">
+		var clock = new THREE.Clock();
+		var stats, scene, renderer, composer;
+		var camera;
+
+		var objects = [];
+
+		if(!init()) {
+			animate();
+		}
+
+		// init the scene
+		function init(){
+
+			if(Detector.webgl){
+				renderer = new THREE.WebGLRenderer({antialias : true});
+				renderer.setClearColor(0xffffff);
+			} else{
+				renderer = new THREE.CanvasRenderer();
+			}
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.getElementById('container').appendChild(renderer.domElement);
+
+			// add Stats.js - https://github.com/mrdoob/stats.js
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.bottom = '0px';
+			document.body.appendChild(stats.domElement);
+
+			// create a scene
+			scene = new THREE.Scene();
+
+			// put a camera in the scene
+			var cameraH = 15;
+			var cameraW = cameraH / window.innerHeight * window.innerWidth;
+			camera = new THREE.OrthographicCamera(-cameraW/2, +cameraW/2,
+				cameraH/2, -cameraH/2, -10000, 10000);
+			camera.position.set(0, 0, 10);
+			scene.add(camera);
+
+			// transparently support window resize
+			THREEx.WindowResize.bind(renderer, camera);
+
+			// here you add your objects
+			var light = new THREE.AmbientLight(0xffffff);
+			scene.add(light);
+
+			var geometry = new THREE.CubeGeometry(1, 1, 1);
+			var material = new THREE.MeshLambertMaterial({color:0xffffff});
+
+
+			for (var i = 0; i <= 10; i++) {
+				for (var j = 0; j <= 10; j++) {
+					var mesh = new THREE.Mesh(geometry, material);
+					var wireframe = new THREE.EdgesHelper(mesh, 0x000000);
+					wireframe.scale.set(0.5, 0.5, 0.5)
+					wireframe.matrixAutoUpdate = true;
+
+					wireframe.position.x = i - 5;
+					wireframe.position.y = 5 - j;
+					wireframe.rotation.z = -j / (Math.PI * 2);
+					wireframe.rotation.y = -i / (Math.PI * 2);
+
+					scene.add(mesh);
+					scene.add(wireframe);
+					objects.push(wireframe)
+				}
+			}
+
+		}
+
+		// animation loop
+		function animate() {
+			// loop on request animation loop
+			requestAnimationFrame(animate);
+
+			// do the render
+			render();
+
+			var delta = clock.getDelta();
+
+			for (var i = 0; i <= 10; i++) {
+				for (var j = 0; j <= 10; j++) {
+					wireframe = objects[i * 11 + j];
+
+					wireframe.rotation.x -= delta * Math.cos(Math.PI / 20 * j);
+					wireframe.rotation.z -= delta * Math.sin(Math.PI / 20 * i);
+				}
+			}
+
+			// update stats
+			stats.update();
+		}
+
+		// render the scene
+		function render() {
+			// variable which is increase by Math.PI every seconds - usefull for animation
+			var PIseconds = Date.now() * Math.PI;
+
+			// actually render the scene
+			renderer.render(scene, camera);
+		}
+	</script>
+</body>
+</html>

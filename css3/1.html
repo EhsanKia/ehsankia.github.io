@@ -1,0 +1,36 @@
+<!doctype html>
+<html ng-app="Twitter">
+<head>
+    <title>CSS3 Experiment #1: Twitter</title>
+    <script type="text/javascript" src="http://code.angularjs.org/1.0.0rc6/angular-1.0.0rc6.min.js"></script>
+    <script type="text/javascript" src="http://code.angularjs.org/1.0.0rc6/angular-resource-1.0.0rc6.min.js"></script>
+
+    <script type="text/javascript" src="js/1.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/css/bootstrap-combined.min.css">
+    <link rel="stylesheet" type="text/css" href="css/1.css">
+    <?php include_once("ga.php") ?>
+</head>
+<body>
+<div ng-controller="TwitterCtrl">
+    <form class="form-horizontal">
+        <input type="text" ng-model="searchTerm">
+        <button class="btn" ng-click="doSearch()"><i class="icon-search"></i>Search</button>
+    </form>
+    <img class="bird" src="img/bird.png" />
+    <table class="table table-striped" style="margin-bottom:10px">
+        <tr ng-repeat="tweet in twResult.results">
+            <td>
+                <img src="{{tweet.profile_image_url}}" alt="{{tweet.from_user}}">
+                <strong>{{tweet.from_user_name}}</strong>: {{tweet.text}}
+            </td>
+        </tr>
+    </table>
+    <button id="pbtn" class="btn" ng-click="changePage(-1)" disabled="{{pbLimit()}}">
+        <i class="icon-chevron-left"></i></button>
+    <span>Page {{page}}</span>
+    <button id="nbtn" class="btn" ng-click="changePage(1)" disabled="{{nbLimit()}}">
+        <i class="icon-chevron-right"></i></button>
+</div>
+</body>
+</html>

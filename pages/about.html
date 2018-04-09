@@ -1,0 +1,27 @@
+<div class="content" style="font-size: 11pt">
+	<br><br><br><br>
+
+	<h1>About Me</h2>
+	<h2>Who I Am &amp; What I Do</h2>
+
+	<img class="mypicture" src="/img/me.jpg" alt="Ehsan Kia">
+
+	My name is Ehsan Kia, I'm <span id="myage"></span> years old and live in Santa Clara, California.<br>
+	I was born in Iran, and grew up in Montrea, Canada.<br>
+	I studied computer science and physics at McGill Univeristy.<br>
+	I speak English, French and Persian.<br><br>
+
+
+	<h3>Interests</h3>
+	Web development and experimenting with bleeding edge web technologies<br>
+	Automating everything with scripts and solving algorithmic problems<br>
+	Trying out indie games with creative premises or audiovisual aspects<br>
+	Exploring electronic music and discovering new artists<br><br>
+</div>
+
+<script>
+	const ageDifMs = Date.now() - new Date('1992-08-10').getTime();
+	const ageDate = new Date(ageDifMs); // miliseconds from epoch
+	const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+	document.getElementById('myage').innerText = age;
+</script>

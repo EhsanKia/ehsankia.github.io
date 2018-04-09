@@ -1,0 +1,441 @@
+<html>
+
+<head>
+
+	<title>WebGL Experiments</title>
+
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+	<script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+	<script type="text/javascript" src="js/webgl-utils.js"></script>
+	<script type="text/javascript" src="js/J3DI.js"></script>
+
+	<script id="vshader" type="x-shader/x-vertex">
+
+	    attribute vec3 aPosition;
+		attribute vec3 aNormal;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+		uniform mat3 uNMatrix;
+
+		varying vec3 vPosition;
+		varying vec3 vNormal;
+
+		void main(void) {
+			gl_Position = uPMatrix * uMVMatrix * vec4( aPosition.y, aPosition.z, aPosition.x , 1.0 );
+
+			vPosition = vec3(aPosition.y, aPosition.z, aPosition.x);
+			vNormal = uNMatrix * vec3(aNormal.y, aNormal.z, aNormal.x);
+		}
+
+	</script>
+
+	<script id="fshader" type="x-shader/x-fragment">
+
+	    #ifdef GL_ES
+		precision highp float;
+		#endif
+
+		varying vec3 vPosition;
+		varying vec3 vNormal;
+
+		void main(void) {
+
+			vec4 color = vec4( 1.0 , 1.0 , 1.0 , 1.0 );
+
+			vec3 normal = normalize(vNormal);
+			vec3 ambColor  = vec3(0.50, 0.50, 0.50);
+			vec3 specColor = vec3(0.25, 0.25, 0.25);
+			vec3 diffColor = vec3(0.60, 0.60, 0.60);
+
+			vec3 lightDirection   = normalize( vec3(5.0, 8.0, 5.0) - vPosition.xyz);
+			vec3 eyeDirection     = normalize(-vPosition.xyz);
+			vec3 reflectDirection = reflect(-lightDirection, normal);
+
+
+			float specLight = pow(max(dot(reflectDirection, eyeDirection), 0.0), 16.0);
+			float diffLight  = max(dot(normal, lightDirection), 0.0);
+
+			vec3 lightWeighting = ambColor + specColor*specLight + diffColor*diffLight;
+
+			gl_FragColor = vec4(color.rgb * lightWeighting, color.a);
+		}
+
+	</script>
+
+	<script>
+
+		var gl;
+		var canvas;
+
+		function init()
+		{
+
+			//Sets up mouse detectors
+			document.onmousedown = handleMouseDown;
+			document.onmouseup   = handleMouseUp;
+			document.onmousemove = handleMouseMove;
+			document.onkeydown = handleKeyDown;
+			document.onkeyup = handleKeyUp;
+
+
+			gl = initWebGL (	"webgl-canvas",					//Canvas ID
+								"vshader", "fshader",			//shader ids
+								["aPosition","aNormal"],		//vertex attributes
+								[ 0, 0, 1, 1], 10000);			//clear color and depth
+
+			if (!gl){	//Check if initialization worked
+				return;
+			}
+
+			gl.program = simpleSetup (
+						gl, "vshader", "fshader",			//shader ids
+						["aPosition","aNormal"],		//vertex attributes
+						[ 0, 0, 1, 1], 10000);			//clear color and depth
+
+			gl.map = [];
+			gl.map.vertexArray = [];
+			gl.map.normalArray = [];
+			gl.map.textureArray = [];
+			gl.map.loadedImages = [];
+			gl.map.vertexObject = gl.createBuffer();
+			gl.map.normalObject = gl.createBuffer();
+			gl.map.numItems = 0;
+
+			//Set up transformation matrices
+			gl.aspectRatio = canvas.width/canvas.height;
+
+			gl.pMatrix = mat4.create();
+			gl.mvMatrix = mat4.create();
+			gl.nMatrix = mat3.create();
+
+			gl.mvMatrixStack = [];
+
+			//Get uniform locations
+			gl.uMVMatrix_Loc = gl.getUniformLocation( gl.program, "uMVMatrix" );
+			gl.uPMatrix_Loc  = gl.getUniformLocation( gl.program, "uPMatrix"  );
+			gl.uNMatrix_Loc  = gl.getUniformLocation( gl.program, "uNMatrix"  );
+
+			//Loads the world
+			loadWorld( "surf_mystery.map" );
+
+			//Starts the frame rendering
+			tick();
+
+		}
+
+		function loadWorld(url) {
+			var request = new XMLHttpRequest();
+			request.open("GET", url);
+			request.onreadystatechange = function()
+			{
+				if (request.readyState == 4)
+					handleLoadedWorld(request.responseText);
+			}
+			request.send();
+		}
+
+		function handleLoadedWorld(data) {
+
+			var lines = data.split("\n");
+			var brush = [];
+			var progress = 0;
+
+			for (var i in lines)
+			{
+				if (lines[i][0] == "(")
+				{
+					var tex = lines[i].match(/.*(\))\s(.*?)\s\[/);
+					gl.map.textureArray.push(tex[2]);
+
+					var coord = lines[i].match(/^\((.*)\)/)[0];
+					coord = coord.replace(/[\(\)]/g,"");
+					coord = coord.replace(/\s\s/g, "");
+					coord = coord.replace(/^\s|\s$/g, "");
+					coord = coord.split(" ");
+
+					for (var j in coord)
+						brush.push( parseFloat( coord[j])/200 );
+
+				}
+
+				else if (brush.length > 0)
+				{
+
+					for (var i=0; i<brush.length; i+=9)
+					{
+
+						gl.map.vertexArray = gl.map.vertexArray.concat( brush.slice(i,i+9) );
+
+						var v12 = vec3.create();
+						var v13 = vec3.create();
+
+						vec3.subtract( brush.slice(i+3,i+6), brush.slice(i,i+3), v12);
+						vec3.subtract( brush.slice(i+6,i+9), brush.slice(i,i+3), v13);
+
+						var n = vec3.create();
+						vec3.cross( v12, v13, n );
+
+						var normalTri = [n[0],n[1],n[2],n[0],n[1],n[2],n[0],n[1],n[2]];
+						gl.map.normalArray = gl.map.normalArray.concat( normalTri );
+
+						var d = -1 * ( n[0] * brush[i] + n[1] * brush[i+1] + n[2] * brush[i+2] );
+
+						var l = i+6;
+
+						for (var j=0; j<brush.length; j+=3)
+						{
+							if ( !same(brush.slice(i,i+3),brush.slice(j,j+3)) && !same(brush.slice(i+3,i+6),brush.slice(j,j+3)) && !same(brush.slice(i+6,i+9),brush.slice(j,j+3)) )
+								if ( Math.abs(n[0]*brush[j] + n[1]*brush[j+1] + n[2]*brush[j+2] + d) < 0.05 )
+								{
+									gl.map.vertexArray = gl.map.vertexArray.concat( brush.slice(i,i+3) );
+									gl.map.vertexArray = gl.map.vertexArray.concat( brush.slice(l,l+3) );
+									gl.map.vertexArray = gl.map.vertexArray.concat( brush.slice(j,j+3) );
+
+									l=j;
+
+									gl.map.normalArray = gl.map.normalArray.concat( normalTri );
+								}
+						}
+					}
+					progress++;
+					document.title = Math.round(progress/5.41)+"%";
+					brush = [];
+				}
+			}
+
+			gl.map.numItems = gl.map.vertexArray.length/3;
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, gl.map.vertexObject);
+			gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(gl.map.vertexArray), gl.STATIC_DRAW);
+			gl.vertexAttribPointer( 0, 3, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(0);
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, gl.map.normalObject);
+			gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(gl.map.normalArray), gl.STATIC_DRAW);
+			gl.vertexAttribPointer( 1, 3, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(1);
+
+			document.title = "WebGL .Map Importer";
+
+			//loadImages();
+
+		}
+
+		function loadImages(){
+
+			for (var i in gl.map.textureArray)
+			{
+				if ( gl.map.textureArray[gl.map.textureArray[i]] == null )
+				{
+					gl.map.loadedImages[gl.map.loadedImages.length] = loadImageTexture(gl, "textures/"+gl.map.textureArray[i].toLowerCase()+".bmp");
+
+					gl.map.textureArray[gl.map.textureArray[i]] = gl.map.loadedImages.length-1;
+				}
+
+				gl.map.textureArray[i] = gl.map.textureArray[gl.map.textureArray[i]];
+
+			}
+		}
+
+		function loadTextures(){
+
+			var startHandle = gl.TEXTURE0;
+			var count = 0;
+
+			for (var i in gl.map.loadedImages)
+			{
+				gl.activeTexture(startHandle + count);
+				gl.bindTexture(gl.TEXTURE_2D, gl.map.loadedImages[i] );
+				gl.uniform1i( gl.getUniformLocation( gl.program, "Tex"+count ), count  );
+				count++;
+			}
+
+		}
+
+		function tick()
+		{
+
+			handleKeys();
+			animateFrame();
+			drawFrame();
+			requestAnimationFrame(tick);
+
+		}
+
+		var lastTime = 0;
+
+		function animateFrame()
+		{
+
+			var timeNow = new Date().getTime();
+
+			if (lastTime != 0) {
+
+				var elapsed = timeNow - lastTime;
+
+				//Forward / Back
+				if (pos_v[0] != 0) {
+					pos[0] -= Math.cos( rot[1] ) * Math.sin( rot[0] ) * pos_v[0] * elapsed;
+					pos[1] += Math.sin( rot[1] ) * pos_v[0] * elapsed;
+					pos[2] -= Math.cos( rot[1] ) * Math.cos( rot[0] ) * pos_v[0] * elapsed;
+				}
+
+				//Left / Right
+				if (pos_v[2] != 0) {
+					pos[0] -= Math.cos( rot[0] ) * pos_v[2] * elapsed;
+					pos[2] += Math.sin( rot[0] ) * pos_v[2] * elapsed;
+				}
+
+			}
+
+			lastTime = timeNow;
+
+		}
+
+		var pKeys = {};
+
+		function handleKeyDown(e) {
+			pKeys[e.keyCode] = true;
+		}
+
+
+		function handleKeyUp(e) {
+			pKeys[e.keyCode] = false;
+		}
+
+
+		var pos   = [ 0 , 0 , 0 ];
+		var pos_v = [ 0 , 0 , 0 ];
+
+		function handleKeys() {
+
+			pos_v[0] = 0;
+
+			//Forward
+			if (pKeys[87])
+				pos_v[0] += 0.01;
+
+			if (pKeys[83])
+				pos_v[0] -= 0.01;
+
+			pos_v[2] = 0;
+			//Sideways
+			if (pKeys[65])
+				pos_v[2] += 0.01;
+
+			if (pKeys[68])
+				pos_v[2] -= 0.01;
+
+		}
+
+
+		var mouseActive  = false;
+		var lastMouseX = 0;
+		var lastMouseY = 0;
+
+		function handleMouseDown(event) {
+
+		}
+
+
+		function handleMouseUp(event) {
+			mouseActive = !mouseActive;
+		}
+
+
+		var rot = [ 0 , 0 ];
+
+		function handleMouseMove(event) {
+
+			var newX = event.clientX;
+			var newY = event.clientY;
+
+			if (lastMouseX != 0 && mouseActive)
+			{
+				rot[0] -= (newX - lastMouseX) / 250;
+				rot[1] -= (newY - lastMouseY) / 250;
+			}
+
+			if ( Math.abs(rot[1]) > Math.PI/2 )
+				rot[1] = sgn(rot[1]) * Math.PI/2;
+
+			lastMouseX = newX
+			lastMouseY = newY;
+
+			handleKeys();
+		}
+
+		function drawFrame()
+		{
+
+			mat4.perspective( 60, gl.aspectRatio, 0.1, 10000.0, gl.pMatrix);
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+			mat4.identity ( gl.mvMatrix );
+
+			mat4.rotate( gl.mvMatrix , -rot[1], [1, 0, 0]);
+			mat4.rotate( gl.mvMatrix , -rot[0], [0, 1, 0]);
+			mat4.translate( gl.mvMatrix , [ -pos[0], -pos[1], -pos[2] ]);
+
+			mat4.toInverseMat3( gl.mvMatrix, gl.nMatrix );
+			mat3.transpose( gl.nMatrix );
+
+			gl.uniformMatrix4fv( gl.uPMatrix_Loc,  false, gl.pMatrix );
+			gl.uniformMatrix4fv( gl.uMVMatrix_Loc, false, gl.mvMatrix);
+			gl.uniformMatrix3fv( gl.uNMatrix_Loc,  false, gl.nMatrix );
+
+			loadTextures();
+
+			gl.drawArrays(gl.TRIANGLES, 0, gl.map.numItems);
+
+		}
+
+		function sgn(x) {
+			if (x>0) return 1;
+			else if (x<0) return -1;
+			else return 0;
+		}
+
+		function same(a,b){
+
+			for (var i in a)
+				if (a[i]!=b[i])
+					return false;
+			return true;
+		}
+
+		window.onload = window.onresize = function() {
+			canvas = document.getElementById("webgl-canvas");
+			var canvasWidth = window.innerWidth;
+			var canvasHeight = window.innerHeight;
+
+			canvas.setAttribute("width", canvasWidth);
+			canvas.setAttribute("height", canvasHeight);
+
+			if (!gl) {
+				init();
+			}
+
+			else {
+				gl.aspectRatio = canvas.width/canvas.height;
+			}
+
+		}
+
+
+	</script>
+
+</head>
+
+
+<body>
+
+    <canvas 	id="webgl-canvas"
+				style="border: none; position: fixed; width: 100%; height: 98%;" >
+	</canvas>
+
+</body>
+
+</html>

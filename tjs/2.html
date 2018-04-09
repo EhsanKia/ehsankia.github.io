@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Cubeworld</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r77/three.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/tweenjs/0.6.1/tweenjs.min.js"></script>
+		<script src="js/threex.windowresize.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/stats.min.js"></script>
+
+		<style>
+			body {
+				overflow: hidden;
+				padding: 0;
+				margin: 0;
+
+				color: #222;
+				background-color: #BBB;
+				font-family: arial;
+				font-size: 100%;
+			}
+		</style>
+	</head>
+<body>
+	<!-- three.js container -->
+	<div id="container"></div>
+
+	<script type="text/javascript">
+		var clock = new THREE.Clock();
+		var stats, scene, renderer, composer;
+		var camera;
+
+		var objects = [];
+
+		if(!init()) {
+			animate();
+			update();
+		}
+
+		// init the scene
+		function init(){
+
+			if(Detector.webgl){
+				renderer = new THREE.WebGLRenderer({antialias : true});
+				renderer.setClearColor(0x000000);
+			} else{
+				renderer = new THREE.CanvasRenderer();
+			}
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.getElementById('container').appendChild(renderer.domElement);
+
+			// add Stats.js - https://github.com/mrdoob/stats.js
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.bottom = '0px';
+			document.body.appendChild(stats.domElement);
+
+			// create a scene
+			scene = new THREE.Scene();
+
+			// put a camera in the scene
+			var cameraH = 15;
+			var cameraW = cameraH / window.innerHeight * window.innerWidth;
+			camera = new THREE.OrthographicCamera(-cameraW/2, +cameraW/2,
+				cameraH/2, -cameraH/2, -10000, 10000);
+			camera.position.set(0, 0, 10);
+			scene.add(camera);
+
+			// transparently support window resize
+			THREEx.WindowResize.bind(renderer, camera);
+
+			// here you add your objects
+			var light = new THREE.AmbientLight(0xffffff);
+			scene.add(light);
+
+			var geometry = new THREE.CubeGeometry(1, 1, 1);
+			var material = new THREE.MeshLambertMaterial({color:0x000000});
+
+
+			for (var i = 0; i < 30; i++) {
+				for (var j = 16; j > 0; j--) {
+					var mesh = new THREE.Mesh(geometry, material);
+					var wireframe = new THREE.EdgesHelper(mesh, 0xffffff);
+					wireframe.matrixAutoUpdate = true;
+					wireframe.position.x = Math.sqrt(2) * (i - 15);
+					wireframe.position.y = 1.65 * (j - 8) - (1 - i % 2) * 0.825;
+					wireframe.position.z = 30 - j;
+					wireframe.rotation.x = Math.PI/5;
+					wireframe.rotation.y = Math.PI/4;
+
+					scene.add(mesh);
+					scene.add(wireframe);
+					objects.push(wireframe)
+				}
+			}
+
+		}
+
+		// animation loop
+		function animate() {
+			// loop on request animation loop
+			requestAnimationFrame(animate);
+
+			// do the render
+			render();
+
+			// update stats
+			stats.update();
+		}
+
+		// render the scene
+		function render() {
+			// variable which is increase by Math.PI every seconds - usefull for animation
+			var PIseconds = Date.now() * Math.PI;
+
+			// actually render the scene
+			renderer.render(scene, camera);
+		}
+
+		function update() {
+			for (var i = 0; i < objects.length; i++) {
+				var offset = Math.sqrt((Math.pow(Math.abs(objects[i].position.x), 2) + 2 * Math.pow(Math.abs(objects[i].position.y), 2))) * 100;
+				if (offset > 250) offset += 200;
+				if (offset > 100) offset += 500;
+				createjs.Tween.get(objects[i].rotation).wait(offset).to({y: objects[i].rotation.y + Math.PI/2}, 2000);
+				createjs.Tween.get(objects[i].position).wait(offset).to({y: objects[i].position.y + 1.65}, 2000)
+					.wait(4000 - offset).to({y: objects[i].position.y});
+			}
+
+			setTimeout(update, 6000);
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+@font-face
+{
+    font-family: Minecraftia;
+    src: url('../fonts/Minecraftia.ttf'),
+    url('../fonts/Minecraftia.eot'); /* IE9+ */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #fff url(../img/bg.png) repeat;
+}
+
+canvas {
+    border: 1px solid #000;
+    background-color: #fff;
+    display: none;
+    margin: auto;
+}
+
+audio{
+    display: none;
+}
+
+p{
+	text-align: center;
+	margin: 10px;
+}
+
+#logo{
+	background: url(../img/logo.png);
+	margin: 25px auto;
+	width: 342px;
+	height: 168px;
+}
+
+#container{
+	margin: auto;
+}

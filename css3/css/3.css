@@ -1,0 +1,66 @@
+body {
+    font-family: Tahoma, Geneva, sans-serif;
+}
+h2 {
+    text-align:center;
+}
+
+.chart {
+    margin: 0 auto;
+    position:relative;
+    width:800px;
+    height:600px;
+}
+
+#graph{
+    height: 400px;
+    width: 400px;
+    float: right;
+    margin: 30px 50px;
+}
+
+.halfcircle {
+    position:absolute;
+    width:400px;
+    height:400px;
+    clip:rect(0px,200px,400px,0px);
+    border-radius:200px;
+    transition: transform 0.5s;
+}
+
+.hold {
+    position:absolute;
+    width:400px;
+    height:400px;
+    clip:rect(0px,400px,400px,200px);
+    transition: transform 0.5s;
+}
+
+#legend {
+    clear:left;
+    float:left;
+    font-size:12px;
+    border: 5px solid grey;
+    border-radius: 8px;
+    padding:5px;
+    width:220px;
+    margin: 50px 30px;
+    overflow: hidden;
+}
+#legend:before{
+    font-weight: bold;
+    padding: 70px;
+    content: "Legend";
+}
+#legend div {
+    margin:3px 0;
+    padding-left: 0.5em;
+}
+
+#legend div:nth-child(even){
+    background-color: #eee;
+}
+#legend span {
+    float:right;
+    padding-left:.5em;
+}

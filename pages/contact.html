@@ -1,0 +1,27 @@
+<div class="content" style="margin-top: 70px">
+
+<h1>Contact Me</h1>
+
+<!-- @begin contact -->
+	<div id="contactForm" class="section" style="margin-top: 40px">
+		<div class="desc">
+			<h2>E-Mail</h2>
+		</div>
+
+		<a href="mailto:spam@ehsankia.com" id="lnkMail">moc.aiknashe@tcatnoc</a>
+
+		<br><br><br>
+		<div class="desc">
+			<h2>Twitter</h2>
+		</div>
+		<a href="http://twitter.com/ehsankia_" id="twitter">@ehsankia_</a>
+    </div><!-- End #contact -->
+
+    <script>
+    $('#lnkMail').hover(function(){
+        var newHref = $(this).attr('href').replace('spam', 'contact');
+        $(this).attr('href', newHref);
+    });
+    </script>
+
+</div>

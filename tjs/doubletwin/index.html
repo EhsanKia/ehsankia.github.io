@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Multiplayer DoubleTwin</title>
+		<style>
+			body{margin: 0;	padding: 0;	overflow: hidden;background-color: #666;}
+			a:hover{color: #FFF;}
+			a{color: #999;}
+		</style>
+		<link rel="stylesheet" type="text/css" href="modal.css" />
+		<?php include "../../pages/ga.php" ?>
+	</head>
+	<body>
+		<a id="help" onclick="openHelp();">?</a>
+		<div class="md-modal md-effect-blur" id="modal-controls">
+			<div class="md-content">
+				<h3>Controls</h3>
+				<div>
+					<p>Would you like to play with a mouse or a gamepad?</p>
+					<div class="button mouse" onclick="choseMouse();"></div>
+					<div class="button gamepad disabled" onclick="choseGamepad();"></div>
+					<ul>
+						<li>Gamepad support requires FF 24+ or Chrome 21+</li>
+						<li>You need to press a key on your gamepad for the game to recognize it</li>
+						<li>In FF, you may have to go to <code>about:config</code>, filter "<code>gamepad</code>", set both values to <code>true</code> and restart Firefox</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-blur" id="modal-mode">
+			<div class="md-content">
+				<h3>Play Mode</h3>
+				<div>
+					<p>Would you like to play singleplayer or multiplayer?</p>
+					<div class="button singleplayer" onclick="choseSingleplayer();"></div>
+					<div class="button multiplayer" onclick="choseMultiplayer();"></div>
+					<ul>
+						<li>Multiplayer requires WebRTC (FF 24+ or Chrome 27+)</li>
+						<li>WebRTC currently only allows FF-FF and Chrome-Chrome connections</li>
+						<li>In FF, you may have to go to <code>about:config</code>, filter "<code>peerconnection.turn</code>", set it to <code>false</code> and restart Firefox</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-blur" id="modal-difficulty">
+			<div class="md-content">
+				<h3>Difficulty</h3>
+				<div>
+					<p>What difficulty would you like for the AI?</p>
+					<div class="button easy" onclick="choseDifficulty(0);">Easy</div>
+					<div class="button normal" onclick="choseDifficulty(1);">Normal</div>
+					<div class="button hard" onclick="choseDifficulty(2);">Hard</div>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-blur" id="modal-peer">
+			<div class="md-content">
+				<h3>Peer Connection</h3>
+				<div>
+					<p>Send your ID to a friend or enter a friend's ID and connect</p>
+					<div id="loader"></div>
+					<label>Your ID:</label><label id="myid" onclick="selectPeerID();"></label>
+					<input type="text" id="peerid" placeholder="Peer's ID">
+					<button id="connect" class="disabled" onclick="connectToPeer();">Connect</button>
+					<p id="error" style="color: #f00"></p>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-blur" id="modal-disconnected">
+			<div class="md-content">
+				<h3>Peer Disconnected</h3>
+				<div>
+					<p>Peer has disconnected, refresh to play again.</p>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-top" id="modal-restart">
+			<div class="md-content">
+				<h3>Restart</h3>
+				<div>
+					<div class="button restart" onclick="choseRestart();"></div>
+					<div class="button settings" onclick="openSettings();"></div>
+				</div>
+			</div>
+		</div>
+		<div class="md-modal md-effect-blur" id="modal-help">
+			<div class="md-content">
+				<h3>Help and Credits</h3>
+				<div>
+					<p>How to play</p>
+					<ul>
+						<li>You and your opponent each start out with 5 cards out of a deck of 23</li>
+						<li>Players take turn placing cards on the board until it is filled</li>
+						<li>To capture a card, place a card with a higher number of the side touching</li>
+						<li>The player with the most number of cards at the end wins</li>
+						<li>The last card in the hand counts as one point, and there can be a draw.</li>
+					</ul>
+					<br>
+					<p>Credits</p>
+					<ul>
+						<li>All the coding is done by me, <a target="_blank" href="http://ehsankia.com">Ehsan Kia</a></li>
+						<li>Huge thanks to the teams behind <a target="_blank" href="http://threejs.org/">ThreeJS</a> and <a href="http://peerjs.com/">PeerJS</a>.</li>
+						<li>Credit for all the art assets go to <a href="http://evoland.shirogames.com/">Evoland</a></li>
+						<li>The original game idea, as far as I know, was from <a target="_blank" href="http://finalfantasy.wikia.com/wiki/Triple_Triad">Triple Triad</a></li>
+					</ul>
+					<br>
+					<center><button onclick="closeHelp();">Close</button></center>
+				</div>
+			</div>
+		</div>
+		<div class="md-overlay"></div><!-- the overlay element -->
+
+		<script src="../js/three.min.js"></script>
+		<script src="../js/Detector.js"></script>
+		<script src="../js/stats.min.js"></script>
+		<script src="../js/Gamepad.js"></script>
+		<script src="THREEx.DoubleTwin.js"></script>
+		<script src="http://cdn.peerjs.com/0.3.14/peer.min.js"></script>
+		<script src="utils.js"></script>
+		<script src="AIs.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>
