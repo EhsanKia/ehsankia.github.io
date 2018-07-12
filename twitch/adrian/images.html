@@ -25,27 +25,30 @@
 			}
 		}
 
-		var links = getUrlParameter('links').split(',');
+    var links = getUrlParameter('links').split(',');
     const images = []
     links.forEach((link, i) => {
       const j = i;
       const img = new Image();
       img.src = link;
+      img.classList.add('image');
       img.onload = () => {
         const delay = (j * (duration + 2));
-        img.style.right = -img.width;
+        img.style.right = (-img.width) + 'px';
         img.style.transitionDelay = delay + 's';
       };
       document.body.appendChild(img);
       images.push(img);
     });
 
-		function display() {
+    function display() {
       images.forEach((img, i) => {
         const j = i;
-        img.style.right = 10;
+        img.style.right = '10px';
         const delay = (j + 1) * (duration + 2) - 1;
-        setTimeout(() => img.style.right = -img.width, delay * 1000);
+        setTimeout(() => {
+					img.style.right = (-img.width) + 'px';
+				}, delay * 1000);
       });
 		}
 
