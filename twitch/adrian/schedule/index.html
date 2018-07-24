@@ -349,7 +349,7 @@
 		now.subtract(now.minutes() % 30, 'm');
 		for (var i = 0; i < 3; i++) {
 			now.add(30, 'm');
-			scheduleTimes.append(now.format('hh:mm A'));
+			scheduleTimes.push(now.format('hh:mm A'));
 		}
 
 		$('body').keydown(function(e) {
