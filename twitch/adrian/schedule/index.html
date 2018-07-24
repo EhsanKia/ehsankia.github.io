@@ -116,7 +116,7 @@
 			ctx.shadowBlur = 5;
 			ctx.font = "75px Tungsten";
 			canvas.style.letterSpacing = "3px";
-			['', "11:30 PM", "12:00 AM", "12:30 AM"].forEach(function(time, i) {
+			scheduleTimes.forEach(function(time, i) {
 				ctx.drawImage(R.time_bar, 480 * i, 480);
 				xPos = 480 * i + (480 - ctx.measureText(time).width) / 2;
 				ctx.fillText(time, xPos, 490);
@@ -342,6 +342,14 @@
 		for (var i = 0; i < 6; i++) {
 			var nextDay = days[i].clone().add(24, 'h');
 			days.push(nextDay);
+		}
+		
+		var scheduleTimes = [''];
+		var now = moment();
+		now.subtract(now.minutes() % 30, 'm');
+		for (var i = 0; i < 3; i++) {
+			now.add(30, 'm');
+			scheduleTimes.append(now.format('hh:mm A'));
 		}
 
 		$('body').keydown(function(e) {
