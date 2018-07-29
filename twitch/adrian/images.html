@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Stream Images</title>
+	<style>
+	  body { overflow: hidden }
+		.image {
+			transition: all 1s cubic-bezier(0.7, -0.6, 0.3, 1.7);
+			position: absolute;
+			bottom: 10px;
+		}
+	</style>
+</head>
+<body>
+  <script>
+		function getUrlParameter(sParam) {
+			var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+			sURLVariables = sPageURL.split('&'), sParameterName, i;
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+			}
+		}
+	  
+    const period = parseInt(getUrlParameter('period') || 15, 10);
+    const duration = parseInt(getUrlParameter('duration') || 10, 10);
+    var links = getUrlParameter('links').split(',');
+
+    const images = [];
+    links.forEach((link, i) => {
+      const j = i;
+      const img = new Image();
+      img.src = link;
+      img.classList.add('image');
+      img.onload = () => {
+        const delay = (j * (duration + 2));
+        img.style.right = (-img.width) + 'px';
+      };
+      document.body.appendChild(img);
+      images.push(img);
+    });
+
+    function display() {
+      images.forEach((img, i) => {
+        const delay = i * (duration + 2);
+		setTimeout(() => {
+          img.style.right = '10px';
+		}, delay * 1000);
+        setTimeout(() => {
+          img.style.right = (-img.width) + 'px';
+        }, (delay + duration + 1) * 1000);
+      });
+    }
+
+    setInterval(display, 1000 * 60 * period);
+    setTimeout(display, 1000);
+	</script>
+</body>
+</html>
