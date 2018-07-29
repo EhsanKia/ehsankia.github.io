@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vizualizer</title>
+	<script src="fpsmeter.min.js"></script>
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		#canvas1 {
+			position: absolute;
+			opacity: 0.7;
+			top: 680px;
+			left: 0;
+		}
+
+		#canvas2 {
+			position: absolute;
+			opacity: 0.5;
+			top: 422px;
+			left: 0;
+		}
+
+		audio {
+			/*display: none;*/
+			opacity: 0.5;
+			padding: 5px;
+			position: absolute;
+			top: 1000px;
+			transition: opacity 0.2s;
+		}
+
+		a {
+			color: white;
+		}
+
+		img {
+			transform: translateZ(0);
+		}
+
+		.bg {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 1920px;
+			z-index: -1;
+		}
+
+
+		#canvas3 {
+			position: absolute;
+			opacity: 0.8;
+			top: 0;
+			left: 0;
+			z-index: -1;
+			mix-blend-mode: overlay;
+		}
+
+		.star {
+			-webkit-filter: hue-rotate(200deg);
+			filter: hue-rotate(200deg);
+			mix-blend-mode: lighten;
+			position: absolute;
+			opacity: 0.3;
+			transform: rotate(-10deg);
+			transform-origin: 500% 2000%;
+			top: 500px;
+			left: 200px;
+			transition: transform 2s;
+			z-index: -1;
+		}
+
+		.doge {
+			mix-blend-mode: overlay;
+		}
+
+		#tracklist {
+			position: absolute;
+			padding: 10px;
+			top: 25px;
+			left: 0;
+			opacity: 0.3;
+			z-index: 100;
+			transition: opacity 0.2s;
+		}
+
+		#head {
+			mix-blend-mode: screen;
+			border-radius: 20px;
+			opacity: 0;
+			transition: opacity 1s;
+			position: absolute;
+			top: 150px;
+			left: 200px;
+		}
+
+		#groovy {
+			font: bold 150px 'Cooper Black', 'Cooper Std', 'Cooper Std Black', sans-serif;
+			text-align: center;
+			color: white;
+			margin: 0;
+			width: 600px;
+			height: 600px;
+			position: absolute;
+			top: 400px;
+			left: 250px;
+			z-index: -1;
+			display: none;
+			opacity: 0;
+			transition: opacity 0.5s;
+		}
+	</style>
+</head>
+<body>
+	<div id="tracklist">
+		<a href="#creamonchrome" onclick="loadSong('creamonchrome')">Cream On Chrome</a><br>
+<!-- 		<a href="#timetravel" onclick="loadSong('timetravel')">Time Travel</a><br>
+		<a href="#chickhabit" onclick="loadSong('chickhabit')">Chick Habit</a><br>
+		<a href="#monkeytree" onclick="loadSong('monkeytree')">Monkey Tree</a><br>
+		<a href="#prettycool" onclick="loadSong('prettycool')">Pretty Cool</a><br>
+		<a href="#neckbrace" onclick="loadSong('neckbrace')">Neckbrace</a><br>
+		<a href="#shitsong" onclick="loadSong('shitsong')">Exs Ohs</a><br>
+		<a href="#wanderer" onclick="loadSong('wanderer')">Wanderer</a><br>
+		<a href="#voyager" onclick="loadSong('voyager')">Voyager</a><br>
+		<a href="#wildcat" onclick="loadSong('wildcat')">Wildcat</a><br>
+		<a href="#myhair" onclick="loadSong('myhair')">My Hair</a><br>
+		<a href="#wasteaway" onclick="loadSong('wasteaway')">Waste Away</a><br>
+		<a href="#damndaniel" onclick="loadSong('damndaniel')">Damn Daniel</a><br>
+		<a href="#monument" onclick="loadSong('monument')">Monument</a><br>
+		<a href="#makethisright" onclick="loadSong('makethisright')">Make It Right</a><br>
+		<a href="#802" onclick="loadSong('802')">8:02</a><br>
+		<a href="#fatpussy" onclick="loadSong('fatpussy')">Fat Pussy</a><br> -->
+	</div>
+	<div id="fireworks">
+	</div>
+	<img id="bg" class="bg" src="img/bg.jpg">
+	<img id="bg_stars" class="bg" src="img/bg_stars.jpg">
+	<img id="sky" class="bg" src="img/sky.png">
+	<img id="star" class="star" src="img/star.jpg">
+	<canvas id='canvas3' width="1200" height="760"></canvas>
+	<h1 id="groovy">LMP</h1>
+	<img id="mountain" class="bg" src="img/mountain.png">
+	<img id="doge" class="bg doge" src="img/doge.png">
+	<img id="light1" class="bg" src="img/light1.png">
+	<img id="light2" class="bg" src="img/light2.png">
+	<img id="light3" class="bg" src="img/light3.png">
+	<canvas id='canvas1' width="1920" height="400"></canvas>
+	<canvas id='canvas2' width="1920" height="600"></canvas>
+	<script type="text/javascript" src="viz.js"></script>
+</body>
+</html>
