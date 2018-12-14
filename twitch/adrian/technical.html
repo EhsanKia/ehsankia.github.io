@@ -53,6 +53,7 @@
 		var agent;
 		var toPause = true;
 		var video = $('#alert')[0];
+		video.volume = 0.5;
 		$('#alert').on('timeupdate', function(e) {
 			var time = e.target.currentTime;
 			if (time > 5) return;
