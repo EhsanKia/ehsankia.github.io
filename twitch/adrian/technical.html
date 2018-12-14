@@ -81,12 +81,15 @@
 					socket.emit("ping");
 				}, 5000);
 
-				socket.on("subscriptions", function(data) {
+				socket.on("event", function(data) {
 					console.log(data);
-					console.log("Got subscription alert");
-					for (var i = 0; i < data.length; i++) {
-						if (data[i].months > 1) continue
-						var name = data[i].name;
+					if (eventData.for !== 'twitch_account') return;
+					if (eventData.type !== 'subscription') return;
+					console.log("Got Twitch subscription alert");
+					var message = data.message;
+					for (var i = 0; i < message.length; i++) {
+						if (message[i].months > 1) continue
+						var name = message[i].name;
 						if (seen.hasOwnProperty(name)) continue;
 						seen[name] = true;
 						subQueue.push(name);
