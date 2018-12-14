@@ -83,8 +83,8 @@
 
 				socket.on("event", function(data) {
 					console.log(data);
-					if (eventData.for !== 'twitch_account') return;
-					if (eventData.type !== 'subscription') return;
+					if (data.for !== 'twitch_account') return;
+					if (data.type !== 'subscription') return;
 					console.log("Got Twitch subscription alert");
 					var message = data.message;
 					for (var i = 0; i < message.length; i++) {
