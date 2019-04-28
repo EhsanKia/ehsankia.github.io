@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #1</title>
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			background: black;
+			height: 100%;
+			overflow: hidden;
+			text-align: center;
+		}
+		canvas {
+			position: fixed;
+		}
+		img {
+			height: 100%;
+			opacity: 0;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="cvs"></canvas>
+	<img id="elle">
+	<script type="text/javascript">
+		function randint(n) {
+			return Math.round(Math.random() * n)
+		}
+
+		let size = 300;
+		function draw() {
+			const angle = Math.random() * 2 * Math.PI;
+			const dist = Math.random() * img.height / 2;
+			const x = Math.round(dist * Math.cos(angle) + img.width / 2);
+			const y = Math.round(dist * Math.sin(angle) + img.height / 2);
+			// const x = randint(img.width);
+			// const y = randint(img.height);
+			const [r, g, b] = img.getColor(x, y);
+			ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
+			ctx.beginPath();
+			ctx.arc(x, y, size, 0, 2 * Math.PI);
+			ctx.fill();
+			if (size > 10) size -= size * 0.002;
+			requestAnimationFrame(draw);
+		}
+
+		const img = document.getElementById('elle');
+		img.crossOrigin = "Anonymous";
+		img.src = "https://i.imgur.com/9Qf5BCK.jpg";
+
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.onload = () => {
+			cvs.setAttribute("width", img.width);
+			cvs.setAttribute("height", img.height);
+			ctx.drawImage(img, 0, 0, img.width, img.height);
+			const imgData = ctx.getImageData(0, 0, img.width, img.height).data;
+			ctx.clearRect(0, 0, img.width, img.height);
+			Image.prototype.getColor = (x, y) => {
+				const ind = y * (img.width * 4) + x * 4;
+				return imgData.slice(ind, ind + 3);
+			}
+			draw();
+		}
+
+	</script>
+</body>
+</html>
