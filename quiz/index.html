@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="QuizApp">
+<head>
+  <title>General knowledge norms</title>
+  <meta charset="utf-8"/>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <style>
+    html, body {
+      height: 100%;
+      font-family: Roboto Slab, Serif;
+    }
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      max-width: 960px;
+      height: 100%;
+    }
+    .intro {
+      font-size: 16pt;
+      text-align: center;
+      margin: 1em;
+    }
+    .question {
+      font-size: 18pt;
+      margin: 1em;
+    }
+    .answer {
+      max-width: 500px;
+    }
+    .answer input {
+      text-transform: uppercase;
+    }
+    .solution {
+      font-size: 30pt;
+      font-weight: bold;
+    }
+    .btn {
+      margin: 1em;
+    }
+    .score {
+      color: #555;
+      font-size: 14pt;
+    }
+    .percent {
+      color: #777;
+      font-size: 12pt;
+    }
+  </style>
+</head>
+<body ng-controller="QuizCtrl" ng-cloak>
+  <div class="container" ng-if="index < 0">
+    <h1>General Knowledge Quiz</h1>
+    <div class="intro">
+      This quiz is based on the <a href="https://link.springer.com/article/10.3758/s13428-012-0307-9">General knowledge norms paper by Tauber et al.</a>
+      <br>
+      There are <b>299 questions</b> on a variety of subjects, given to college-aged students.
+      <br>
+      The questions are ordered by the percentage of students that answered correctly.
+      <br>
+      Each question has a single word straight-forward answer (no riddles or wordplay).
+    </div>
+    <button class="btn btn-primary btn-lg" ng-click="start()" autofocus>Start</button>
+  </div>
+
+  <div class="container" ng-if="index >= 0">
+    <div class="question"><b>{{index + 1}}.</b> {{data[index][0]}}</div>
+
+    <form ng-if="!solution">
+      <div class="input-group input-group-lg answer">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Answer</span>
+        </div>
+        <input type="text" class="form-control" ng-model="answer" autofocus>
+      </div>
+
+      <input class="btn btn-danger btn-lg" type="button" value="Skip" ng-click="skip()">
+      <input class="btn btn-success btn-lg" type="submit" value="Submit" ng-click="submit(answer)">
+    </form>
+
+    <div ng-if="solution">
+      <div class="solution" ng-style="{'color': color}">{{data[index][1]}}</div>
+      <button class="btn btn-success btn-lg" ng-click="next()" autofocus>Next</button>
+    </div>
+
+    <div class="percent">{{data[index][2]}}% answered this correctly</div>
+    <div class="score">Score: {{score}} / {{index + solution}}</div>
+  </div>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular.min.js"></script>
+  <script type="text/javascript" src="quiz.js"></script>
+</body>
+</html>
