@@ -3,74 +3,38 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Elle #2</title>
-	<script src="//www.marvinj.org/releases/marvinj-1.0.js"></script>
-	<style>
-		html, body {
-			margin: 0;
-			padding: 0;
-			height: 100%;
-			background: black;
-			overflow: hidden;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-		}
-		canvas {
-		}
-	</style>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
 </head>
 <body>
+	<img id="elle">
 	<canvas id="cvs"></canvas>
 	<script type="text/javascript">
-		MarvinImage.prototype.getIntColorArray = function(x,y){
-			const start = (y * this.width + x) * 4;
-			return this.imageData.data.slice(start, start + 4);
-		};
-
-		function randint(n) {
-			return Math.round(Math.random() * n)
-		}
-
-		function draw() {
-			while (true) {
-				const x = randint(img.width - 20) + 10;
-				const y = randint(img.height - 20) + 10;
-				const c = imgBlur.getIntComponent0(x, y);
-				if (c / 255 < Math.random()) continue;
-				size = (c / 255) * 5 + 1
-
-				ctx.beginPath();
-				const [r, g, b, a] = img.getIntColorArray(x, y);
-				ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-				ctx.arc(x, y, size, 0, 2 * Math.PI);
-				ctx.fill();
-				break;
-			}
-			requestAnimationFrame(draw);
-		}
-
+		const poly = new nanoq(null, (a, b) => {
+			return a.error < b.error;
+		});
+		const img = document.getElementById('elle');
 		const cvs = document.getElementById('cvs');
 		const ctx = cvs.getContext('2d');
-
-		const img = new MarvinImage();
-		const imgEdge = new MarvinImage();
-		const imgBlur = new MarvinImage();
-		img.load("https://i.imgur.com/4b9R8R1.jpg", () => {
+		img.load("https://i.imgur.com/vQ0QiS3.jpg", () => {
 			cvs.setAttribute("width", img.width);
 			cvs.setAttribute("height", img.height);
-
-			imgEdge.setDimension(img.width, img.height);
-			Marvin.prewitt(img, imgEdge);
-			imgEdge.update();
-
-			imgBlur.setDimension(img.width, img.height);
-			imgBlur.ctx.filter = 'blur(5px) grayscale(100%)';
-			imgBlur.ctx.drawImage(imgEdge.canvas, 0, 0);
-			imgBlur.imageData = imgBlur.ctx.getImageData(0, 0, img.width, img.height);
+			const rect = new Rectangle(img.width, img.height);
+			rect.draw(ctx, img);
+			poly.push(rect);
 			draw();
 		});
 
+		function draw() {
+			const p = poly.pop()
+			const [t1, t2] = p.split();
+			t1.draw(ctx, img);
+			t2.draw(ctx, img);
+			poly.push(t1);
+			poly.push(t2);
+
+			requestAnimationFrame(draw);
+		}
 	</script>
 </body>
 </html>
