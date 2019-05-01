@@ -287,7 +287,7 @@ const data = [
   ["WHAT WAS THE LAST NAME OF BILLY THE KID?", "BONNEY", 0.0],
   ["WHAT IS THE LAST NAME OF THE SINGER WHOSE THEME SONG WAS “WHEN THE BLUE OF THE NIGHT MEETS THE GOLD OF THE DAY”?", "CROSBY", 0.0],
   ["FROM WHAT MUSICAL IS THE SONG “BAUBLES BANGLES AND BEADS”?", "KISMET", 0.0],
-  ["WATSON IN THE SHERLOCK HOLMES SERIES?", "BRUCE", 0.0],
+  ["WHAT WAS THE LAST NAME OF THE ACTOR WHO PORTRAYED DR. WATSON IN THE SHERLOCK HOLMES SERIES?", "BRUCE", 0.0],
   ["WHAT IS THE LAST NAME OF THE MAN WHO WAS MOST RESPONSIBLE FOR PHOTOGRAPHING THE U.S. CIVIL WAR?", "BRADY", 0.0],
   ["WHAT IS THE NAME OF A NUMBER TWO WOOD IN GOLF?", "BRASSIE", 0.0],
   ["WHAT IS THE LAST NAME OF THE POET WHO WROTE THE LINE “INTO EACH LIFE A LITTLE RAIN MUST FALL”?", "LONGFELLOW", 0.0],
@@ -329,7 +329,7 @@ angular
     }
 
     $scope.submit = (value) => {
-        $scope.solution = true;
+        if (!value || !value.trim()) return;
 
         const query = value.trim().toUpperCase();
         const answer = $scope.data[$scope.index][1];
@@ -339,6 +339,7 @@ angular
         } else {
             $scope.color = 'red';
         }
+        $scope.solution = true;
     }
 
     $scope.next = () => {
@@ -347,6 +348,7 @@ angular
     }
 }]);
 
+// https://github.com/trekhleb/javascript-algorithms
 function levenshteinDistance(a, b) {
   const distanceMatrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
   for (let i = 0; i <= a.length; i += 1) {
