@@ -201,7 +201,7 @@ const data = [
   ["WHAT IS THE LAST NAME OF THE ACTOR WHO PLAYED RHETT BUTLER IN “GONE WITH THE WIND”?", "GABLE", 2.0],
   ["IN WHICH COUNTRY IS ANGEL FALLS LOCATED?", "VENEZUELA", 2.0],
   ["WHAT IS THE CAPITAL OF CANADA?", "OTTAWA", 1.9],
-  ["WHAT IS THE LAST NAME OF THE SECOND U.S. PRESIDENT?", "ARTHUR", 1.9],
+  ["WHAT IS THE LAST NAME OF THE TWENTY-FIRST U.S. PRESIDENT?", "ARTHUR", 1.9],
   ["WHAT WAS THE NAME OF THE GOLDFISH IN THE STORY OF PINOCCHIO?", "CLEO", 1.9],
   ["WHAT IS THE NAME OF THE VILLAINOUS PEOPLE WHO LIVED UNDERGROUND IN H. G. WELLS’S BOOK “THE TIME MACHINE”?", "MORLOCKS", 1.8],
   ["WHAT WAS THE LAST NAME OF THE CHARACTER PORTRAYED BY ROBERT STACK ON THE TELEVISION SHOW “THE UNTOUCHABLES”?", "NESS", 1.5],
@@ -333,7 +333,8 @@ angular
 
         const query = value.trim().toUpperCase();
         const answer = $scope.data[$scope.index][1];
-        if (levenshteinDistance(query, answer) < 3) {
+        const minDist = answer.length < 6 ? 2 : 3;
+        if (levenshteinDistance(query, answer) <= minDist) {
             $scope.color = 'green';
             $scope.score++;
         } else {
