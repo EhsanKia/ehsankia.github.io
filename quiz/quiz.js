@@ -318,6 +318,7 @@ angular
     $scope.index = -1;
     $scope.solution = false;
     $scope.color = 'black';
+    $scope.error = '';
 
     $scope.start = () => {
         $scope.index = 0;
@@ -329,11 +330,18 @@ angular
     }
 
     $scope.submit = (value) => {
-        if (!value || !value.trim()) return;
+        if (!value || !value.trim()) {
+          $scope.error = 'Please enter an answer.'
+          return;
+        };
 
         const query = value.trim().toUpperCase();
+        if (query.indexOf(' ') > 0) {
+          $scope.error = 'Please enter a single-word answer.'
+          return;
+        }
         const answer = $scope.data[$scope.index][1];
-        const minDist = answer.length < 6 ? 2 : 3;
+        const minDist = answer.length < 8 ? 2 : 3;
         if (levenshteinDistance(query, answer) <= minDist) {
             $scope.color = 'green';
             $scope.score++;
@@ -345,6 +353,7 @@ angular
 
     $scope.next = () => {
         $scope.index++;
+        $scope.error = '';
         $scope.solution = false;
     }
 }]);

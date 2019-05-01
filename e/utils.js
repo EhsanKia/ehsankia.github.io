@@ -59,7 +59,7 @@ class Polygon {
 		const [r1, g1, b1] = img.getColor(a[0], a[1]);
 		const [r2, g2, b2] = img.getColor(b[0], b[1]);
 		const colorError = 2 * Math.pow(r1 - r2, 2) + 4 * Math.pow(g1 - g2, 2) + 3 * Math.pow(b1 - b2, 2);
-		return Math.sqrt(colorError) + 2 * dist(a, b);
+		return Math.sqrt(colorError) + 3 * dist(a, b);
 	}
 }
 
