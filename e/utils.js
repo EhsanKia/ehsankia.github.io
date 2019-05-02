@@ -1,3 +1,10 @@
+function start(callback, step = 0, lastTime = null) {
+	const time = new Date().getTime();
+	const elapsed = lastTime ? time - lastTime : 0;
+	callback(step, elapsed);
+	requestAnimationFrame(() => start(callback, step + 1, time));
+}
+
 Image.prototype.load = function(url, callback) {
 	this.onload = () => {
 		const cvs = document.getElementById('cvs');
@@ -5,7 +12,7 @@ Image.prototype.load = function(url, callback) {
 		cvs.setAttribute("width", this.width);
 		cvs.setAttribute("height", this.height);
 		ctx.drawImage(this, 0, 0, this.width, this.height);
-        this.imageData = ctx.getImageData(0, 0, img.width, img.height).data;
+        this.imageData = ctx.getImageData(0, 0, img.width, img.height);
 		if (callback) callback()
 	};
 	this.crossOrigin = "anonymous";
@@ -16,8 +23,28 @@ Image.prototype.getColor = function(x, y) {
 	y = Math.max(0, Math.min(this.height - 1, y|0));
 	x = Math.max(0, Math.min(this.width - 1, x|0));
 	const start = (y * this.width + x) * 4;
-	return this.imageData.slice(start, start + 4);
+	return this.imageData.data.slice(start, start + 4);
 };
+
+function rgbToHsl(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+
+  if (max == min) {
+    h = s = 0;  // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [ h, s, l ];
+}
 
 function randint(n) {
 	return Math.round(Math.random() * n)
@@ -25,6 +52,11 @@ function randint(n) {
 
 function dist(p1, p2) {
 	return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+}
+
+function threshold(value, limits, outputs) {
+	const ind = limits.findIndex(lim => value < lim);
+	return outputs[ind === -1 ? outputs.length - 1 : ind];
 }
 
 class Polygon {

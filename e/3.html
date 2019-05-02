@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #3</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
+</head>
+<body>
+	<img id="elle">
+	<canvas id="cvs"></canvas>
+	<script type="text/javascript">
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/pBRDm0N.jpg", () => {
+			cvs.setAttribute("width", img.width);
+			cvs.setAttribute("height", img.height);
+			start(draw);
+		});
+
+		function draw(step) {
+			const limit = threshold(step, [200, 2000, 5000], [0.5, 0.1, 0.05, 0.02]);
+			console.log(limit);
+			let [x, y] = [randint(img.width), randint(img.height)];
+			const [r, g, b] = img.getColor(x, y);
+			const [h, _, l] = rgbToHsl(r, g, b);
+
+			let x1, x2, y1, y2;
+			for (x1 = x; x1 >= 0; x1--) {
+				const [h2, _ , l2] = rgbToHsl(...img.getColor(x1, y));
+				if (dist([h, l], [h2, l2]) > limit) break;
+			}
+			for (x2 = x; x2 < img.width; x2++) {
+				const [h2, _ , l2] = rgbToHsl(...img.getColor(x2, y));
+				if (dist([h, l], [h2, l2]) > limit) break;
+			}
+			for (y1 = y; y1 >= 0; y1--) {
+				const [h2, _ , l2] = rgbToHsl(...img.getColor(x, y1));
+				if (dist([h, l], [h2, l2]) > limit) break;
+			}
+			for (y2 = y; y2 < img.height; y2++) {
+				const [h2, _ , l2] = rgbToHsl(...img.getColor(x, y2));
+				if (dist([h, l], [h2, l2]) > limit) break;
+			}
+
+			ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+			ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+
+		}
+	</script>
+</body>
+</html>
