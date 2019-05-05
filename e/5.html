@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #5</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
+</head>
+<body>
+	<img id="elle">
+	<canvas id="cvs"></canvas>
+	<script type="text/javascript">
+		class Particle {
+			constructor(x) {
+				this.s = (Math.random() / 20) + 0.02;
+				this.t = 0;
+				this.y = 0;
+			}
+			update(e) {
+				this.t += e;
+				this.y = Math.floor(this.t * this.s);
+			}
+		}
+
+		let cols = [];
+		const size = 10;
+		const chars = "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ".split('')
+		function draw(step, elapsed) {
+			if (step % 16 === 0) {
+				ctx.save();
+				ctx.globalAlpha = 0.1;
+				ctx.globalCompositeOperation = 'destination-out';
+				ctx.fillStyle = '#fff';
+				ctx.fillRect(0, 0, img.width, img.height);
+				ctx.restore();
+			}
+
+			ctx.font = '16px monospace';
+			for (let x = 0; x * size < img.width; x++) {
+				if (cols[x] === undefined) {
+					if (Math.random() > 0.005) continue;
+					cols[x] = new Particle();
+				}
+				const p = cols[x];
+				p.update(elapsed);
+
+				const [rx, ry] = [x * size + 5, p.y * size];
+				const char = chars[(x * 13 + p.y) % chars.length];
+				const [r, g, b] = img.getColor(rx, ry);
+				ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+				ctx.fillText(char, rx, ry);
+				if (ry > img.height) cols[x] = undefined;
+			}
+		}
+
+		let edgeData;
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/i2BbfVX.jpg", () => {
+			start(draw);
+		});
+	</script>
+</body>
+</html>
