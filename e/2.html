@@ -10,19 +10,15 @@
 	<img id="elle">
 	<canvas id="cvs"></canvas>
 	<script type="text/javascript">
-		const poly = new nanoq(null, (a, b) => {
-			return a.error < b.error;
-		});
+		const poly = new nanoq(null, (a, b) => a.error < b.error);
 		const img = document.getElementById('elle');
 		const cvs = document.getElementById('cvs');
 		const ctx = cvs.getContext('2d');
 		img.load("https://i.imgur.com/vQ0QiS3.jpg", () => {
 			cvs.setAttribute("width", img.width);
 			cvs.setAttribute("height", img.height);
-			const rect = new Rectangle(img.width, img.height);
-			rect.draw(ctx, img);
-			poly.push(rect);
-			draw();
+			poly.push(new Rectangle(img.width, img.height));
+			start(draw);
 		});
 
 		function draw() {
@@ -32,8 +28,6 @@
 			t2.draw(ctx, img);
 			poly.push(t1);
 			poly.push(t2);
-
-			requestAnimationFrame(draw);
 		}
 	</script>
 </body>
