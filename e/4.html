@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #4</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
+</head>
+<body>
+	<img id="elle">
+	<canvas id="cvs"></canvas>
+	<script type="text/javascript">
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/j397gA2.jpg", () => {
+			cvs.setAttribute("width", img.width);
+			cvs.setAttribute("height", img.height);
+			start(draw);
+		});
+
+		let p = [400, 400];
+		let v = [1, 1];
+		let a = [0, 0];
+		let l = 100;
+		function draw(step, elapsed) {
+			p[0] += v[0];
+			p[1] += v[1];
+
+			v[0] += a[0];
+			v[1] += a[1];
+
+			a[0] += (Math.random() - 0.5) / 100;
+			a[1] += (Math.random() - 0.5) / 100;
+
+			if (p[0] - l/2 < 0) v[0] = Math.abs(v[0]);
+			if (p[0] + l/2 > img.width) v[0] = -Math.abs(v[0]);
+			if (p[1] - l/2 < 0) v[1] = Math.abs(v[1]);
+			if (p[1] + l/2 > img.height) v[1] = -Math.abs(v[1]);
+
+			const [r, g, b] = img.getColor(p[0], p[1] - l/2);
+			ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.2)`;
+			drawStar(p[0], p[1], l);
+		}
+
+		function drawStar(x, y, l) {
+			const [dx, dy] = [l / 2, l * (Math.sqrt(5) - 1) / 4]
+			ctx.save();
+			ctx.translate(x - dx, y - dy);
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+
+			for (var i = 0; i < 5; i++) {
+				ctx.translate(l, 0);
+				ctx.lineTo(0, 0);
+				ctx.rotate(4 * Math.PI / 5);
+			}
+
+			ctx.fill();
+			ctx.restore();
+		}
+	</script>
+</body>
+</html>
