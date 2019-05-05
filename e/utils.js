@@ -5,7 +5,7 @@ function start(callback) {
 
 	// Setup speed bindings
 	for (let i = 1; i <= 7; i++) {
-		Mousetrap.bind(i.toString(), () => speed = 2 ** i);
+		Mousetrap.bind(i.toString(), () => speed = 2 ** (i - 1));
 	}
 
 	const loop = () => {
