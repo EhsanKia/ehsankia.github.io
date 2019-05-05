@@ -3,7 +3,7 @@ function start(callback) {
 	let speed = 2;
 	let lastTime = new Date().getTime();
 
-	// Setup bindings
+	// Setup speed bindings
 	for (let i = 1; i <= 7; i++) {
 		Mousetrap.bind(i.toString(), () => speed = 2 ** i);
 	}
@@ -35,10 +35,15 @@ Image.prototype.load = function(url, callback) {
 		cvs.setAttribute("height", this.height);
 		ctx.drawImage(this, 0, 0, this.width, this.height);
         this.imageData = ctx.getImageData(0, 0, img.width, img.height);
+        ctx.clearRect(0, 0, this.width, this.height);
 		if (callback) callback()
 	};
 	this.crossOrigin = "anonymous";
 	this.src = getUrlParam('url', url);
+
+	// Setup debug bindings
+	Mousetrap.bind('z', () => this.style.opacity = 1 - this.style.opacity);
+	Mousetrap.bind('x', () => this.style.zIndex = 2 - this.style.zIndex);
 }
 
 Image.prototype.getColor = function(x, y) {

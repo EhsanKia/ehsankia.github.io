@@ -10,18 +10,8 @@
 	<img id="elle">
 	<canvas id="cvs"></canvas>
 	<script type="text/javascript">
-		const img = document.getElementById('elle');
-		const cvs = document.getElementById('cvs');
-		const ctx = cvs.getContext('2d');
-		img.load("https://i.imgur.com/pBRDm0N.jpg", () => {
-			cvs.setAttribute("width", img.width);
-			cvs.setAttribute("height", img.height);
-			start(draw);
-		});
-
 		function draw(step) {
 			const limit = threshold(step, [200, 2000, 5000], [0.5, 0.1, 0.05, 0.02]);
-			console.log(limit);
 			let [x, y] = [randint(img.width), randint(img.height)];
 			const [r, g, b] = img.getColor(x, y);
 			const [h, _, l] = rgbToHsl(r, g, b);
@@ -46,8 +36,14 @@
 
 			ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
 			ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
-
 		}
+
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/pBRDm0N.jpg", () => {
+			start(draw);
+		});
 	</script>
 </body>
 </html>

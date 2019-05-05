@@ -10,17 +10,6 @@
 	<img id="elle">
 	<canvas id="cvs"></canvas>
 	<script type="text/javascript">
-		const poly = new nanoq(null, (a, b) => a.error < b.error);
-		const img = document.getElementById('elle');
-		const cvs = document.getElementById('cvs');
-		const ctx = cvs.getContext('2d');
-		img.load("https://i.imgur.com/vQ0QiS3.jpg", () => {
-			cvs.setAttribute("width", img.width);
-			cvs.setAttribute("height", img.height);
-			poly.push(new Rectangle(img.width, img.height));
-			start(draw);
-		});
-
 		function draw() {
 			const p = poly.pop()
 			const [t1, t2] = p.split();
@@ -29,6 +18,15 @@
 			poly.push(t1);
 			poly.push(t2);
 		}
+
+		const poly = new nanoq(null, (a, b) => a.error < b.error);
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/vQ0QiS3.jpg", () => {
+			poly.push(new Rectangle(img.width, img.height));
+			start(draw);
+		});
 	</script>
 </body>
 </html>
