@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #6</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
+</head>
+<body>
+	<img id="elle">
+	<canvas id="cvs"></canvas>
+	<script type="text/javascript">
+		const modes = [
+			[60, 30, 0],
+			[0, 85, 170],
+			[0, 0, 0],
+		];
+		let offset = modes.pop();
+
+		function draw(step) {
+			const newFrame = ctx.createImageData(img.imageData);
+			for (let c = 0; c < 3; ++c) {
+				const target = (step + offset[c]) % 255;
+				for (let i = 0; i < newFrame.data.length; i += 4) {
+					if (img.imageData.data[i + c] === target) {
+						newFrame.data[i + 3] = 255;
+						newFrame.data[i + c] = 255;
+					}
+				}
+			}
+			ctx.putImageData(newFrame, 0, 0);
+		}
+
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/BUHTlLQ.jpg", () => {
+			start(draw, 1);
+		});
+
+		cvs.onclick = function() {
+			modes.unshift(offset);
+			offset = modes.pop();
+		}
+	</script>
+</body>
+</html>

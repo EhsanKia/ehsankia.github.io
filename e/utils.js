@@ -1,6 +1,6 @@
-function start(callback) {
+function start(callback, defaultSpeed = 2) {
 	let step = 0;
-	let speed = 2;
+	let speed = defaultSpeed;
 	let lastTime = new Date().getTime();
 
 	// Setup speed bindings
