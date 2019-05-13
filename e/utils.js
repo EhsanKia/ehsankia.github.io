@@ -1,22 +1,25 @@
-function start(callback, defaultSpeed = 2) {
+function start(callback, defaultSpeed = 1) {
 	let step = 0;
 	let speed = defaultSpeed;
 	let lastTime = new Date().getTime();
+	let debug = false;
 
 	// Setup speed bindings
 	for (let i = 1; i <= 7; i++) {
 		Mousetrap.bind(i.toString(), () => speed = 2 ** (i - 1));
 	}
+	Mousetrap.bind('c', () => debug = !debug);
 
 	const loop = () => {
 		for (var i = 0; i < speed; i++) {
 			const time = new Date().getTime();
 			const elapsed = lastTime ? time - lastTime : 0;
+			if (debug) console.time('frame');
 			callback(step, elapsed);
+			if (debug) console.timeEnd('frame');
 			lastTime = time;
 			step++;
 		}
-
 		requestAnimationFrame(loop);
 	}
 	loop();
