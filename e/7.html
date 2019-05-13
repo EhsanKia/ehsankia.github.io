@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Elle #7</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="utils.js"></script>
+</head>
+<body>
+	<img id="elle">
+	<canvas id="cvs"></canvas>
+	<script type="text/javascript">
+		function draw(step) {
+			if (step % 8 === 0) {
+				ctx.save();
+				ctx.globalAlpha = 0.1;
+				ctx.globalCompositeOperation = 'destination-out';
+				ctx.fillStyle = '#fff';
+				ctx.fillRect(0, 0, img.width, img.height);
+				ctx.restore();
+			}
+
+			if (Math.random() > 0.5) {
+				const x = randint(img.width);
+				ctx.putImageData(img.imageData, 0, 0, x, 0, 3, img.height);
+			} else {
+				const y = randint(img.height);
+				ctx.putImageData(img.imageData, 0, 0, 0, y, img.width, 3);
+			}
+		}
+
+		const img = document.getElementById('elle');
+		const cvs = document.getElementById('cvs');
+		const ctx = cvs.getContext('2d');
+		img.load("https://i.imgur.com/3Al6P2R.jpg", () => {
+			start(draw);
+		});
+	</script>
+</body>
+</html>
