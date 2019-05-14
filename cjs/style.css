@@ -27,16 +27,11 @@ a:active, a:hover{
 #sidemenu{
 	position: fixed;
 	float: left;
-	top:2%;
+	top: 5%;
 	width: 280px;
 	height: 96%;
-	max-height: 690px;
-	
+	max-height: 420px;
 	transition: margin 0.75s;
-	-moz-transition: margin 0.75s; /* Firefox */
-	-webkit-transition: margin 0.75s; /* Safari and Chrome */
-	-o-transition: margin 0.75s; /* Opera */
-
 }
 
 #content{
@@ -44,8 +39,8 @@ a:active, a:hover{
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: 100%;	
-	z-index: -3;	
+	height: 100%;
+	z-index: -3;
 }
 
 #items{
@@ -53,8 +48,7 @@ a:active, a:hover{
 	overflow: hidden;
 	width: 100%;
 	height: 100%;
-	background: url(bg.png) repeat;	
-	
+	background: url(bg.png) repeat;
 	border-top-right-radius: 10px;
 	border-bottom-right-radius: 10px;
 	box-shadow: 0px 0px 20px #BBB;
@@ -83,16 +77,10 @@ button.minimal {
 	float: left;
 	left: 265px;
 	top: 10px;
-	
 	margin-bottom: -100px;
-	
 	background: #e3e3e3;
 	border: 1px solid #bbb;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
 	border-radius: 3px;
-	-webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
-	-moz-box-shadow: inset 0 0 1px 1px #f6f6f6;
 	box-shadow: inset 0 0 1px 1px #f6f6f6;
 	color: #333;
 	font: bold 24px "helvetica neue", helvetica, arial, sans-serif;
@@ -100,23 +88,19 @@ button.minimal {
 	padding: 0 0 5px 12px;
 	text-align: center;
 	text-shadow: 0 1px 0 #fff;
-	width: 40px; 
+	width: 40px;
 	z-index: 0;
 }
 button.minimal:hover {
 	background: #d9d9d9;
-	-webkit-box-shadow: inset 0 0 1px 1px #eaeaea;
-	-moz-box-shadow: inset 0 0 1px 1px #eaeaea;
 	box-shadow: inset 0 0 1px 1px #eaeaea;
 	color: #222;
-	cursor: pointer; 
+	cursor: pointer;
 }
 button.minimal:active {
 	background: #d0d0d0;
-	-webkit-box-shadow: inset 0 0 1px 1px #e3e3e3;
-	-moz-box-shadow: inset 0 0 1px 1px #e3e3e3;
 	box-shadow: inset 0 0 1px 1px #e3e3e3;
-	color: #000; 
+	color: #000;
 }
 
 button.open:after{
