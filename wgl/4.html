@@ -69,8 +69,10 @@
 		var canvas;
 		var gui, p;
 
+		const MAX_SIZE = 45;
+
 		var Params = function() {
-			this.size = 30;
+			this.size = MAX_SIZE;
 			this.distance = 12.0;
 		};
 
@@ -149,7 +151,7 @@
 		function setupGUI(){
 			gui = new dat.GUI();
 
-			var s = gui.add(p, 'size', 1, 45).step(1);
+			var s = gui.add(p, 'size', 1, MAX_SIZE).step(1);
 			var d = gui.add(p, 'distance', 2, 50);
 
 			s.onChange(function(){
@@ -232,9 +234,13 @@
 		}
 
 		var pos   = [ -15 , -10 , -15 ];
-		var pos_v = [ 0 , 0 , 0 ];
+		var pos_v = [ 0.01 , 0 , 0 ];
 		function handleKeys() {
-			pos_v[0] = 0;
+			if (mouseActive) {
+				pos_v[0] = 0;
+			} else {
+				return;
+			}
 
 			//Forward
 			if (pKeys[87])
@@ -264,7 +270,7 @@
 		}
 
 
-		var rot = [ 5*Math.PI/4 , Math.PI/5 ];
+		var rot = [ 5*Math.PI/4 , Math.PI/5 - 0.01];
 		function handleMouseMove(event) {
 			var newX = event.clientX;
 			var newY = event.clientY;
@@ -491,7 +497,7 @@
 			canvas.setAttribute("width", window.innerWidth);
 			canvas.setAttribute("height", window.innerHeight);
 
-			if (!gl) init(45);
+			if (!gl) init(MAX_SIZE);
 
 			else {
 				gl.viewport(0,0,window.innerWidth,window.innerHeight)
