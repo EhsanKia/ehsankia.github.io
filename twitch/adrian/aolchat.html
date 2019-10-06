@@ -3,7 +3,7 @@
 <!-- © NightDev 2016 -->
 <html>
     <head>
-        <title>KapChat</title>
+        <title>AOL Chat</title>
         <meta charset="UTF-8" />
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
         <script src="js/punycode.min.js"></script>
@@ -256,8 +256,9 @@
 
                     Chat.vars.queue.push($newLine.wrap('<div>').parent().html());
                 },
-                load: function(channel) {
+                load: function(channel, userid) {
                     Chat.vars.channel = channel;
+                    Chat.vars.userid = userid;
 
                     if(Chat.vars.theme) {
                         Chat.loadTheme(Chat.vars.theme);
@@ -440,7 +441,14 @@
                     });
                 },
                 loadSubscriberBadge: function(callback) {
-                    $.getJSON("https://api.twitch.tv/kraken/chat/" + Chat.vars.channel + "/badges?client_id=nvye55kh6sv8fkpsl9q9dkcsvy2sp5b&callback=?").done(function(e) {
+                    $.ajax({
+                        beforeSend: function(request) {
+                            request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
+                            request.setRequestHeader("Accept", 'application/vnd.twitchtv.v5+json');                            
+                        },
+                        url: "https://api.twitch.tv/kraken/chat/" + Chat.vars.userid + "/badges?callback=?",
+                        dataType: "json",                        
+                    }).done(function(e) {
                         callback(true);
                         if(!e.subscriber) return;
                         var $css = $('<style></style>');
@@ -555,9 +563,25 @@
                     spammers: []
                 }
             };
+            
+            function getUserid(channel, callback) {
+                $.ajax({
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
+                    },
+                    dataType: "json",
+                    url: 'https://api.twitch.tv/helix/users?login=' + channel,
+                    success: function(result) {
+                        callback(result.data[0].id);
+                    }
+                });
+            }
 
             $(document).ready(function(){
-              Chat.load(getParameterByName('channel').toLowerCase() || 'night');
+                const channel = getParameterByName('channel').toLowerCase() || 'ehsankia';
+                loadUserid(channel, (userid) => {
+                    Chat.load(channel, userid);
+                });                
             });
         </script>
         <style>
