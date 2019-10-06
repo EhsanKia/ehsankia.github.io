@@ -446,7 +446,7 @@
                             request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
                             request.setRequestHeader("Accept", 'application/vnd.twitchtv.v5+json');                            
                         },
-                        url: "https://api.twitch.tv/kraken/chat/" + Chat.vars.userid + "/badges?callback=?",
+                        url: "https://api.twitch.tv/kraken/chat/" + Chat.vars.userid + "/badges",
                         dataType: "json",                        
                     }).done(function(e) {
                         callback(true);
