@@ -453,7 +453,7 @@
                         if(!e.subscriber) return;
                         var $css = $('<style></style>');
                         $css.attr('type', 'text/css');
-                        $css.html('.subscriber { background-image: url("' + e.subscriber.image.replace('http:', 'https:') + '"); }');
+                        $css.html(`.subscriber { background-image: url("${e.subscriber.image}"); }`);
                         $("head").append($css);
                     });
                 },
@@ -579,7 +579,7 @@
 
             $(document).ready(function(){
                 const channel = getParameterByName('channel').toLowerCase() || 'ehsankia';
-                loadUserid(channel, (userid) => {
+                getUserid(channel, (userid) => {
                     Chat.load(channel, userid);
                 });                
             });
@@ -634,37 +634,37 @@
 
             .turbo {
                 background-color: #6441a5;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_turbo.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/turbo.svg);
                 background-size: 100%;
             }
 
             .mod {
                 background-color: #34ae0a;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_mod.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/mod.svg);
                 background-size: 100%;
             }
 
             .broadcaster {
                 background-color: #e71818;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_broadcaster.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/broadcaster.svg);
                 background-size: 100%;
             }
 
             .staff {
                 background-color: #200f33;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_staff.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/staff.svg);
                 background-size: 100%;
             }
 
             .admin {
                 background-color: #faaf19;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_admin.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/admin.svg);
                 background-size: 100%;
             }
 
             .global_mod {
                 background-color: #0C6F20;
-                background-image: url(//www-cdn.jtvnw.net/images/xarth/badge_globalmod.svg);
+                background-image: url(//static-cdn.jtvnw.net/chat-badges/globalmod.svg);
                 background-size: 100%;
             }
 
