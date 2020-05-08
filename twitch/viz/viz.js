@@ -52,7 +52,9 @@ document.onmousemove = function() {
 window.addEventListener('load', function() {
 	audio = new Audio();
 	audio.controls = true;
-	audio.autoplay = true;
+	audio.onplay = function() {
+		audioCtx.resume();
+	}
 	audio.onended = function() {
 		var track = songs.pop();
 		loadSong(track);
