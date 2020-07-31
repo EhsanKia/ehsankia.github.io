@@ -444,10 +444,10 @@
                     $.ajax({
                         beforeSend: function(request) {
                             request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
-                            request.setRequestHeader("Accept", 'application/vnd.twitchtv.v5+json');                            
+                            request.setRequestHeader("Accept", 'application/vnd.twitchtv.v5+json');
                         },
                         url: "https://api.twitch.tv/kraken/chat/" + Chat.vars.userid + "/badges",
-                        dataType: "json",                        
+                        dataType: "json",
                     }).done(function(e) {
                         callback(true);
                         if(!e.subscriber) return;
@@ -563,16 +563,16 @@
                     spammers: []
                 }
             };
-            
+
             function getUserid(channel, callback) {
                 $.ajax({
                     beforeSend: function(request) {
                         request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
                     },
                     dataType: "json",
-                    url: 'https://api.twitch.tv/helix/users?login=' + channel,
+                    url: 'https://twitch.center/twitch/resolve_username?user=' + channel,
                     success: function(result) {
-                        callback(result.data[0].id);
+                        callback(result.id);
                     }
                 });
             }
@@ -581,7 +581,7 @@
                 const channel = getParameterByName('channel').toLowerCase() || 'ehsankia';
                 getUserid(channel, (userid) => {
                     Chat.load(channel, userid);
-                });                
+                });
             });
         </script>
         <style>
