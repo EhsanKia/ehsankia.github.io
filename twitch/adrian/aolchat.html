@@ -381,16 +381,15 @@
                     });
                 },
                 loadEmotes: function(callback) {
-                    ['emotes', 'channels/' + encodeURIComponent(Chat.vars.channel)].forEach(function(endpoint) {
-                        $.getJSON('https://api.betterttv.net/2/' + endpoint).done(function(data) {
-                            data.emotes.forEach(function(emote) {
+                    ['cached/emotes/global', 'cached/users/twitch/' + userid].forEach(function(endpoint) {
+                        $.getJSON('https://api.betterttv.net/3/' + endpoint).done(function(data) {
+                            (data.channelEmotes || data).forEach(function(emote) {
                                 Chat.vars.extraEmotes[emote.code] = {
-                                    restrictions: emote.restrictions,
                                     code: emote.code,
                                     source: 'bttv',
                                     id: emote.id,
-                                    '1x': data.urlTemplate.replace('{{id}}', emote.id).replace('{{image}}','1x'),
-                                    '2x': data.urlTemplate.replace('{{id}}', emote.id).replace('{{image}}','2x')
+                                    '1x': `https://cdn.betterttv.net/emote/${emote.id}/1x`,
+                                    '2x': `https://cdn.betterttv.net/emote/${emote.id}/2x`,
                                 };
                             });
                         });
