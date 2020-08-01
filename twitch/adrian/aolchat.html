@@ -272,7 +272,7 @@
                         $('#chat_box').css('height', 'calc(100% - 10px)');
                     }
 
-                    Chat.loadEmotes(function() {
+                    Chat.loadEmotes(userid, function() {
                         Chat.loadSubscriberBadge(function() {
                             Chat.insert(null, null, "Connecting to AOL chat servers...");
 
@@ -380,7 +380,7 @@
                         });
                     });
                 },
-                loadEmotes: function(callback) {
+                loadEmotes: function(userid, callback) {
                     ['cached/emotes/global', 'cached/users/twitch/' + userid].forEach(function(endpoint) {
                         $.getJSON('https://api.betterttv.net/3/' + endpoint).done(function(data) {
                             (data.channelEmotes || data).forEach(function(emote) {
