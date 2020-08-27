@@ -33,7 +33,7 @@ body {
 }
 
 #container {
-	width:950px;
+	width:1000px;
 	margin:0 auto;
 	margin-top:125px;
 }
@@ -45,12 +45,13 @@ body {
 }
 #content_right {
 	float:left;
-	width:700px;
-	font-size:13px;
+	width: 750px;
+	font-size: 14px;
+	line-height: 1.4;
 }
 
 .content{
-	padding-left:50px;
+	padding-left:30px;
 	margin-bottom:40px;
 	font-family: 'Droid Serif', arial, serif;
 }
@@ -82,10 +83,12 @@ body {
 }
 
 .breakline {
-	color:#484545;
+	color:#666;
 	background:url(../img/breakline.gif);
 	padding-top:3px;
+	margin-top: 2px;
 	margin-bottom: 15px;
+	width: 97%;
 	height:10px;
 }
 .menubreak {
@@ -94,7 +97,7 @@ body {
 	width:180px;
 }
 #links, #links a {
-	color:#484545;
+	color:#666;
 	overflow: hidden;
 	width:180px;
 	text-align:right;
