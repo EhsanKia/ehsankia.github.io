@@ -23,7 +23,7 @@
 		var p, gui;
 
 		var Params = function() {
-			this.size = 120;
+			this.size = 200;
 			this.count = 50;
 			this.twist = 1;
 			this.border = 1;
@@ -53,7 +53,7 @@
 			if (gui == undefined){
 				p = new Params();
 				gui = new dat.GUI();
-				gui.add(p, 'size', 10, 200);
+				gui.add(p, 'size', 25, 300);
 				gui.add(p, 'count', 10, 100);
 				gui.add(p, 'twist', -5, 5);
 				gui.add(p, 'fill');
