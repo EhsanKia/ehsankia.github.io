@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="GerryApp">
+<head>
+	<title>Gerrymandering</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+	<style>
+		.grid {
+			width: 650px;
+			display: grid;
+			grid-template-columns: repeat(13, 50px);
+			grid-template-rows: repeat(13, 50px);
+			box-sizing: content-box;
+			margin: 20px;
+		}
+		.cell {
+			width: 50px;
+			height: 50px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 31px;
+			font-weight: bold;
+			user-select: none;
+			cursor: pointer;
+		}
+		.grid, .cell {
+			border: 1px solid #FFF;
+		}
+		.blue { background-color: #434A9C; color: white;}
+		.yellow { background-color: #F9D47D; text-shadow: 1px 1px 1px grey;}
+		.controls {
+			position: absolute;
+			top: 15px;
+			left: 675px;
+		}
+		.region {
+			margin: 9px;
+			padding: 5px 10px;
+			font-size: 16pt;
+			cursor: pointer;
+			font-family: monospace;
+		}
+		.selected { background-color: black; color: white; }
+		.A { color: #ccd157; }
+		.B { color: #7bcdb6; }
+		.C { color: #6ed25b; }
+		.D { color: #cdb0a2; }
+		.E { color: #8795c9; }
+		.F { color: #c68840; }
+		.G { color: #cc5796; }
+		.H { color: #d54d3d; }
+		.I { color: #5f7b3d; }
+		.J { color: #8d4ccc; }
+		.K { color: #7a3a36; }
+		.L { color: #3e4743; }
+		.M { color: #50336d; }
+	</style>
+</head>
+<body ng-controller="GerryCtrl" ng-wheel="mouseWheel($event)">
+	<div class="grid">
+		<div class="cell {{cell}}" ng-repeat="cell in grid track by $index"
+			 ng-class="{yellow: DATA[$index] == 1, blue: DATA[$index] == 2}"
+			 ng-click="cellClick($index)">
+			{{cell}}
+		</div>
+	</div>
+	<div class="controls">
+		<div class="region" ng-repeat="region in REGIONS"
+			 ng-class="{selected: region == selected}"
+			 ng-click="setRegion(region)">
+			{{region}}: {{count(region)}} ({{countBlue(region)}})
+		<div>
+	</div>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular.min.js"></script>
+	<script>
+		angular
+		.module('GerryApp', [])
+		.directive("ngWheel", ["$parse", function($parse) {
+			return function(scope, element, attr) {
+				var fn = $parse(attr.ngWheel);
+				element.bind("mousewheel", (event) => scope.$apply(() => fn(scope, {$event: event})));
+			};
+		}])
+		.controller('GerryCtrl', ['$scope',
+		function($scope) {
+			$scope.REGIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+			$scope.DATA = [
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 2, 1, 1, 2, 2, 1, 1, 2, 2,
+				2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1,
+				1, 1, 1, 2, 2, 1, 1, 2, 1, 2, 1, 2, 1,
+				1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2,
+				1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 1, 1,
+				1, 2, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2,
+				1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2,
+				1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 2,
+				2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 2,
+				1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2,
+			];
+			$scope.grid = Array(13*13).fill('');
+			if ('grid' in localStorage) $scope.grid = JSON.parse(localStorage.grid);
+			$scope.selected = $scope.REGIONS[0];
+
+			$scope.setRegion = (r) => $scope.selected = r;
+			$scope.cellClick = (i) => {
+				if ($scope.grid[i] === $scope.selected) $scope.grid[i] = '';
+				else $scope.grid[i] = $scope.selected;
+				localStorage.grid = JSON.stringify($scope.grid);
+			};
+			$scope.count = (r) => $scope.grid.filter(x => x === r).length;
+			$scope.countBlue = (r) => {
+				return $scope.grid.filter((x, i) => x === r && $scope.DATA[i] == 2).length;
+			};
+			$scope.mouseWheel = (e) => {
+				let ind = $scope.REGIONS.indexOf($scope.selected);
+				ind += $scope.REGIONS.length + (e.deltaY < 0 ? -1 : 1);
+				$scope.selected = $scope.REGIONS[ind % $scope.REGIONS.length];
+			};
+		}]);
+	</script>
+</body>
+</html>
