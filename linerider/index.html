@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Line Rider</title>
+	<style>
+		body { text-align: center; }
+		ruffle-player { width: 800px; height: 600px; padding: 20px; }
+	</style>
+</head>
+<body>
+	<script>
+		window.RufflePlayer = window.RufflePlayer || {};
+		window.addEventListener("DOMContentLoaded", () => {
+			let ruffle = window.RufflePlayer.newest();
+			let player = ruffle.create_player();
+			let container = document.body;
+			container.appendChild(player);
+			player.stream_swf_url("Ph0X.swf");
+		});
+	</script>
+	<script src="ruffle.js"></script>
+</body>
+</html>
