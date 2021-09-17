@@ -4,7 +4,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/* globals $, p2, PIXI, ReconnectingWebSocket, Raygun, _ */
+/* globals $, p2, PIXI, ReconnectingWebSocket, _ */
 
 // getQueryParameter checks to see if a query parameter is present, and
 // if so, return its value (or true for simple flags).
@@ -455,9 +455,9 @@ $(function () {
       // Splits is now a list of text fragments, between each of which is a givepoints command.
       for (j = 0; j < splits.length - 1; ++j) {
         var matchResults = matches[j].match(amountRegex);
-        console.log(matchResults);
+        // console.log(matchResults);
         var amount = parseInt(matchResults[1], 10);
-        console.log(amount);
+        // console.log(amount);
 
         if (total + amount > expected) {
           // Skip this one, as it exceeds the number of bits in the message.
@@ -533,8 +533,8 @@ $(function () {
     needsDepthSort = true;
   }
 
-  function handlePointsGiven(json) {
-    addText(json.viewer.name, json.user_message, json.extra.emotes, json.extra.amount);
+  function handlePointsGiven(data) {
+    addText(data.name, data.message, "", parseInt(data.amount));
   }
 
   function killAllGems() {
@@ -607,7 +607,16 @@ $(function () {
     // +X is right, -Y is down.
     // Origin of a draw is the top right corner.
 
-    startWebsocket();
+    const accessToken = getQueryParameter('access_token');
+    if (accessToken) {
+      $.getJSON('https://streamlabs.com/api/v1.0/socket/token?access_token=' + accessToken, (data) => {
+        startWebsocket(data.socket_token);
+      });
+    } else {
+      console.log('missing access_token');
+    }
+
+
     // Init p2.js
     world = new p2.World({
       gravity: [0, -98.20]
@@ -777,92 +786,41 @@ $(function () {
   }
 
   // Websocket eventing loop
-  function startWebsocket() {
+  function startWebsocket(token) {
     var socket = null;
-    if (window.WebSocket) {
-      var uri = 'a.muxy.io/ws/undefined/' + window.settingsID + '/cup';
-      if (window.location.protocol === "http:") {
-        uri = "ws://" + uri;
-      } else {
-        uri = "wss://" + uri;
-      }
-
-      var reconnectionTimeout = null;
-      var PING_TIMEOUT = 10 * 1000;
-
-      // Every 3 minutes, send a proof of life message to the server.
-      var proofOfLifeInterval = null;
-      var proofOfLifeID = 0;
-      var PROOF_OF_LIFE_TIMEOUT = 60 * 1000 * 3;
-
-      var proofOfLife = function proofOfLife() {
-        if (socket) {
-          socket.send(proofOfLifeID++);
-        }
-      };
-
-      var reconnect = function reconnect() {
-        if (socket) {
-          socket.close();
-        }
-
-        clearTimeout(reconnectionTimeout);
-        reconnectionTimeout = setTimeout(reconnect, PING_TIMEOUT);
-
-        socket = new ReconnectingWebSocket(uri);
-        console.log("Establishing connection to websocket server...");
-
-        socket.onopen = function () {
-          proofOfLifeID = 0;
-          clearInterval(proofOfLifeInterval);
-          proofOfLifeInterval = setInterval(proofOfLife, PROOF_OF_LIFE_TIMEOUT);
-
-          socket.onmessage = function (event) {
-            var json = {};
-
-            try {
-              json = JSON.parse(event.data);
-              if (json.type === "command") {
-                if (json.extra.type === "ping") {
-                  clearTimeout(reconnectionTimeout);
-                  reconnectionTimeout = setTimeout(reconnect, PING_TIMEOUT);
-                  return;
-                }
-
-                if (json.extra.type === "reset_points") {
-                  if (json.extra.target && json.extra.target === "cup") {
-                    impulseAllGems();
-                  }
-                  return;
-                }
-              }
-
-              if (json.type === "points_given") {
-                handlePointsGiven(json);
-              }
-
-              if (json.type === "session_change") {
-                if (json.extra.islive) {
-                  killAllGems();
-                }
-              }
-            } catch (err) {
-              Raygun.send(err, json);
-              console.error(err);
-            }
-          };
-
-          socket.onerror = function (event) {
-            Raygun.send("Websocket Error", event);
-          };
-        };
-      };
-
-      reconnect();
-    } else {
-      $("#chrome-version-error").removeClass("hidden-error");
-      Raygun.send("Browser does not support websockets.");
+    if (!window.WebSocket) {
+      document.body.innerText = "Browser does not support websockets.";
+      return;
     }
+
+    const uri = `https://sockets.streamlabs.com?token=${token}`;
+    const streamlabs = io(uri, {transports: ['websocket']});
+
+    //Perform Action on event
+    streamlabs.on('connect', () => {
+      console.log('connect');
+    });
+
+    streamlabs.on('disconnect', () => {
+      console.log('disconnect');
+    });
+
+    streamlabs.on('error', (errorData) => {
+      console.log('error', errorData);
+    });
+
+    streamlabs.on('event', (eventData) => {
+      console.log('event', eventData);
+      if (eventData.type === 'bits') {
+        eventData?.message.forEach((bits) => {
+          handlePointsGiven(bits);
+        });
+      }
+      if (eventData.type === 'raids') {
+        impulseAllGems();
+      }
+    });
+
   }
 
   // Debugging niceties.
