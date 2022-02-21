@@ -1,0 +1,248 @@
+<html>
+ <head>
+     <title>Vortex Math</title>
+	<script type="text/javascript" src="dat.gui.min.js"></script>
+    <style type="text/css">
+    	body{margin: 0; padding: 0;}
+		#container {margin: auto; width: 1300px}
+    </style>
+ </head>
+ <body>
+	<canvas id="canvas"></canvas>
+
+    <script type="text/javascript">       
+        CanvasRenderingContext2D.prototype.fillCircle = function(x, y, r) {
+			ctx.beginPath();
+			ctx.arc(x, y, r, 0, 2 * Math.PI);
+			ctx.fill();
+		}
+        CanvasRenderingContext2D.prototype.strokeLine = function(p1, p2, arrow = false) {
+            ctx.beginPath();
+            ctx.moveTo(p1[0], p1[1]);
+			ctx.lineTo(p2[0], p2[1]);
+			ctx.stroke();
+
+            if (arrow) {
+                const angle = Math.atan2(p2[1]-p1[1], p2[0]-p1[0]);
+                ctx.drawArrow(p2, angle);
+            }
+        }
+        CanvasRenderingContext2D.prototype.drawArrow = function drawArrow(p, angle) {
+            const headlen = 10;
+            ctx.save();
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.beginPath();
+            ctx.moveTo(p[0], p[1]);
+            ctx.lineTo(p[0]-headlen*Math.cos(angle-Math.PI/7),
+                        p[1]-headlen*Math.sin(angle-Math.PI/7));
+            ctx.lineTo(p[0]-headlen*Math.cos(angle+Math.PI/7),
+                        p[1]-headlen*Math.sin(angle+Math.PI/7));
+            ctx.lineTo(p[0], p[1]);
+            ctx.lineTo(p[0]-headlen*Math.cos(angle-Math.PI/7),
+                        p[1]-headlen*Math.sin(angle-Math.PI/7));
+            ctx.stroke();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function computeDistance(p1, p2) {
+            return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+        }
+
+		const cvs = document.getElementById('canvas');
+        /** @type {CanvasRenderingContext2D} */
+		const ctx = cvs.getContext('2d');
+		const w = window.innerWidth;
+		const h = window.innerHeight;
+		let gui, p;
+
+        const Params = function() {
+            this.startNum = 1;
+			this.modulus = 9;
+			this.multiplier = 2;
+            this.lineWidth = 5;
+            this.lineHue = 270;
+            this.lengthBasedColor = false;
+            this.perLoopColor = true;
+            this.lineOpacity = 1;
+            this.drawPoints = true;
+            this.drawArrow = false;
+
+            // Presets
+            this.default = function() {
+                this.modulus = 9;
+                this.multiplier = 2;
+                this.lineWidth = 5;
+                this.lineHue = 270;
+                this.lineOpacity = 1;
+                this.lengthBasedColor = false;
+                this.perLoopColor = true;
+                this.drawPoints = true;
+                this.drawArrow = false;
+                draw();
+            };
+            this.m11x2 = function() {
+                this.modulus = 11;
+                this.multiplier = 2;
+                this.lineWidth = 3;
+                this.lineHue = -1;
+                this.lineOpacity = 1;
+                this.lengthBasedColor = false;
+                this.perLoopColor = false;
+                this.drawPoints = true;
+                this.drawArrow = false;
+                draw();
+            };
+            this.m50x2 = function() {
+                this.modulus = 50;
+                this.multiplier = 2;
+                this.lineWidth = 3;
+                this.lineHue = -1;
+                this.lineOpacity = 1;
+                this.lengthBasedColor = false;
+                this.perLoopColor = false;
+                this.drawPoints = true;
+                this.drawArrow = false;
+                draw();
+            };
+            this.m50x3 = function() {
+                this.modulus = 50;
+                this.multiplier = 3;
+                this.lineWidth = 3;
+                this.lineHue = -1;
+                this.lineOpacity = 1;
+                this.lengthBasedColor = false;
+                this.perLoopColor = false;
+                this.drawPoints = true;
+                this.drawArrow = false;
+                draw();
+            };
+            this.m7417x240 = function() {
+                this.modulus = 7417;
+                this.multiplier = 240;
+                this.lineWidth = 1;
+                this.lineOpacity = 0.2;
+                this.lengthBasedColor = true;
+                this.perLoopColor = false;
+                this.drawPoints = false;
+                this.drawArrow = false;
+                draw();
+            };
+		};
+
+
+		window.onload = function() {
+			terminate();
+
+			if (gui == undefined){
+				p = new Params();
+				gui = new dat.GUI();
+				gui.add(p, 'modulus').step(1).listen().onChange(draw);
+				gui.add(p, 'multiplier').step(1).listen().onChange(draw);
+                const lineFolder = gui.addFolder('line');
+				lineFolder.add(p, 'lineWidth', 1, 5).step(1).listen().onChange(draw);
+				lineFolder.add(p, 'lineHue', -1, 360).step(1).listen().onChange(draw);
+				lineFolder.add(p, 'lengthBasedColor').listen().onChange(draw);
+				lineFolder.add(p, 'perLoopColor').listen().onChange(draw);
+				lineFolder.add(p, 'lineOpacity', 0, 1).listen().onChange(draw);
+                const presetFolder = gui.addFolder('presets');
+                presetFolder.add(p, 'default');
+                presetFolder.add(p, 'm11x2');
+                presetFolder.add(p, 'm50x2');
+                presetFolder.add(p, 'm50x3');
+                presetFolder.add(p, 'm7417x240');
+				gui.add(p, 'drawPoints').listen().onChange(draw);
+				gui.add(p, 'drawArrow').listen().onChange(draw);
+			}
+
+			cvs.style.position = "fixed";
+			cvs.setAttribute("width", w);
+			cvs.setAttribute("height", h);
+			draw();
+		}
+		window.onload();
+
+		function draw() {
+            ctx.clearRect(0, 0, w, h);
+            const [cx, cy] = [w / 2, h / 2];
+            const r = Math.min(w, h) * 0.45;
+            const points = new Map();
+
+            // Draw initial circle.
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#caccce';
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw numbers around circle.
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.fillStyle = '#302e2e';
+            ctx.font = (40 - 5 * Math.round(Math.log(p.modulus)) ) + 'px arial black';
+            for (let n = 0; n < p.modulus; n++) {
+                ctx.save();
+                ctx.rotate(n * Math.PI * 2 / p.modulus);
+                ctx.translate(0, -r);
+                if (p.modulus < 100) {
+                    const tw = ctx.measureText(n).width;
+                    ctx.fillText(n, -tw / 2, -10);
+                }
+
+                // Store the points for later.
+                const transform = ctx.getTransform();
+                points.set(n, [transform.e, transform.f]);
+
+                ctx.restore();
+            }
+            ctx.restore();
+
+            // Draw lines
+            const seenPoints = new Set();
+            const [lh, ll, lo] = [p.lineHue, p.lineHue < 0 ? 0 : 50, p.lineOpacity];
+            let hueOffset = 0;
+            ctx.strokeStyle = `hsla(${lh}, 50%, ${ll}%, ${lo})`;
+            ctx.lineWidth = p.lineWidth;
+            for (let i = 1; i < p.modulus; i++) {
+                let num = i;
+                if (p.perLoopColor && !seenPoints.has(num)) {
+                    console.log(lh - hueOffset)
+                    ctx.strokeStyle = `hsla(${lh - hueOffset}, 50%, 50%, ${lo})`;
+                    hueOffset += 75;
+                }
+                while (!seenPoints.has(num)) {
+                    seenPoints.add(num);
+                    const p1 = points.get(num);
+                    num = num * p.multiplier % p.modulus;
+                    const p2 = points.get(num);
+
+                    if (p.lengthBasedColor) {
+                        const length = computeDistance(p1, p2);
+                        const hue = -360 * length / (2 * r) + p.lineHue;
+                        ctx.strokeStyle = `hsla(${hue - hueOffset}, 100%, 75%, ${lo})`;
+                    }
+
+                    ctx.strokeLine(p1, p2, p.drawArrow);
+                }
+            }
+
+            // Drawn points
+            const pointRadius = 8 - Math.round(Math.log(p.modulus));
+            if (p.drawPoints && pointRadius > 0) {
+                ctx.fillStyle = '#ffaa3c';
+                for (const [x, y] of points.values()) {
+                    ctx.fillCircle(x, y, pointRadius);
+                }
+            }
+		}
+
+		function terminate(){
+			if (typeof(gui) != "undefined"){
+				gui.destroy();
+				gui = undefined;
+			}
+		}
+  </script>
+ </body>
+</html>
