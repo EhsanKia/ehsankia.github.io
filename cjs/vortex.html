@@ -45,10 +45,6 @@
             ctx.restore();
         }
 
-        function computeDistance(p1, p2) {
-            return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
-        }
-
 		const cvs = document.getElementById('canvas');
         /** @type {CanvasRenderingContext2D} */
 		const ctx = cvs.getContext('2d');
@@ -121,6 +117,7 @@
                 this.modulus = 7417;
                 this.multiplier = 240;
                 this.lineWidth = 1;
+                this.lineHue = 0;
                 this.lineOpacity = 0.2;
                 this.lengthBasedColor = true;
                 this.perLoopColor = false;
@@ -207,8 +204,7 @@
             for (let i = 1; i < p.modulus; i++) {
                 let num = i;
                 if (p.perLoopColor && !seenPoints.has(num)) {
-                    console.log(lh - hueOffset)
-                    ctx.strokeStyle = `hsla(${lh - hueOffset}, 50%, 50%, ${lo})`;
+                    ctx.strokeStyle = `hsla(${lh - hueOffset}, 70%, 50%, ${lo})`;
                     hueOffset += 75;
                 }
                 while (!seenPoints.has(num)) {
@@ -218,9 +214,9 @@
                     const p2 = points.get(num);
 
                     if (p.lengthBasedColor) {
-                        const length = computeDistance(p1, p2);
-                        const hue = -360 * length / (2 * r) + p.lineHue;
-                        ctx.strokeStyle = `hsla(${hue - hueOffset}, 100%, 75%, ${lo})`;
+                        const length = ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2) / (4*r*r);
+                        const hue = (0.8 - 0.8 * length) * 360 + p.lineHue;
+                        ctx.strokeStyle = `hsla(${hue - hueOffset}, 100%, 50%, ${lo})`;
                     }
 
                     ctx.strokeLine(p1, p2, p.drawArrow);
