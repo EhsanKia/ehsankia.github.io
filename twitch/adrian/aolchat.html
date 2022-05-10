@@ -440,21 +440,21 @@
                     });
                 },
                 loadSubscriberBadge: function(callback) {
-                    $.ajax({
-                        beforeSend: function(request) {
-                            request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
-                            request.setRequestHeader("Accept", 'application/vnd.twitchtv.v5+json');
-                        },
-                        url: "https://api.twitch.tv/kraken/chat/" + Chat.vars.userid + "/badges",
-                        dataType: "json",
-                    }).done(function(e) {
-                        callback(true);
-                        if(!e.subscriber) return;
-                        var $css = $('<style></style>');
-                        $css.attr('type', 'text/css');
-                        $css.html(`.subscriber { background-image: url("${e.subscriber.image}"); }`);
-                        $("head").append($css);
-                    });
+                    callback(true);
+                    // $.ajax({
+                    //     beforeSend: function(request) {
+                    //         request.setRequestHeader("Client-ID", 'nvye55kh6sv8fkpsl9q9dkcsvy2sp5b');
+                    //     },
+                    //     url: "https://api.twitch.tv/helix/chat/badges?broadcaster_id=" + Chat.vars.userid,
+                    //     dataType: "json",
+                    // }).done(function(e) {
+                    //     callback(true);
+                    //     if(!e.subscriber) return;
+                    //     var $css = $('<style></style>');
+                    //     $css.attr('type', 'text/css');
+                    //     $css.html(`.subscriber { background-image: url("${e.subscriber.image}"); }`);
+                    //     $("head").append($css);
+                    // });
                 },
                 parseTags: function(nick, tags) {
                     var defaultColors = ["#FF0000", "#0000FF", "#008000", "#B22222", "#FF7F50", "#9ACD32", "#FF4500", "#2E8B57", "#DAA520", "#D2691E", "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"];
@@ -572,6 +572,9 @@
                     url: 'https://twitch.center/twitch/resolve_username?user=' + channel,
                     success: function(result) {
                         callback(result.id);
+                    },
+                    error: function() {
+                        callback(62111158);
                     }
                 });
             }
