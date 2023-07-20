@@ -73,7 +73,7 @@
     <button class="btn btn-primary btn-lg" ng-click="start()" autofocus>Start</button>
   </div>
 
-  <div class="container" ng-if="index >= 0 && index < 300">
+  <div class="container" ng-if="index >= 0 && index < data.length">
     <div class="question"><b>{{index + 1}}.</b> {{data[index][0]}}</div>
 
     <form ng-if="!solution">
@@ -98,7 +98,7 @@
     <div class="score">Score: {{score}} / {{index + solution}}</div>
   </div>
 
-  <div class="container" ng-if="index == 299">
+  <div class="container" ng-if="index == data.length">
     <div class="score final-score">Score: {{score}} / {{index + solution}}</div>
     <div class="intro">
       You've completed all the questions, you can leave feedback <a target="_blank" href="https://twitter.com/ehsankia_">here</a>.
