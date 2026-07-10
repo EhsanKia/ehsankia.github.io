@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frame Game — abstract movie trivia</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{
+  --bg:#0b0e1a; --bg2:#141a2e; --panel:rgba(255,255,255,.055); --panel2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12); --txt:#eef1fa; --dim:#9aa3bf;
+  --gold:#f5b942; --gold2:#ffd97a; --accent:#7c5cff; --good:#3ecf8e; --bad:#ff6b6b;
+  --r:16px; --shadow:0 20px 60px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--txt);
+  background-image:
+    radial-gradient(900px 500px at 15% -10%, rgba(124,92,255,.22), transparent 60%),
+    radial-gradient(800px 500px at 90% 110%, rgba(245,185,66,.13), transparent 60%);
+  background-attachment:fixed;
+  min-height:100%;
+}
+main{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+.screen{display:none;animation:pop .35s ease}
+.screen.active{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+button{font:inherit;cursor:pointer;border:0}
+input{font:inherit}
+.hidden{display:none !important}
+
+/* ---------- home ---------- */
+.logo{
+  text-align:center;font-size:clamp(44px,8vw,76px);font-weight:900;letter-spacing:.04em;
+  margin-top:6vh;line-height:1;
+  background:linear-gradient(180deg,#fff, #ffd97a 55%, #f5a034);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 24px rgba(245,185,66,.25));
+}
+.logo em{font-style:normal;color:transparent;background:linear-gradient(180deg,#cfc4ff,#7c5cff);-webkit-background-clip:text;background-clip:text}
+.tag{text-align:center;color:var(--dim);margin:10px 0 34px;font-size:17px}
+.namewrap{display:flex;justify-content:center;margin-bottom:26px}
+.txt{
+  background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  border-radius:12px;padding:13px 16px;font-size:17px;outline:none;width:280px;text-align:center;
+  transition:border-color .15s, box-shadow .15s;
+}
+.txt:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,185,66,.18)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:720px;margin:0 auto}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:26px 24px;box-shadow:var(--shadow);backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;gap:12px;align-items:flex-start;
+}
+.card h2{font-size:20px}
+.card p{color:var(--dim);font-size:14px;flex:1}
+.btn{
+  background:linear-gradient(180deg,var(--gold2),var(--gold));color:#241a05;font-weight:700;
+  padding:12px 22px;border-radius:12px;font-size:16px;letter-spacing:.02em;
+  transition:transform .12s, filter .12s; box-shadow:0 6px 18px rgba(245,185,66,.25);
+}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.alt{background:linear-gradient(180deg,#a795ff,var(--accent));color:#fff;box-shadow:0 6px 18px rgba(124,92,255,.3)}
+.btn.ghost{background:var(--panel2);color:var(--txt);box-shadow:none;border:1px solid var(--line)}
+.joinrow{display:flex;gap:10px;width:100%}
+#code{width:120px;text-transform:uppercase;letter-spacing:.35em;font-weight:800;text-align:center}
+.err{color:var(--bad);text-align:center;margin-top:18px;min-height:22px;font-size:15px}
+.foot{color:#5d6683;text-align:center;font-size:13px;margin-top:44px}
+
+/* ---------- lobby ---------- */
+.lobby{max-width:620px;margin:5vh auto 0;text-align:center}
+.lbl{color:var(--dim);letter-spacing:.3em;font-size:12px;font-weight:700}
+.codebig{
+  font-size:clamp(56px,10vw,84px);font-weight:900;letter-spacing:.28em;margin:6px 0 2px;
+  color:var(--gold2);text-shadow:0 0 40px rgba(245,185,66,.4);user-select:all;
+}
+.copy{background:none;color:var(--dim);font-size:13px;text-decoration:underline}
+.copy:hover{color:var(--txt)}
+.pl-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:30px 0 8px;min-height:46px}
+.chip{
+  background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:9px 18px;
+  font-weight:600;font-size:15px;animation:pop .3s ease;
+}
+.chip .crown{margin-right:6px}
+.host-controls{margin-top:26px;display:flex;flex-direction:column;gap:18px;align-items:center}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{background:none;color:var(--dim);padding:9px 18px;font-weight:700;font-size:14px}
+.seg button.on{background:var(--accent);color:#fff}
+.wait{color:var(--dim);margin-top:26px;animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+.leave{margin-top:36px}
+
+/* ---------- game ---------- */
+.g-head{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.round-pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px;white-space:nowrap}
+.timerwrap{flex:1;height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;min-width:140px}
+.timerbar{height:100%;width:100%;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--gold));transition:width .25s linear}
+.timerbar.low{background:linear-gradient(90deg,var(--bad),#ff9d6b)}
+.t-num{font-variant-numeric:tabular-nums;font-weight:800;width:44px;text-align:right}
+.hint{color:var(--gold2);font-size:14px;font-weight:600;min-width:90px}
+.g-grid{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+.stage{position:relative}
+.frame{
+  position:relative;background:#05070d;border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--line);box-shadow:var(--shadow);
+  padding:14px 26px;
+}
+.frame::before,.frame::after{
+  content:"";position:absolute;top:0;bottom:0;width:16px;
+  background:repeating-linear-gradient(to bottom, transparent 0 7px, rgba(255,255,255,.16) 7px 15px, transparent 15px 22px);
+  opacity:.5;
+}
+.frame::before{left:4px}.frame::after{right:4px}
+#art{border-radius:8px;overflow:hidden;background:#000}
+#art svg{display:block;width:100%;height:auto}
+.reveal{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;
+  background:rgba(5,7,13,.82);backdrop-filter:blur(3px);border-radius:var(--r);
+  text-align:center;animation:pop .3s ease;padding:20px;
+}
+.reveal .who{font-size:17px;color:var(--dim)}
+.reveal .who b{color:var(--good)}
+.reveal .title{font-size:clamp(24px,4vw,38px);font-weight:900;color:var(--gold2)}
+.reveal .yr{color:var(--dim)}
+.guessrow{display:flex;gap:10px;margin-top:14px}
+#guess{flex:1;text-align:left}
+.aside{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel h3{font-size:12px;letter-spacing:.2em;color:var(--dim);margin-bottom:10px;font-weight:700}
+.scores li{list-style:none;display:flex;justify-content:space-between;padding:6px 4px;border-radius:8px;font-size:15px}
+.scores li b{font-variant-numeric:tabular-nums;color:var(--gold2)}
+.scores li.me{background:rgba(124,92,255,.15)}
+.feed{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.feed .g{padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.05);animation:pop .25s ease;word-break:break-word}
+.feed .g .nm{color:var(--dim);font-weight:700;margin-right:6px}
+.feed .g.win{background:rgba(62,207,142,.18);color:var(--good);font-weight:700}
+.feed .g.sys{background:none;color:var(--dim);font-style:italic;padding:2px 10px}
+
+/* ---------- end ---------- */
+.endwrap{max-width:560px;margin:6vh auto;text-align:center}
+.endwrap h2{font-size:34px;margin-bottom:26px}
+.podium{display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.pod{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:17px}
+.pod .medal{font-size:24px;width:34px}
+.pod .nm{flex:1;text-align:left;font-weight:700}
+.pod .sc{font-weight:900;color:var(--gold2);font-variant-numeric:tabular-nums}
+.pod.first{border-color:rgba(245,185,66,.5);box-shadow:0 0 30px rgba(245,185,66,.15);font-size:20px}
+.endbtns{display:flex;gap:12px;justify-content:center}
+
+@media (max-width:860px){
+  .g-grid{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  .feed{max-height:180px}
+}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ============ HOME ============ -->
+<section id="scr-home" class="screen active">
+  <h1 class="logo">FRAME<em>GAME</em></h1>
+  <p class="tag">Iconic movie frames, redrawn as abstract art. Guess them faster than your friends.</p>
+  <div class="namewrap"><input id="name" class="txt" maxlength="14" placeholder="Your nickname" autocomplete="off"></div>
+  <div class="cards">
+    <div class="card">
+      <h2>🎬 Host a room</h2>
+      <p>Get a 4-letter code, share it with friends, and control the game.</p>
+      <button id="btn-host" class="btn">Create room</button>
+    </div>
+    <div class="card">
+      <h2>🍿 Join a room</h2>
+      <p>Enter the code from your host's screen.</p>
+      <div class="joinrow">
+        <input id="code" class="txt" maxlength="4" placeholder="CODE" autocomplete="off">
+        <button id="btn-join" class="btn alt">Join</button>
+      </div>
+    </div>
+  </div>
+  <p id="home-err" class="err"></p>
+  <p class="foot">Peer-to-peer over WebRTC — no game server, your guesses go straight to the host.<br>85 hand-vectored frames from 40 years of cinema, across Easy and Hard (abstract) modes.</p>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section id="scr-lobby" class="screen">
+  <div class="lobby">
+    <p class="lbl">ROOM CODE</p>
+    <div id="code-big" class="codebig">····</div>
+    <button id="btn-copy" class="copy">copy code</button>
+    <div id="lobby-players" class="pl-grid"></div>
+    <div id="host-controls" class="host-controls hidden">
+      <div class="seg" id="diff-seg">
+        <button data-d="easy" class="on">😌 Easy</button>
+        <button data-d="hard">🔥 Hard · abstract</button>
+      </div>
+      <div class="seg" id="rounds-seg">
+        <button data-n="5">5 rounds</button>
+        <button data-n="10" class="on">10 rounds</button>
+        <button data-n="15">15 rounds</button>
+      </div>
+      <button id="btn-start" class="btn">Start game</button>
+    </div>
+    <p id="lobby-wait" class="wait hidden">Waiting for the host to start…</p>
+    <button id="btn-leave-lobby" class="btn ghost leave">Leave</button>
+  </div>
+</section>
+
+<!-- ============ GAME ============ -->
+<section id="scr-game" class="screen">
+  <div class="g-head">
+    <span id="round-pill" class="round-pill">Round 1 / 10</span>
+    <div class="timerwrap"><div id="timerbar" class="timerbar"></div></div>
+    <span id="t-num" class="t-num">45</span>
+    <span id="hint" class="hint"></span>
+  </div>
+  <div class="g-grid">
+    <div class="stage">
+      <div class="frame"><div id="art"></div></div>
+      <div id="reveal" class="reveal hidden">
+        <div class="who" id="reveal-who"></div>
+        <div class="title" id="reveal-title"></div>
+        <div class="yr" id="reveal-yr"></div>
+      </div>
+      <form id="guess-form" class="guessrow">
+        <input id="guess" class="txt" maxlength="60" placeholder="Name that movie…" autocomplete="off">
+        <button class="btn" id="btn-guess" type="submit">Guess</button>
+      </form>
+    </div>
+    <aside class="aside">
+      <div class="panel"><h3>SCOREBOARD</h3><ul id="scores" class="scores"></ul></div>
+      <div class="panel"><h3>GUESSES</h3><div id="feed" class="feed"></div></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ END ============ -->
+<section id="scr-end" class="screen">
+  <div class="endwrap">
+    <h2>🏆 Final scores</h2>
+    <div id="podium" class="podium"></div>
+    <div class="endbtns">
+      <button id="btn-again" class="btn hidden">Back to lobby</button>
+      <p id="end-wait" class="wait hidden">Waiting for the host…</p>
+      <button id="btn-exit" class="btn ghost">Exit</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+"use strict";
+/* ================================================================
+   MOVIE DATABASE
+   EASY — 55 iconic frames (1986–2023), fuller / more literal art
+   ================================================================ */
+const EASY=[
+{t:"Top Gun",y:1986,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241049"/><stop offset=".55" stop-color="#c94f6d"/><stop offset="1" stop-color="#ff9e5e"/></linearGradient></defs><rect width="320" height="200" fill="url(#tg1)"/><circle cx="160" cy="150" r="42" fill="#ffd98a"/><circle cx="160" cy="150" r="58" fill="#ffd98a" opacity=".2"/><rect y="158" width="320" height="42" fill="#160c26"/><rect x="120" y="163" width="80" height="3" fill="#ffbd7a" opacity=".55"/><rect x="135" y="170" width="50" height="2" fill="#ffbd7a" opacity=".3"/><path d="M62 60 L118 74 L86 84 L64 76 Z" fill="#130d22"/><path d="M64 76 L58 56 L74 64 Z" fill="#130d22"/><path d="M196 96 L252 110 L220 120 L198 112 Z" fill="#130d22"/><path d="M198 112 L192 92 L208 100 Z" fill="#130d22"/><path d="M30 58 L60 64" stroke="#ffe6c4" stroke-width="2" opacity=".5"/><path d="M164 94 L194 100" stroke="#ffe6c4" stroke-width="2" opacity=".5"/></svg>`},
+{t:"Die Hard",y:1988,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0a1026"/><circle cx="52" cy="40" r="16" fill="#e8ecff" opacity=".9"/><rect x="60" y="70" width="60" height="130" fill="#111a38"/><rect x="215" y="90" width="50" height="110" fill="#111a38"/><rect x="128" y="18" width="72" height="182" rx="3" fill="#182448"/><g fill="#ffd97a"><rect x="136" y="28" width="8" height="6"/><rect x="150" y="28" width="8" height="6"/><rect x="178" y="28" width="8" height="6"/><rect x="136" y="44" width="8" height="6"/><rect x="164" y="44" width="8" height="6"/><rect x="150" y="60" width="8" height="6"/><rect x="178" y="60" width="8" height="6"/><rect x="136" y="120" width="8" height="6"/><rect x="164" y="120" width="8" height="6"/><rect x="150" y="140" width="8" height="6"/><rect x="178" y="156" width="8" height="6"/><rect x="136" y="172" width="8" height="6"/></g><rect x="132" y="82" width="64" height="22" fill="#ff7a2f"/><path d="M132 82 l14 -12 12 12 -8 10 z" fill="#ffb84d"/><circle cx="186" cy="92" r="9" fill="#ffe08a"/><path d="M164 18 q-30 26 -34 58" stroke="#cfd6ee" stroke-width="2" fill="none"/><circle cx="130" cy="78" r="4" fill="#e8ecff"/></svg>`},
+{t:"Edward Scissorhands",y:1990,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#bfe3d8"/><rect x="0" y="150" width="320" height="50" fill="#9fd0b8"/><rect x="10" y="120" width="55" height="34" fill="#f3b6c8"/><path d="M10 120 l27 -16 28 16 z" fill="#d98aa5"/><rect x="250" y="118" width="55" height="36" fill="#bcd7f2"/><path d="M250 118 l27 -16 28 16 z" fill="#8fb4dd"/><path d="M160 44 l-30 -18 8 22 -24 -8 14 20 -26 2 22 12 -18 10 24 2 -10 16 22 -8 4 20 10 -18 12 18 4 -20 22 8 -12 -16 26 -2 -20 -10 24 -12 -28 -2 16 -20 -26 8 8 -22 z" fill="#161320"/><circle cx="160" cy="62" r="21" fill="#f2ead8"/><circle cx="152" cy="60" r="2.6" fill="#161320"/><circle cx="168" cy="60" r="2.6" fill="#161320"/><path d="M154 72 q6 3 12 0" stroke="#8a6f6f" stroke-width="1.6" fill="none"/><path d="M148 52 l-4 -3 M172 52 l4 -3" stroke="#161320" stroke-width="2"/><path d="M138 84 q22 14 44 0 l6 66 -56 0 z" fill="#241f31"/><g stroke="#c9ced9" stroke-width="3" fill="none"><path d="M136 116 l-26 -22"/><path d="M136 120 l-32 -12"/><path d="M136 124 l-30 2"/><path d="M184 116 l26 -22"/><path d="M184 120 l32 -12"/><path d="M184 124 l30 2"/></g><circle cx="136" cy="120" r="5" fill="#3a3550"/><circle cx="184" cy="120" r="5" fill="#3a3550"/></svg>`},
+{t:"Terminator 2: Judgment Day",y:1991,a:["terminator 2","t2","terminator two","terminator"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="t2a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffdf6b"/><stop offset="1" stop-color="#ff5a1f"/></linearGradient></defs><rect width="320" height="200" fill="#150d12"/><rect x="0" y="20" width="320" height="8" fill="#241820"/><rect x="20" y="0" width="10" height="120" fill="#241820"/><rect x="290" y="0" width="10" height="120" fill="#241820"/><rect y="118" width="320" height="82" fill="url(#t2a)"/><ellipse cx="90" cy="130" rx="34" ry="6" fill="#ffe89a" opacity=".8"/><ellipse cx="240" cy="150" rx="44" ry="7" fill="#ffe89a" opacity=".6"/><path d="M150 200 L150 150 q0 -12 10 -12 l4 0 q9 0 9 10 l0 8 5 0 q4 0 4 5 l0 6 -6 2 0 21 z" fill="#12080c"/><path d="M164 138 q-2 -22 6 -30 q8 2 6 14 l-4 18 z" fill="#12080c"/><path d="M120 128 q20 -8 40 -2" stroke="#fff2b0" stroke-width="2" fill="none" opacity=".7"/><path d="M60 96 q6 -18 2 -34" stroke="#5c4450" stroke-width="4" fill="none" opacity=".5"/><path d="M270 90 q-6 -18 -2 -34" stroke="#5c4450" stroke-width="4" fill="none" opacity=".5"/></svg>`},
+{t:"Beauty and the Beast",y:1991,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bb1" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#4a3a63"/><stop offset="1" stop-color="#1d1430"/></radialGradient></defs><rect width="320" height="200" fill="url(#bb1)"/><path d="M40 0 a45 90 0 0 0 0 130" stroke="#2e2347" stroke-width="10" fill="none"/><path d="M280 0 a45 90 0 0 1 0 130" stroke="#2e2347" stroke-width="10" fill="none"/><circle cx="160" cy="26" r="5" fill="#ffe9a8"/><path d="M160 31 l0 10 m-18 -4 l8 8 m28 -8 l-8 8" stroke="#c9a86a" stroke-width="2"/><g fill="#ffe9a8"><circle cx="138" cy="48" r="3"/><circle cx="160" cy="52" r="3"/><circle cx="182" cy="48" r="3"/></g><ellipse cx="160" cy="182" rx="130" ry="16" fill="#5b4a7d" opacity=".55"/><path d="M150 96 q-5 -18 8 -22 q13 4 8 22 q14 34 34 44 l-10 40 q-32 12 -64 0 q-4 -44 8 -62 q10 -10 16 -22 z" fill="#f6c945"/><path d="M150 96 q-24 8 -30 24" stroke="#f6c945" stroke-width="7" fill="none"/><circle cx="158" cy="68" r="9" fill="#f0c9a0"/><path d="M186 78 q16 -10 14 -26 q16 10 8 30 q10 26 -4 44 l-22 34 -14 -6 q18 -40 4 -62 q8 -6 14 -14 z" fill="#274a8f"/><circle cx="196" cy="52" r="10" fill="#6f5a44"/><path d="M188 44 l-4 -8 6 4 z M204 44 l4 -8 -6 4 z" fill="#6f5a44"/></svg>`},
+{t:"Aladdin",y:1992,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#101b4d"/><circle cx="170" cy="86" r="62" fill="#f3ecd2"/><circle cx="170" cy="86" r="74" fill="#f3ecd2" opacity=".15"/><g fill="#fff" opacity=".8"><circle cx="30" cy="30" r="1.6"/><circle cx="70" cy="60" r="1.3"/><circle cx="285" cy="40" r="1.6"/><circle cx="255" cy="90" r="1.2"/><circle cx="40" cy="120" r="1.4"/><circle cx="300" cy="140" r="1.3"/></g><path d="M0 200 l0 -36 30 0 0 -10 14 0 0 10 22 0 0 36 z" fill="#0a1130"/><path d="M240 200 l0 -30 20 0 0 -8 12 0 0 8 24 0 0 30 z" fill="#0a1130"/><path d="M96 200 l0 -26 q34 -20 64 0 l0 26 z" fill="#0a1130"/><circle cx="128" cy="166" r="15" fill="#0a1130"/><rect x="124" y="140" width="8" height="16" fill="#0a1130"/><path d="M118 96 q42 -18 84 0 l-12 10 q-30 -12 -60 0 z" fill="#5b2a8c"/><path d="M118 96 l-10 8 12 4 M202 96 l10 8 -12 4" fill="#5b2a8c"/><path d="M148 78 q4 -12 12 -12 q4 6 2 14 l8 0 q6 -10 12 -8 q4 6 0 14 l-34 4 z" fill="#0a1130"/><g stroke="#ffd97a" stroke-width="1.6" opacity=".8"><path d="M150 112 q10 4 20 0"/></g></svg>`},
+{t:"Jurassic Park",y:1993,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0c1418"/><g stroke="#2f4450" stroke-width="1.4" opacity=".7"><path d="M40 0 l-16 60"/><path d="M100 0 l-16 70"/><path d="M170 0 l-14 52"/><path d="M240 0 l-16 66"/><path d="M300 0 l-14 56"/><path d="M70 40 l-12 52"/><path d="M280 60 l-12 52"/></g><path d="M300 200 L300 96 q0 -34 -30 -36 q-36 -2 -50 18 q-12 16 -34 16 l0 10 26 2 q-8 10 4 14 l20 2 q-10 8 2 14 l22 2 q20 6 20 30 l0 32 z" fill="#101c14"/><circle cx="262" cy="80" r="4" fill="#c9d84c"/><g fill="#101c14"><path d="M200 96 l6 12 6 -12 z"/><path d="M216 108 l6 12 6 -12 z"/><path d="M236 122 l6 12 6 -12 z"/></g><rect y="176" width="320" height="24" fill="#0a0f0c"/><rect x="30" y="140" width="86" height="38" rx="8" fill="#22303a"/><rect x="44" y="128" width="56" height="22" rx="6" fill="#22303a"/><circle cx="52" cy="180" r="12" fill="#0e1418"/><circle cx="98" cy="180" r="12" fill="#0e1418"/><path d="M112 150 L190 132 L190 168 L114 162 Z" fill="#ffe9a0" opacity=".28"/><circle cx="112" cy="154" r="6" fill="#fff3c4"/><rect x="46" y="132" width="20" height="14" fill="#9fd2e8" opacity=".5"/></svg>`},
+{t:"Schindler's List",y:1993,a:["schindlers list"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#c9c9c9"/><rect x="0" y="0" width="110" height="140" fill="#8f8f8f"/><rect x="210" y="0" width="110" height="130" fill="#9b9b9b"/><g fill="#7a7a7a"><rect x="14" y="16" width="16" height="22"/><rect x="44" y="16" width="16" height="22"/><rect x="74" y="16" width="16" height="22"/><rect x="14" y="58" width="16" height="22"/><rect x="44" y="58" width="16" height="22"/><rect x="74" y="58" width="16" height="22"/><rect x="226" y="20" width="16" height="22"/><rect x="256" y="20" width="16" height="22"/><rect x="286" y="20" width="16" height="22"/><rect x="226" y="62" width="16" height="22"/><rect x="256" y="62" width="16" height="22"/></g><path d="M110 140 L210 130 L210 200 L110 200 Z" fill="#b0b0b0"/><rect y="140" width="110" height="60" fill="#a3a3a3"/><rect x="210" y="130" width="110" height="70" fill="#a8a8a8"/><g fill="#3d3d3d"><path d="M20 200 l0 -34 q6 -10 12 0 l0 34 z"/><circle cx="26" cy="158" r="6"/><path d="M52 200 l0 -30 q6 -10 12 0 l0 30 z"/><circle cx="58" cy="162" r="6"/><path d="M250 200 l0 -32 q6 -10 12 0 l0 32 z"/><circle cx="256" cy="160" r="6"/><path d="M282 200 l0 -28 q6 -10 12 0 l0 28 z"/><circle cx="288" cy="164" r="6"/></g><path d="M155 186 l0 -24 q6 -8 12 0 l0 24 z" fill="#b03030"/><circle cx="161" cy="154" r="6" fill="#d8b8a8"/><path d="M152 160 q9 -8 18 0 l-2 8 -14 0 z" fill="#b03030"/></svg>`},
+{t:"The Lion King",y:1994,a:["lion king"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".7" stop-color="#ff7847"/><stop offset="1" stop-color="#d84f3a"/></linearGradient></defs><rect width="320" height="200" fill="url(#lk1)"/><circle cx="160" cy="76" r="44" fill="#fff1b8"/><circle cx="160" cy="76" r="58" fill="#fff1b8" opacity=".25"/><path d="M0 200 l0 -30 q60 -14 90 -34 l70 12 0 52 z" fill="#5e2a20"/><path d="M60 138 L200 108 L206 128 L70 152 Z" fill="#7a3527"/><path d="M20 172 q14 -20 4 -36 M290 190 q-14 -18 -4 -34" stroke="#4a2018" stroke-width="5" fill="none"/><path d="M255 178 l6 -26 m0 0 q-14 -8 -10 -20 q16 -2 18 10 q14 -6 18 6 q-8 14 -26 4" stroke="#4a2018" stroke-width="4" fill="none"/><path d="M150 96 q-8 -14 4 -20 q12 -4 16 8 l-2 14 q10 22 -4 30 l-18 4 q-10 -20 4 -36 z" fill="#3a1c2e"/><circle cx="160" cy="72" r="7" fill="#3a1c2e"/><path d="M142 60 q4 -20 18 -22 q16 2 18 22" stroke="#3a1c2e" stroke-width="5" fill="none"/><path d="M158 42 l-16 -8 M164 42 l16 -8" stroke="#3a1c2e" stroke-width="4"/><ellipse cx="161" cy="36" rx="9" ry="6" fill="#e8a03c"/><circle cx="156" cy="35" r="1.4" fill="#3a1c2e"/><circle cx="166" cy="35" r="1.4" fill="#3a1c2e"/></svg>`},
+{t:"Forrest Gump",y:1994,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#8fb573"/><rect y="0" width="320" height="90" fill="#a8c98a"/><ellipse cx="60" cy="40" rx="46" ry="26" fill="#6f9e55"/><ellipse cx="270" cy="34" rx="52" ry="30" fill="#6f9e55"/><rect y="150" width="320" height="50" fill="#b8b2a4"/><rect x="70" y="96" width="180" height="12" rx="4" fill="#7a5230"/><rect x="70" y="118" width="180" height="10" rx="4" fill="#7a5230"/><rect x="80" y="108" width="10" height="52" fill="#5e3d22"/><rect x="230" y="108" width="10" height="52" fill="#5e3d22"/><path d="M138 96 l0 -30 q0 -8 8 -8 l8 0 q8 0 8 8 l0 30 z" fill="#f2f0e8"/><circle cx="150" cy="50" r="11" fill="#e8b48c"/><path d="M140 44 q10 -8 20 0 l0 -4 -20 0 z" fill="#6b4a2f"/><rect x="136" y="96" width="28" height="34" rx="4" fill="#f2f0e8"/><rect x="140" y="130" width="8" height="26" fill="#c9c4b4"/><rect x="152" y="130" width="8" height="26" fill="#c9c4b4"/><rect x="176" y="86" width="34" height="22" rx="3" fill="#8a2f2f"/><rect x="176" y="84" width="34" height="6" rx="3" fill="#a84040"/><path d="M60 30 q10 -12 22 -6 q-2 12 -14 12 l-8 24 -3 0 z" fill="#fff" opacity=".92"/></svg>`},
+{t:"Pulp Fiction",y:1994,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#3a0f16"/><path d="M0 0 q20 60 0 120 M40 0 q16 60 0 116 M80 0 q14 56 0 110" stroke="#571722" stroke-width="14" fill="none"/><path d="M320 0 q-20 60 0 120 M280 0 q-16 60 0 116 M240 0 q-14 56 0 110" stroke="#571722" stroke-width="14" fill="none"/><g><rect x="88" y="128" width="144" height="72" fill="#111"/><g fill="#e8e4d8"><rect x="88" y="128" width="24" height="24"/><rect x="136" y="128" width="24" height="24"/><rect x="184" y="128" width="24" height="24"/><rect x="112" y="152" width="24" height="24"/><rect x="160" y="152" width="24" height="24"/><rect x="208" y="152" width="24" height="24"/><rect x="88" y="176" width="24" height="24"/><rect x="136" y="176" width="24" height="24"/><rect x="184" y="176" width="24" height="24"/></g></g><ellipse cx="160" cy="118" rx="86" ry="30" fill="#ffe9a0" opacity=".1"/><path d="M120 138 l0 -42 q0 -10 10 -10 q12 2 10 14 l-4 38 z" fill="#0d0d0d"/><circle cx="130" cy="76" r="9" fill="#e8b48c"/><path d="M121 70 q9 -9 18 0 l0 10 -18 0 z" fill="#141414"/><path d="M118 96 l-14 -12 M142 96 l14 -12" stroke="#0d0d0d" stroke-width="5"/><path d="M182 138 l0 -40 q0 -10 10 -10 q12 2 10 14 l-4 36 z" fill="#0d0d0d"/><circle cx="192" cy="74" r="9" fill="#d8a074"/><path d="M183 66 q9 -8 18 0 l2 12 -22 0 z" fill="#141414"/><path d="M200 88 l14 -18 M204 90 l18 -12" stroke="#0d0d0d" stroke-width="4"/><path d="M212 70 l6 -6 M218 76 l8 -4" stroke="#d8a074" stroke-width="3"/></svg>`},
+{t:"Toy Story",y:1995,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#7fb8e8"/><g fill="#fff"><ellipse cx="50" cy="34" rx="26" ry="12"/><ellipse cx="70" cy="30" rx="20" ry="10"/><ellipse cx="200" cy="24" rx="28" ry="12"/><ellipse cx="222" cy="30" rx="20" ry="10"/><ellipse cx="290" cy="70" rx="24" ry="11"/><ellipse cx="120" cy="66" rx="22" ry="10"/></g><rect y="150" width="320" height="50" fill="#b57a3e"/><g stroke="#9a6330" stroke-width="2"><path d="M0 166 l320 0"/><path d="M0 184 l320 0"/></g><path d="M118 150 l0 -44 q0 -6 6 -6 l12 0 q6 0 6 6 l0 44 z" fill="#f2d84a"/><rect x="116" y="112" width="26" height="22" fill="#8a4b2a"/><path d="M112 96 l34 0 -4 -10 -26 0 z" fill="#7a3f22"/><ellipse cx="129" cy="86" rx="17" ry="6" fill="#7a3f22"/><circle cx="129" cy="74" r="10" fill="#e8b48c"/><rect x="120" y="132" width="8" height="18" fill="#28449c"/><rect x="132" y="132" width="8" height="18" fill="#28449c"/><path d="M176 150 l0 -40 q0 -18 16 -18 q16 0 16 18 l0 40 z" fill="#e8e8e8"/><circle cx="192" cy="80" r="13" fill="#e8e8e8"/><circle cx="192" cy="80" r="9" fill="#bfe3f2" opacity=".8"/><path d="M176 116 q-12 -4 -12 -16 l6 0 q0 8 8 10 z" fill="#3ec74f"/><path d="M208 116 q12 -4 12 -16 l-6 0 q0 8 -8 10 z" fill="#3ec74f"/><rect x="180" y="120" width="24" height="6" fill="#3ec74f"/><rect x="180" y="140" width="10" height="10" fill="#c9c9c9"/><rect x="194" y="140" width="10" height="10" fill="#c9c9c9"/></svg>`},
+{t:"Independence Day",y:1996,a:["id4"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1a2338"/><ellipse cx="160" cy="30" rx="190" ry="58" fill="#2b3550"/><ellipse cx="160" cy="26" rx="150" ry="44" fill="#39445f"/><ellipse cx="160" cy="22" rx="110" ry="32" fill="#46516d"/><circle cx="160" cy="34" r="18" fill="#5c688a"/><g fill="#9fe8ff" opacity=".8"><circle cx="60" cy="44" r="3"/><circle cx="110" cy="56" r="3"/><circle cx="210" cy="56" r="3"/><circle cx="260" cy="44" r="3"/></g><path d="M148 46 L172 46 L192 132 L128 132 Z" fill="#bfe9ff" opacity=".65"/><rect x="112" y="132" width="96" height="40" fill="#e8ecf4"/><path d="M132 132 l0 -18 56 0 0 18" fill="#e8ecf4"/><path d="M126 114 l68 0 -34 -16 z" fill="#d8dce8"/><ellipse cx="160" cy="98" rx="16" ry="12" fill="#e8ecf4"/><g stroke="#b8becd" stroke-width="3"><path d="M138 172 l0 -30 M148 172 l0 -30 M160 172 l0 -30 M172 172 l0 -30 M182 172 l0 -30"/></g><circle cx="160" cy="128" r="20" fill="#ffd06b" opacity=".85"/><circle cx="160" cy="128" r="10" fill="#fff3c4"/><path d="M120 140 l-14 -8 M200 140 l14 -8 M126 156 l-16 4 M196 156 l16 4" stroke="#ffb84d" stroke-width="4"/><rect y="172" width="320" height="28" fill="#10182a"/></svg>`},
+{t:"Titanic",y:1997,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ti1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset=".55" stop-color="#e86a6a"/><stop offset="1" stop-color="#7a3a6e"/></linearGradient></defs><rect width="320" height="200" fill="url(#ti1)"/><circle cx="220" cy="66" r="30" fill="#ffe3a0"/><rect y="130" width="320" height="70" fill="#3a2352"/><path d="M0 200 L0 148 L250 118 L282 128 L200 200 Z" fill="#1d1230"/><path d="M0 156 L246 124" stroke="#4a3568" stroke-width="3"/><g stroke="#4a3568" stroke-width="2"><path d="M40 152 l0 -12 M80 147 l0 -12 M120 142 l0 -12 M160 137 l0 -12 M200 132 l0 -12 M236 127 l0 -10"/></g><path d="M246 108 l0 16 M246 108 l-6 2 M246 108 l6 4" stroke="#120b20" stroke-width="3" fill="none"/><path d="M240 96 q6 -10 6 -18 l3 14 q10 -4 16 2 l-12 4 q4 8 0 12 q-8 -2 -13 -14 z" fill="#120b20"/><circle cx="247" cy="74" r="6" fill="#120b20"/><path d="M230 100 q8 -12 4 -22 l4 12 q6 -8 12 -6 l-8 8 q6 2 6 8 l-12 2 q-4 4 -6 -2 z" fill="#241638" opacity="0"/><path d="M226 104 l-20 -22 M258 104 l20 -24" stroke="#120b20" stroke-width="4"/><circle cx="238" cy="66" r="5" fill="#120b20"/><path d="M232 72 q-10 10 -22 8" stroke="#120b20" stroke-width="4" fill="none"/></svg>`},
+{t:"Men in Black",y:1997,a:["mib"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0d1120"/><g fill="#161c30"><rect x="10" y="30" width="40" height="170"/><rect x="60" y="60" width="34" height="140"/><rect x="230" y="44" width="36" height="156"/><rect x="276" y="70" width="34" height="130"/></g><g fill="#ffd97a" opacity=".7"><rect x="18" y="44" width="6" height="8"/><rect x="34" y="60" width="6" height="8"/><rect x="18" y="84" width="6" height="8"/><rect x="240" y="60" width="6" height="8"/><rect x="252" y="84" width="6" height="8"/><rect x="286" y="90" width="6" height="8"/></g><circle cx="160" cy="70" r="26" fill="#fff" opacity=".95"/><circle cx="160" cy="70" r="36" fill="#bfe9ff" opacity=".35"/><g stroke="#dff4ff" stroke-width="2" opacity=".8"><path d="M160 30 l0 -14 M132 44 l-10 -10 M188 44 l10 -10 M124 70 l-14 0 M196 70 l14 0"/></g><path d="M118 200 l0 -74 q0 -12 12 -12 l16 0 q12 0 12 12 l0 74 z" fill="#0a0a0f"/><circle cx="138" cy="98" r="12" fill="#c98d5e"/><path d="M128 96 l8 0 M140 96 l8 0" stroke="#0a0a0f" stroke-width="6"/><rect x="134" y="116" width="8" height="26" fill="#e8e8e8"/><path d="M136 118 l4 20 -4 6 z" fill="#0a0a0f"/><path d="M158 128 l14 -16 4 4 -14 16 z" fill="#0a0a0f"/><rect x="172" y="104" width="14" height="5" rx="2" fill="#c9ced9" transform="rotate(-45 179 106)"/><path d="M196 200 l0 -70 q0 -12 12 -12 l14 0 q12 0 12 12 l0 70 z" fill="#0a0a0f"/><circle cx="215" cy="104" r="12" fill="#8a5a3a"/><path d="M205 102 l8 0 M217 102 l8 0" stroke="#0a0a0f" stroke-width="6"/><rect x="211" y="122" width="8" height="24" fill="#e8e8e8"/><path d="M213 124 l4 18 -4 6 z" fill="#0a0a0f"/></svg>`},
+{t:"The Fifth Element",y:1997,a:["fifth element"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#141b33"/><g fill="#1d2748"><rect x="0" y="0" width="70" height="200"/><rect x="250" y="0" width="70" height="200"/></g><g fill="#ffd97a" opacity=".6"><rect x="12" y="20" width="8" height="10"/><rect x="34" y="48" width="8" height="10"/><rect x="12" y="90" width="8" height="10"/><rect x="44" y="130" width="8" height="10"/><rect x="262" y="30" width="8" height="10"/><rect x="288" y="70" width="8" height="10"/><rect x="266" y="120" width="8" height="10"/><rect x="292" y="160" width="8" height="10"/></g><rect x="76" y="150" width="60" height="26" rx="8" fill="#f2c53d"/><rect x="70" y="156" width="12" height="12" fill="#8fe8ff"/><rect x="196" y="40" width="56" height="24" rx="8" fill="#f2c53d"/><rect x="244" y="46" width="10" height="10" fill="#8fe8ff"/><rect x="86" y="72" width="52" height="22" rx="7" fill="#e86a3a"/><path d="M160 200 l0 -76 q0 -10 8 -10 l10 0 q8 0 8 10 l0 76 z" fill="#f2e8dc"/><g stroke="#fff" stroke-width="5"><path d="M164 128 l18 14 M182 128 l-18 14 M164 152 l18 14 M182 152 l-18 14"/></g><circle cx="173" cy="102" r="12" fill="#f0c9a0"/><path d="M160 96 q0 -14 13 -14 q13 0 13 14 l0 12 q6 -18 -2 -26 q-10 -8 -22 0 q-8 8 -2 26 z" fill="#ff6b1f"/><path d="M162 108 q-4 10 2 16 M184 108 q4 10 -2 16" stroke="#ff6b1f" stroke-width="5" fill="none"/></svg>`},
+{t:"The Truman Show",y:1998,a:["truman show"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tr1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd0f2"/><stop offset="1" stop-color="#c9e8f7"/></linearGradient></defs><rect width="320" height="200" fill="url(#tr1)"/><g fill="#fff"><ellipse cx="60" cy="40" rx="30" ry="13"/><ellipse cx="84" cy="46" rx="22" ry="10"/><ellipse cx="200" cy="30" rx="34" ry="14"/><ellipse cx="150" cy="76" rx="26" ry="11"/><ellipse cx="60" cy="110" rx="30" ry="12"/></g><rect y="168" width="320" height="32" fill="#3a7ba8"/><path d="M0 168 q80 -8 160 0 q80 8 160 0 l0 32 -320 0 z" fill="#2d6890" opacity=".7"/><path d="M212 168 L232 60 L320 60 L320 168 Z" fill="#a8d8ee"/><g stroke="#7fb8d8" stroke-width="3" fill="none"><path d="M212 168 L320 168 M220 140 L320 140 M226 112 L320 112 M231 84 L320 84"/><path d="M258 168 L266 60 M300 168 L304 60"/></g><rect x="238" y="34" width="34" height="52" fill="#1d3346"/><rect x="240" y="36" width="30" height="48" fill="#0e2233"/><path d="M244 96 l0 -14 q0 -6 5 -6 q7 0 6 8 l-2 12 z" fill="#25404f"/><circle cx="249" cy="70" r="5" fill="#25404f"/><path d="M243 76 l-8 -8 M256 74 l9 -10" stroke="#25404f" stroke-width="3"/></svg>`},
+{t:"The Big Lebowski",y:1998,a:["big lebowski"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#241640"/><g fill="#7c5cff" opacity=".5"><path d="M40 24 l4 10 10 2 -8 8 2 10 -8 -6 -8 6 2 -10 -8 -8 10 -2 z"/><path d="M270 40 l3 8 8 2 -6 6 1 8 -6 -4 -6 4 1 -8 -6 -6 8 -2 z"/><path d="M160 14 l3 8 8 2 -6 6 1 8 -6 -4 -6 4 1 -8 -6 -6 8 -2 z"/></g><path d="M60 200 L120 82 L200 82 L260 200 Z" fill="#b5834a"/><g stroke="#9a6c3a" stroke-width="2"><path d="M92 200 L136 82 M124 200 L152 82 M160 200 L160 82 M196 200 L168 82 M228 200 L184 82"/></g><g fill="#f2ede0"><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z" transform="translate(-18,4)"/><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z"/><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z" transform="translate(18,4)"/><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z" transform="translate(-9,-9)"/><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z" transform="translate(9,-9)"/><path d="M156 60 q-4 -6 0 -12 q4 -4 4 -10 l4 0 q0 6 4 10 q4 6 0 12 q-2 6 -12 0 z" transform="translate(0,-18)"/></g><circle cx="86" cy="160" r="20" fill="#181028"/><circle cx="80" cy="154" r="3" fill="#241640"/><circle cx="90" cy="152" r="3" fill="#241640"/><circle cx="86" cy="162" r="3" fill="#241640"/><rect x="236" y="130" width="40" height="52" rx="4" fill="#f2ede0" opacity=".92"/><rect x="238" y="150" width="36" height="30" fill="#c9a86a"/><rect x="238" y="132" width="36" height="18" fill="#fff"/></svg>`},
+{t:"The Matrix",y:1999,a:["matrix"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#010703"/><g stroke="#1fbf5e" stroke-width="6"><path d="M14 0 V200" stroke-dasharray="6 11" opacity=".38"/><path d="M42 -6 V200" stroke-dasharray="6 8" opacity=".55"/><path d="M70 0 V200" stroke-dasharray="6 14" opacity=".3"/><path d="M98 -4 V200" stroke-dasharray="6 9" opacity=".5"/><path d="M126 0 V200" stroke-dasharray="6 12" opacity=".34"/><path d="M154 -8 V200" stroke-dasharray="6 10" opacity=".45"/><path d="M182 0 V200" stroke-dasharray="6 13" opacity=".3"/><path d="M210 -5 V200" stroke-dasharray="6 9" opacity=".52"/><path d="M238 0 V200" stroke-dasharray="6 12" opacity=".36"/><path d="M266 -7 V200" stroke-dasharray="6 8" opacity=".55"/><path d="M294 0 V200" stroke-dasharray="6 11" opacity=".4"/></g><g fill="#8fffb5"><rect x="39" y="60" width="6" height="6"/><rect x="95" y="112" width="6" height="6"/><rect x="207" y="40" width="6" height="6"/><rect x="263" y="88" width="6" height="6"/><rect x="151" y="24" width="6" height="6"/></g><ellipse cx="150" cy="142" rx="66" ry="48" fill="#08170d" opacity=".92"/><rect y="180" width="320" height="20" fill="#031008"/><g stroke="#1d3524" stroke-width="9" stroke-linecap="round" fill="none"><path d="M184 180 L177 150 L160 137"/><path d="M158 180 L165 152 L160 137"/><path d="M160 137 Q140 129 121 119"/></g><g stroke="#1d3524" stroke-width="7" stroke-linecap="round"><path d="M140 128 L129 154"/><path d="M151 133 L147 160"/></g><path d="M157 140 q-8 20 -22 28 l-7 -7 q13 -9 19 -25 z" fill="#1d3524"/><circle cx="112" cy="112" r="9" fill="#1d3524"/><path d="M104 110 l7 -2.4 M114 107 l7 -2.4" stroke="#3adf7c" stroke-width="2"/><g stroke="#eafff2" stroke-width="2"><path d="M14 84 L100 100" opacity=".9"/><path d="M20 102 L98 112" opacity=".7"/></g><g stroke="#9fffc4" fill="none" opacity=".8"><circle cx="58" cy="92" r="5"/><circle cx="58" cy="92" r="10" opacity=".45"/><circle cx="80" cy="110" r="4"/></g><ellipse cx="168" cy="184" rx="34" ry="4" fill="#0b2414"/></svg>`},
+{t:"Fight Club",y:1999,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0f1d1f"/><rect width="320" height="200" fill="#132a2d" opacity=".6"/><g opacity=".35" fill="#0a1416"><circle cx="40" cy="40" r="26"/><circle cx="290" cy="160" r="34"/><circle cx="270" cy="30" r="18"/></g><rect x="0" y="176" width="320" height="24" fill="#0a1416"/><rect x="84" y="70" width="152" height="66" rx="10" fill="#ff7fa8" transform="rotate(-8 160 103)"/><rect x="92" y="76" width="136" height="26" rx="8" fill="#ffa8c4" transform="rotate(-8 160 92)" opacity=".85"/><rect x="96" y="118" width="120" height="8" rx="4" fill="#e05c88" transform="rotate(-8 156 122)" opacity=".7"/><path d="M60 168 q30 8 60 2" stroke="#0a1416" stroke-width="4" fill="none"/><circle cx="252" cy="170" r="4" fill="#5c1a1a"/><circle cx="266" cy="178" r="3" fill="#5c1a1a"/><circle cx="60" cy="182" r="3" fill="#5c1a1a"/></svg>`},
+{t:"Gladiator",y:2000,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gl1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8d5a0"/><stop offset="1" stop-color="#c9a86a"/></linearGradient></defs><rect width="320" height="200" fill="url(#gl1)"/><rect y="0" width="320" height="96" fill="#b5945c"/><g fill="#9a7a44"><path d="M0 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M40 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M80 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M120 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M160 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M200 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M240 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/><path d="M280 20 a16 20 0 0 1 32 0 l0 76 -32 0 z"/></g><g fill="#6b5230" opacity=".7"><circle cx="16" cy="60" r="4"/><circle cx="56" cy="58" r="4"/><circle cx="96" cy="62" r="4"/><circle cx="136" cy="58" r="4"/><circle cx="176" cy="60" r="4"/><circle cx="216" cy="58" r="4"/><circle cx="256" cy="62" r="4"/><circle cx="296" cy="58" r="4"/></g><rect y="96" width="320" height="8" fill="#8a6a3c"/><ellipse cx="160" cy="180" rx="150" ry="30" fill="#d8b878" opacity=".6"/><path d="M148 196 l0 -52 q0 -8 6 -8 l10 0 q6 0 6 8 l0 52 z" fill="#4a3826"/><path d="M146 148 q12 -10 26 0 l0 -14 -26 0 z" fill="#6b5230"/><circle cx="159" cy="120" r="10" fill="#8a6a48"/><path d="M148 116 q11 -10 22 0 l0 -8 -22 0 z" fill="#3a2c1c"/><path d="M144 148 l-10 30 M174 148 l10 30" stroke="#4a3826" stroke-width="6"/><path d="M184 176 l2 16" stroke="#8a8a92" stroke-width="4"/><ellipse cx="120" cy="190" rx="30" ry="5" fill="#b5945c" opacity=".8"/></svg>`},
+{t:"Cast Away",y:2000,a:["castaway"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ca1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aee6f2"/><stop offset="1" stop-color="#7fd0e8"/></linearGradient></defs><rect width="320" height="130" fill="url(#ca1)"/><rect y="110" width="320" height="40" fill="#2d9db8"/><path d="M0 150 q40 -8 80 0 q40 8 80 0 q40 -8 80 0 q40 8 80 0 l0 50 -320 0 z" fill="#f2e3c0"/><circle cx="272" cy="34" r="22" fill="#fff3c4"/><path d="M40 130 q-4 -50 6 -64 q22 4 30 22 q-16 2 -24 -4 q14 16 10 46 z" fill="#3a8a5c"/><path d="M46 66 q-20 -8 -34 4 q16 10 30 2 M46 66 q6 -20 24 -22 q-4 16 -18 20" fill="#3a8a5c"/><rect x="44" y="120" width="8" height="30" fill="#8a6a48" transform="rotate(6 48 135)"/><circle cx="200" cy="118" r="26" fill="#e8e0d0"/><path d="M182 108 q18 -12 36 0" stroke="#c9bfa8" stroke-width="2" fill="none"/><path d="M188 130 q12 10 24 0" stroke="#c9bfa8" stroke-width="2" fill="none"/><path d="M196 106 q-8 6 -6 14 q2 8 10 10 q-2 -12 4 -18 q6 -4 4 -10 q-8 -2 -12 4 z" fill="#c0392b"/><circle cx="192" cy="116" r="2.5" fill="#7a2018"/><circle cx="206" cy="114" r="2.5" fill="#7a2018"/><path d="M194 126 q6 4 12 -2" stroke="#7a2018" stroke-width="2" fill="none"/><g stroke="#8a6a48" stroke-width="5"><path d="M96 176 l60 -8 M98 186 l60 -8 M100 196 l58 -8"/></g><path d="M120 170 l4 -30 26 -4" stroke="#6b5236" stroke-width="3" fill="none"/></svg>`},
+{t:"Shrek",y:2001,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#3d5a2e"/><ellipse cx="70" cy="30" rx="60" ry="26" fill="#4a6b38"/><ellipse cx="260" cy="40" rx="70" ry="30" fill="#4a6b38"/><rect y="140" width="320" height="60" fill="#2d4022"/><ellipse cx="160" cy="168" rx="120" ry="20" fill="#4f5d2a"/><ellipse cx="160" cy="164" rx="100" ry="14" fill="#5c6b30"/><g fill="#4f5d2a"><circle cx="80" cy="158" r="6"/><circle cx="250" cy="166" r="7"/></g><circle cx="160" cy="92" r="34" fill="#7ab648"/><path d="M128 78 q-16 -8 -20 -18 q10 -2 16 4 q4 6 8 8 z" fill="#7ab648"/><path d="M192 78 q16 -8 20 -18 q-10 -2 -16 4 q-4 6 -8 8 z" fill="#7ab648"/><circle cx="112" cy="62" r="6" fill="#8fc95c"/><circle cx="208" cy="62" r="6" fill="#8fc95c"/><circle cx="150" cy="86" r="4" fill="#2d3a1c"/><circle cx="172" cy="86" r="4" fill="#2d3a1c"/><path d="M144 104 q16 12 34 0" stroke="#2d3a1c" stroke-width="3" fill="none"/><ellipse cx="161" cy="96" rx="7" ry="5" fill="#6ba33c"/><path d="M132 124 q28 14 56 0 l6 36 -68 0 z" fill="#e8e0c8"/><path d="M126 128 l20 34 -26 0 z M194 128 l-20 34 26 0 z" fill="#5c3d26"/><rect x="60" y="96" width="6" height="48" fill="#8a6a3c"/><rect x="34" y="88" width="58" height="18" rx="4" fill="#a8824a"/><path d="M34 88 l-8 9 8 9 z" fill="#a8824a"/></svg>`},
+{t:"Harry Potter and the Sorcerer's Stone",y:2001,a:["harry potter","harry potter and the philosophers stone","the sorcerers stone","the philosophers stone"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#131a3a"/><circle cx="60" cy="40" r="18" fill="#f2ecd0"/><g fill="#0a0f26"><path d="M0 200 l0 -60 20 0 0 -20 8 -14 8 14 0 20 16 0 0 60 z"/><path d="M52 200 l0 -84 12 0 0 -14 6 -10 6 10 0 14 12 0 0 84 z"/><path d="M232 200 l0 -70 14 0 0 -18 7 -12 7 12 0 18 14 0 0 70 z"/><path d="M274 200 l0 -54 12 0 0 -14 6 -10 6 10 0 14 10 0 0 54 z"/><path d="M88 200 l0 -44 144 0 0 44 z"/></g><g fill="#ffd97a" opacity=".8"><rect x="8" y="152" width="5" height="8"/><rect x="60" y="130" width="5" height="8"/><rect x="70" y="150" width="5" height="8"/><rect x="242" y="144" width="5" height="8"/><rect x="284" y="158" width="5" height="8"/><rect x="100" y="168" width="5" height="8"/><rect x="130" y="168" width="5" height="8"/><rect x="200" y="168" width="5" height="8"/></g><g stroke="#e8c95c" stroke-width="5" fill="none"><circle cx="130" cy="92" r="26"/><circle cx="196" cy="92" r="26"/><path d="M156 92 l14 0"/><path d="M104 90 l-14 -4 M222 90 l14 -4"/></g><path d="M158 40 l10 12 -8 2 10 12 -8 2 8 10" stroke="#ffd97a" stroke-width="4" fill="none"/><path d="M256 30 q10 -8 18 0 q-4 8 -10 6 l-8 8 -4 -4 z" fill="#c9b68a"/></svg>`},
+{t:"The Lord of the Rings: The Fellowship of the Ring",y:2001,a:["lord of the rings","the fellowship of the ring","lotr","lord of the rings fellowship of the ring"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="lr1" cx=".5" cy=".5" r=".7"><stop offset="0" stop-color="#3a2610"/><stop offset="1" stop-color="#120c06"/></radialGradient><linearGradient id="lr2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".5" stop-color="#e8b845"/><stop offset="1" stop-color="#b5832a"/></linearGradient></defs><rect width="320" height="200" fill="url(#lr1)"/><path d="M40 200 l40 -70 40 70 z" fill="#1d1208" opacity=".8"/><path d="M74 130 q6 -14 12 0 q-4 10 -12 0" fill="#ff6b1f" opacity=".7"/><circle cx="160" cy="100" r="54" fill="none" stroke="url(#lr2)" stroke-width="16"/><circle cx="160" cy="100" r="63" fill="none" stroke="#ffdf8a" stroke-width="2" opacity=".5"/><circle cx="160" cy="100" r="45" fill="none" stroke="#ffdf8a" stroke-width="2" opacity=".5"/><g stroke="#ff9d3a" stroke-width="2.4" fill="none" opacity=".9"><path d="M120 82 q6 -6 10 0 q4 6 10 0 q4 -6 10 0"/><path d="M170 76 q6 -6 10 0 q4 6 10 0"/><path d="M120 122 q6 6 10 0 q4 -6 10 0 q4 6 10 0"/><path d="M170 126 q6 6 10 0 q4 -6 10 0"/></g><g fill="#ffe9a0" opacity=".5"><circle cx="60" cy="40" r="1.6"/><circle cx="270" cy="50" r="1.6"/><circle cx="290" cy="150" r="1.4"/><circle cx="36" cy="160" r="1.4"/></g></svg>`},
+{t:"Spirited Away",y:2001,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1a2440"/><rect x="60" y="30" width="200" height="120" fill="#a83232"/><rect x="50" y="26" width="220" height="12" rx="4" fill="#2d5c3e"/><rect x="70" y="58" width="180" height="10" rx="3" fill="#2d5c3e"/><rect x="80" y="90" width="160" height="10" rx="3" fill="#2d5c3e"/><g fill="#ffd97a"><rect x="80" y="42" width="14" height="10"/><rect x="110" y="42" width="14" height="10"/><rect x="140" y="42" width="14" height="10"/><rect x="170" y="42" width="14" height="10"/><rect x="200" y="42" width="14" height="10"/><rect x="230" y="42" width="14" height="10"/><rect x="90" y="72" width="12" height="12"/><rect x="130" y="72" width="12" height="12"/><rect x="180" y="72" width="12" height="12"/><rect x="220" y="72" width="12" height="12"/><rect x="100" y="106" width="12" height="16"/><rect x="150" y="106" width="12" height="16"/><rect x="200" y="106" width="12" height="16"/></g><rect x="140" y="0" width="12" height="30" fill="#8a2828"/><rect y="150" width="320" height="50" fill="#26365c"/><rect x="40" y="150" width="240" height="10" fill="#7a4a3a"/><g stroke="#5c3a2e" stroke-width="4"><path d="M60 160 l0 40 M120 160 l0 40 M200 160 l0 40 M260 160 l0 40"/></g><g stroke="#8a5a48" stroke-width="3"><path d="M52 168 l216 0"/></g><path d="M152 148 q-8 -34 4 -52 q12 18 4 52 z" fill="#151521"/><ellipse cx="156" cy="104" rx="9" ry="12" fill="#f2f2ea"/><path d="M151 100 l4 3 M161 100 l-4 3" stroke="#151521" stroke-width="2"/><circle cx="152" cy="108" r="1.6" fill="#8a6aa8"/><circle cx="160" cy="108" r="1.6" fill="#8a6aa8"/><circle cx="240" cy="164" r="6" fill="#ffb84d"/><circle cx="80" cy="164" r="6" fill="#ffb84d"/></svg>`},
+{t:"Spider-Man",y:2002,a:["spiderman","spider man"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1d2a40"/><g stroke="#3a4a66" stroke-width="1.6" opacity=".8"><path d="M20 0 l-12 200 M60 0 l-8 200 M300 0 l12 200 M260 0 l8 200"/></g><g stroke="#8fa8c9" stroke-width="1.4" opacity=".5"><path d="M40 -10 l10 60 M90 -20 l8 56 M140 -30 l6 50 M190 -20 l6 54 M240 -14 l8 58 M280 -6 l10 60"/></g><path d="M160 0 l0 44" stroke="#dfe8f2" stroke-width="3"/><path d="M160 44 q-22 4 -24 30 q0 26 24 34 q24 -8 24 -34 q-2 -26 -24 -30 z" fill="#c0392b"/><path d="M141 96 q8 12 19 12 q11 0 19 -12 l-6 14 q-6 8 -13 8 q-7 0 -13 -8 z" fill="#8a1f14"/><path d="M146 92 q-6 -16 8 -22 q8 -2 10 6 q-2 12 -18 16 z" fill="#f2f2f2"/><path d="M174 92 q6 -16 -8 -22 q-8 -2 -10 6 q2 12 18 16 z" fill="#f2f2f2"/><g stroke="#5c120c" stroke-width="1.4" fill="none"><path d="M160 44 l0 64 M138 74 l44 0 M144 58 q16 10 32 0 M144 92 q16 -10 32 0"/></g><path d="M150 128 q10 8 20 0 l-4 14 q-6 4 -12 0 z" fill="#e8b48c"/><path d="M144 142 q16 12 32 0 l-2 20 q-14 10 -28 0 z" fill="#4a2c38"/><g stroke="#9fb8d8" stroke-width="1.6" opacity=".7"><path d="M30 30 l6 30 M70 40 l5 26 M250 36 l-5 28 M290 30 l-6 30"/></g></svg>`},
+{t:"Finding Nemo",y:2003,a:["nemo"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fn1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1565c0"/><stop offset="1" stop-color="#0a2f6b"/></linearGradient></defs><rect width="320" height="200" fill="url(#fn1)"/><path d="M60 0 L90 0 L120 200 L70 200 Z" fill="#5c9fe8" opacity=".18"/><path d="M180 0 L206 0 L250 200 L190 200 Z" fill="#5c9fe8" opacity=".14"/><g fill="#e8f4ff" opacity=".5"><circle cx="40" cy="60" r="3"/><circle cx="46" cy="40" r="2"/><circle cx="290" cy="90" r="3"/><circle cx="284" cy="70" r="2"/></g><g stroke="#b06ad8" stroke-width="9" stroke-linecap="round" fill="none"><path d="M60 200 q-6 -34 8 -52"/><path d="M90 200 q2 -40 -8 -58"/><path d="M120 200 q-4 -36 10 -50"/><path d="M150 200 q4 -42 -6 -56"/><path d="M185 200 q-6 -34 6 -50"/><path d="M220 200 q2 -38 -8 -52"/><path d="M252 200 q-4 -32 8 -48"/></g><g stroke="#c98ae8" stroke-width="7" stroke-linecap="round" fill="none"><path d="M75 200 q-2 -28 6 -40"/><path d="M105 200 q2 -30 -6 -42"/><path d="M136 200 q-2 -30 8 -42"/><path d="M170 200 q2 -28 -6 -40"/><path d="M205 200 q-2 -26 6 -38"/><path d="M238 200 q0 -28 -6 -40"/></g><g><ellipse cx="150" cy="92" rx="26" ry="16" fill="#ff7f2a"/><path d="M176 92 l16 -10 0 20 z" fill="#ff7f2a"/><path d="M138 78 q6 14 0 28 l-8 0 q-5 -14 0 -28 z" fill="#fff"/><path d="M158 78 q6 14 0 28 l-8 0 q-5 -14 0 -28 z" fill="#fff"/><path d="M176 86 q4 6 0 12 l-4 0 q-3 -6 0 -12 z" fill="#fff"/><circle cx="132" cy="88" r="3" fill="#1a1a1a"/><path d="M148 70 q4 -8 10 -6 M150 114 q4 8 10 6" stroke="#e86a1f" stroke-width="4" fill="none"/></g><g transform="translate(52,34) scale(.55)"><ellipse cx="150" cy="92" rx="26" ry="16" fill="#ff8f3a"/><path d="M176 92 l16 -10 0 20 z" fill="#ff8f3a"/><path d="M138 78 q6 14 0 28 l-8 0 q-5 -14 0 -28 z" fill="#fff"/><path d="M158 78 q6 14 0 28 l-8 0 q-5 -14 0 -28 z" fill="#fff"/><circle cx="132" cy="88" r="3.4" fill="#1a1a1a"/></g></svg>`},
+{t:"Kill Bill: Vol. 1",y:2003,a:["kill bill","kill bill vol 1","kill bill volume 1"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#f2c518"/><g stroke="#e0b310" stroke-width="14"><path d="M160 100 L320 20 M160 100 L320 100 M160 100 L320 180 M160 100 L240 200 M160 100 L80 200 M160 100 L0 180 M160 100 L0 100 M160 100 L0 20 M160 100 L80 0 M160 100 L240 0"/></g><path d="M150 200 l0 -62 q0 -10 8 -10 l10 0 q8 0 8 10 l0 62 z" fill="#f2c518"/><path d="M150 200 l0 -62 q0 -10 8 -10 l4 0 0 72 z" fill="#e8ba0f"/><path d="M155 200 l0 -58 3 0 0 58 z M168 200 l0 -58 3 0 0 58 z" fill="#1a1a1a"/><rect x="150" y="126" width="26" height="6" fill="#1a1a1a"/><circle cx="163" cy="106" r="11" fill="#f0c9a0"/><path d="M152 100 q11 -10 22 0 l0 -6 -22 0 z" fill="#e8d84a"/><path d="M150 134 l-16 22 M176 134 l14 -30" stroke="#f2c518" stroke-width="7"/><path d="M186 108 L252 42" stroke="#c9ced9" stroke-width="5"/><path d="M252 42 L258 36" stroke="#e8e8e8" stroke-width="5"/><rect x="180" y="104" width="10" height="10" rx="2" fill="#1a1a1a"/><g fill="#b01818"><circle cx="216" cy="140" r="4"/><circle cx="228" cy="152" r="3"/><circle cx="206" cy="156" r="2.5"/></g></svg>`},
+{t:"V for Vendetta",y:2005,a:["v for vendetta"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#12101d"/><path d="M160 34 q-40 0 -44 44 q-2 34 14 52 q14 16 30 16 q16 0 30 -16 q16 -18 14 -52 q-4 -44 -44 -44 z" fill="#f2ede4"/><path d="M116 60 q-6 -26 20 -34 q24 -8 48 0 q26 8 20 34 l-10 -4 q2 -18 -18 -22 q-16 -4 -32 0 q-20 4 -18 22 z" fill="#0a0812"/><path d="M134 78 q10 -6 22 -2 l-2 8 q-10 -4 -18 0 z" fill="#0a0812"/><path d="M186 78 q-10 -6 -22 -2 l2 8 q10 -4 18 0 z" fill="#0a0812" transform="translate(-14 0) scale(1)"/><path d="M182 84 q10 -8 22 -4 l-2 8 q-10 -4 -18 0 z" fill="#0a0812" transform="rotate(6 192 84)"/><ellipse cx="140" cy="94" rx="6" ry="8" fill="#0a0812"/><ellipse cx="180" cy="94" rx="6" ry="8" fill="#0a0812"/><circle cx="134" cy="112" r="8" fill="#e88a9a" opacity=".7"/><circle cx="186" cy="112" r="8" fill="#e88a9a" opacity=".7"/><path d="M138 124 q22 14 44 0 q-6 12 -22 12 q-16 0 -22 -12 z" fill="#0a0812"/><path d="M154 128 q6 -8 12 0 l-6 16 z" fill="#2d2a3a"/><path d="M146 132 q14 8 28 0" stroke="#0a0812" stroke-width="2" fill="none"/><path d="M240 160 q10 -14 24 -10 q4 12 -8 18 q-10 4 -16 -2 l-24 26 -6 -6 z" fill="#b01830"/><path d="M250 158 q6 -8 14 -6" stroke="#7a0f20" stroke-width="2" fill="none"/></svg>`},
+{t:"300",y:2006,a:["three hundred"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="th1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a1a"/><stop offset="1" stop-color="#8a5a26"/></linearGradient></defs><rect width="320" height="200" fill="url(#th1)"/><circle cx="240" cy="50" r="26" fill="#e8b45c" opacity=".7"/><rect y="150" width="320" height="50" fill="#1d1408"/><path d="M180 200 L200 150 L320 150 L320 200 Z" fill="#0d0a04"/><g stroke="#2d2010" stroke-width="4"><path d="M20 150 l-6 -60 M40 150 l-4 -70 M60 150 l-8 -56 M80 150 l-4 -66"/></g><path d="M30 88 l-16 -12 12 2 z M36 78 l-14 -14 12 4 z M52 92 l-14 -12 10 2 z M76 82 l-16 -12 12 2 z" fill="#2d2010"/><path d="M120 148 l-6 -44 q0 -10 10 -12 l8 -2 q10 0 12 10 l2 10 26 10 -4 12 -28 -8 -4 26 z" fill="#1a1005"/><circle cx="130" cy="82" r="10" fill="#1a1005"/><path d="M122 76 q8 -10 18 -2 l4 -8 -22 -2 z" fill="#3a2a12"/><path d="M118 96 q-22 6 -28 28 l8 4 q8 -18 24 -22 z" fill="#7a1f14"/><path d="M114 148 l-34 34 8 6 34 -30 z" fill="#1a1005"/><path d="M172 120 l30 -6 q10 0 12 8 l4 24 -10 24 -12 -4 8 -22 -2 -12 -28 4 z" fill="#120c04"/><circle cx="212" cy="106" r="9" fill="#120c04"/><path d="M226 132 l16 30 M220 140 l24 20" stroke="#120c04" stroke-width="5"/><path d="M96 60 l10 60" stroke="#3a2a12" stroke-width="4"/><path d="M96 60 l-4 -14 8 12 z" fill="#8a8a92"/></svg>`},
+{t:"Ratatouille",y:2007,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#2d3644"/><rect x="230" y="20" width="70" height="90" rx="6" fill="#3c4a5e"/><rect x="238" y="28" width="54" height="74" fill="#141c33"/><path d="M265 96 l-12 0 6 -22 2 -14 1 -8 1 -4 1 4 1 8 2 14 6 22 z" fill="#5c6a80"/><path d="M254 84 l22 0 M258 72 l14 0" stroke="#5c6a80" stroke-width="2"/><circle cx="252" cy="40" r="7" fill="#f2e8c9" opacity=".9"/><rect y="130" width="320" height="70" fill="#4a5668"/><rect y="124" width="320" height="10" fill="#5c6a80"/><path d="M40 124 l0 -34 q0 -26 32 -26 q32 0 32 26 l0 34 z" fill="#8a95a8"/><ellipse cx="72" cy="64" rx="34" ry="8" fill="#a8b2c4"/><path d="M56 52 q-2 -14 6 -20 M78 50 q2 -12 -4 -20" stroke="#dfe4ec" stroke-width="4" fill="none" opacity=".7"/><path d="M150 124 l0 -20 q0 -8 8 -8 q10 0 10 10 l-2 18 z" fill="#7a8496"/><circle cx="158" cy="88" r="9" fill="#7a8496"/><circle cx="150" cy="82" r="4" fill="#7a8496"/><circle cx="166" cy="82" r="4" fill="#7a8496"/><circle cx="154" cy="88" r="1.6" fill="#1a2130"/><circle cx="162" cy="88" r="1.6" fill="#1a2130"/><circle cx="158" cy="93" r="2" fill="#d88a9a"/><path d="M150 74 q-2 -18 8 -22 q2 8 -2 12 q8 -4 12 2 q-6 8 -18 8 z" fill="#f2f2ec"/><path d="M148 100 q-14 8 -12 24" stroke="#7a8496" stroke-width="4" fill="none"/><path d="M168 96 l18 -18" stroke="#8a6a3c" stroke-width="4"/><ellipse cx="190" cy="74" rx="7" ry="5" fill="#c9a86a"/><path d="M64 118 q6 -10 0 -18 M84 118 q6 -10 0 -18" stroke="#dfe4ec" stroke-width="3" fill="none" opacity=".6"/></svg>`},
+{t:"No Country for Old Men",y:2007,a:["no country"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="nc1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c9a0"/><stop offset="1" stop-color="#b59a68"/></linearGradient></defs><rect width="320" height="120" fill="url(#nc1)"/><rect y="120" width="320" height="80" fill="#8a744c"/><path d="M0 132 L140 120 L180 120 L320 136 L320 200 L0 200 Z" fill="#6b5a3a"/><path d="M148 120 L172 120 L200 200 L120 200 Z" fill="#4a3e28"/><path d="M160 128 l-2 14 M158 152 l-2 14 M156 178 l-2 14" stroke="#d8c9a0" stroke-width="4"/><g stroke="#4a3e28" stroke-width="3"><path d="M40 120 l0 -44 M40 82 l-14 -6 M40 82 l14 -6 M280 120 l0 -50 M280 76 l-14 -6 M280 76 l14 -6"/></g><path d="M216 200 l0 -58 q0 -10 9 -10 q11 0 11 12 l0 56 z" fill="#241c10"/><circle cx="226" cy="118" r="10" fill="#b58a62"/><path d="M214 116 q0 -14 12 -14 q12 0 12 14 l0 6 -3 0 0 -8 -18 0 0 8 -3 0 z" fill="#12100a"/><rect x="200" y="150" width="10" height="28" rx="4" fill="#7a7a82"/><path d="M210 150 q10 -4 8 12" stroke="#4a4a52" stroke-width="3" fill="none"/><circle cx="70" cy="162" r="14" fill="#c9b070"/><circle cx="70" cy="162" r="10" fill="#e0ca8a"/><circle cx="70" cy="162" r="3" fill="#b59848"/></svg>`},
+{t:"WALL-E",y:2008,a:["walle","wall e"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="we1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a877"/><stop offset="1" stop-color="#8a6a44"/></linearGradient></defs><rect width="320" height="200" fill="url(#we1)"/><circle cx="60" cy="40" r="20" fill="#e8d5a8" opacity=".7"/><g fill="#6b5232"><rect x="10" y="60" width="30" height="30"/><rect x="14" y="30" width="30" height="30"/><rect x="44" y="74" width="30" height="30"/><rect x="240" y="50" width="34" height="34"/><rect x="270" y="80" width="30" height="30"/><rect x="246" y="16" width="30" height="34"/></g><g fill="#5c4628" opacity=".8"><rect x="14" y="64" width="8" height="8"/><rect x="30" y="76" width="8" height="8"/><rect x="250" y="58" width="9" height="9"/><rect x="278" y="88" width="8" height="8"/></g><rect y="150" width="320" height="50" fill="#7a5e3a"/><rect x="128" y="96" width="52" height="44" rx="5" fill="#c98a2a"/><rect x="134" y="102" width="40" height="14" fill="#a86e1d"/><path d="M138 96 l0 -12 4 0 0 12 z M166 96 l0 -12 4 0 0 12 z" fill="#5c5c64"/><rect x="130" y="66" width="20" height="16" rx="8" fill="#c9ced9"/><rect x="156" y="66" width="20" height="16" rx="8" fill="#c9ced9"/><circle cx="141" cy="74" r="5" fill="#1a2130"/><circle cx="166" cy="74" r="5" fill="#1a2130"/><path d="M148 84 l8 0 0 12 -8 0 z" fill="#5c5c64"/><path d="M120 140 l68 0 6 14 -80 0 z" fill="#3a3a42"/><g fill="#5c5c64"><circle cx="132" cy="154" r="7"/><circle cx="152" cy="154" r="7"/><circle cx="174" cy="154" r="7"/></g><path d="M184 108 l16 -4 M200 104 l0 -12" stroke="#c98a2a" stroke-width="6"/><path d="M196 82 l8 0 0 12 -8 0 z" fill="#8a6a3c"/><path d="M200 82 q-2 -10 4 -14 q4 6 2 14 M200 80 q-8 -4 -8 -12 q8 0 10 8" fill="#3ecf6e"/></svg>`},
+{t:"The Dark Knight",y:2008,a:["dark knight","batman the dark knight"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1526"/><stop offset="1" stop-color="#1d2c4a"/></linearGradient></defs><rect width="320" height="200" fill="url(#dk1)"/><g fill="#0a1020"><rect x="0" y="110" width="46" height="90"/><rect x="54" y="130" width="40" height="70"/><rect x="226" y="120" width="44" height="80"/><rect x="278" y="140" width="42" height="60"/></g><g fill="#ffd97a" opacity=".55"><rect x="8" y="120" width="6" height="7"/><rect x="24" y="136" width="6" height="7"/><rect x="8" y="156" width="6" height="7"/><rect x="62" y="140" width="6" height="7"/><rect x="78" y="158" width="6" height="7"/><rect x="234" y="130" width="6" height="7"/><rect x="252" y="148" width="6" height="7"/><rect x="288" y="150" width="6" height="7"/><rect x="300" y="170" width="6" height="7"/></g><path d="M96 200 L150 40 L210 40 L262 200 Z" fill="#dfe9ff" opacity=".16"/><ellipse cx="180" cy="52" rx="52" ry="20" fill="#e8f0ff" opacity=".85"/><path d="M180 44 l-5 6 -8 -7 1 9 -12 2 10 5 -6 8 11 -3 3 9 4 -8 10 4 -4 -9 11 -4 -12 -3 2 -9 -7 6 z" fill="#0d1526"/><path d="M124 200 l0 -30 q0 -10 10 -10 l10 0 q10 0 10 10 l0 30 z" fill="#05070d"/><circle cx="134" cy="152" r="8" fill="#05070d"/><path d="M128 148 l-3 -8 5 4 z M140 148 l3 -8 -5 4 z" fill="#05070d"/><path d="M120 168 q-14 12 -26 12 l0 20 26 0 z" fill="#05070d"/></svg>`},
+{t:"Up",y:2009,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="up1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fb8e8"/><stop offset="1" stop-color="#b8ddf2"/></linearGradient></defs><rect width="320" height="200" fill="url(#up1)"/><g fill="#fff" opacity=".9"><ellipse cx="52" cy="150" rx="34" ry="14"/><ellipse cx="80" cy="156" rx="26" ry="11"/><ellipse cx="270" cy="60" rx="34" ry="14"/><ellipse cx="292" cy="68" rx="24" ry="10"/><ellipse cx="60" cy="40" rx="26" ry="11"/></g><g><circle cx="150" cy="46" r="11" fill="#e84a4a"/><circle cx="170" cy="38" r="12" fill="#f2c518"/><circle cx="188" cy="48" r="10" fill="#3ecf8e"/><circle cx="160" cy="28" r="10" fill="#7c5cff"/><circle cx="140" cy="32" r="9" fill="#ff8ab0"/><circle cx="180" cy="26" r="9" fill="#ff7f2a"/><circle cx="196" cy="34" r="8" fill="#4aa8e8"/><circle cx="148" cy="60" r="9" fill="#4aa8e8"/><circle cx="186" cy="60" r="9" fill="#e84a4a"/><circle cx="128" cy="44" r="8" fill="#3ecf8e"/><circle cx="206" cy="48" r="8" fill="#f2c518"/><circle cx="167" cy="52" r="10" fill="#ff8ab0"/></g><g stroke="#5c5c64" stroke-width="1" opacity=".7"><path d="M150 57 L164 96 M170 50 L166 96 M188 58 L170 96 M160 38 L165 96 M128 52 L163 96 M206 56 L172 96"/></g><path d="M140 118 l0 -20 8 -8 0 -6 8 0 0 6 36 0 0 28 z" fill="#8a5cc9"/><path d="M136 96 l30 -18 32 18 z" fill="#b0413e"/><rect x="150" y="104" width="10" height="14" fill="#f2e8c9"/><rect x="172" y="104" width="10" height="14" fill="#f2e8c9"/><path d="M148 118 l40 0 0 6 -40 0 z" fill="#6b449c"/><path d="M158 124 l16 0 0 12 -16 0 z" fill="#7a4a2e"/></svg>`},
+{t:"Avatar",y:2009,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#081824"/><g fill="#0d2836"><ellipse cx="50" cy="170" rx="60" ry="40"/><ellipse cx="280" cy="160" rx="70" ry="50"/></g><g fill="#3adfd0" opacity=".7"><circle cx="40" cy="130" r="3"/><circle cx="66" cy="150" r="2.4"/><circle cx="272" cy="120" r="3"/><circle cx="296" cy="140" r="2.4"/><circle cx="250" cy="150" r="2"/><circle cx="30" cy="160" r="2"/></g><g stroke="#1a4a5c" stroke-width="3" fill="none" opacity=".8"><path d="M30 200 q4 -40 -8 -60"/><path d="M60 200 q-2 -36 10 -52"/><path d="M290 200 q4 -44 -6 -62"/><path d="M262 200 q-2 -34 8 -50"/></g><path d="M160 40 q-38 0 -42 46 q-2 36 16 54 q12 12 26 12 q14 0 26 -12 q18 -18 16 -54 q-4 -46 -42 -46 z" fill="#3a7ac9"/><path d="M160 40 q-20 0 -32 18 q14 -8 32 -8 q18 0 32 8 q-12 -18 -32 -18 z" fill="#2d5ea8"/><path d="M136 96 q10 -12 22 -4 q-10 4 -22 4 z" fill="#f2c518"/><ellipse cx="144" cy="94" rx="9" ry="7" fill="#f2c518"/><ellipse cx="176" cy="94" rx="9" ry="7" fill="#f2c518"/><ellipse cx="146" cy="94" rx="3.4" ry="5" fill="#12100a"/><ellipse cx="174" cy="94" rx="3.4" ry="5" fill="#12100a"/><path d="M156 104 q4 8 8 0 l-2 12 q-2 2 -4 0 z" fill="#2d5ea8"/><path d="M148 126 q12 8 24 0" stroke="#1d4488" stroke-width="3" fill="none"/><g fill="#8fd8f2" opacity=".8"><circle cx="146" cy="66" r="1.8"/><circle cx="160" cy="60" r="1.8"/><circle cx="174" cy="66" r="1.8"/><circle cx="140" cy="112" r="1.6"/><circle cx="180" cy="112" r="1.6"/></g><path d="M228 60 q10 -10 20 0 q8 8 0 18 q-10 8 -20 0 q-8 -10 0 -18 z" fill="none" stroke="#5ce8d8" stroke-width="2" opacity=".8"/><g stroke="#5ce8d8" stroke-width="1.6" opacity=".7"><path d="M238 78 l0 16 M232 76 l-6 12 M244 76 l6 12"/></g><circle cx="238" cy="68" r="4" fill="#c9f7f2"/></svg>`},
+{t:"Inception",y:2010,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ic1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa8c4"/><stop offset="1" stop-color="#5c6a88"/></linearGradient></defs><rect width="320" height="200" fill="url(#ic1)"/><g fill="#3d4a66"><rect x="0" y="30" width="24" height="60"/><rect x="30" y="14" width="20" height="76"/><rect x="56" y="38" width="26" height="52"/><rect x="88" y="22" width="18" height="68"/><rect x="112" y="44" width="24" height="46"/><rect x="142" y="18" width="22" height="72"/><rect x="170" y="36" width="24" height="54"/><rect x="200" y="24" width="20" height="66"/><rect x="226" y="42" width="26" height="48"/><rect x="258" y="20" width="20" height="70"/><rect x="284" y="38" width="36" height="52"/></g><g fill="#333f58" transform="rotate(180 160 8)"><rect x="10" y="-60" width="22" height="70"/><rect x="40" y="-44" width="18" height="54"/><rect x="66" y="-64" width="24" height="74"/><rect x="98" y="-48" width="20" height="58"/><rect x="124" y="-60" width="22" height="70"/><rect x="152" y="-40" width="20" height="50"/><rect x="180" y="-58" width="24" height="68"/><rect x="210" y="-46" width="18" height="56"/><rect x="234" y="-62" width="24" height="72"/><rect x="264" y="-44" width="20" height="54"/><rect x="290" y="-58" width="30" height="68"/></g><g fill="#ffe9a8" opacity=".5"><rect x="34" y="24" width="5" height="6"/><rect x="92" y="34" width="5" height="6"/><rect x="146" y="30" width="5" height="6"/><rect x="204" y="36" width="5" height="6"/><rect x="262" y="32" width="5" height="6"/></g><rect y="128" width="320" height="72" fill="#6b4a2e"/><rect y="128" width="320" height="10" fill="#7a5636"/><g stroke="#5c3e24" stroke-width="2" opacity=".7"><path d="M0 152 l320 0 M0 174 l320 0"/></g><path d="M160 76 l-14 14 q-4 4 0 8 l10 8 8 0 10 -8 q4 -4 0 -8 z" fill="#c9ced9"/><path d="M152 106 l16 0 -6 18 -4 0 z" fill="#b0b6c4"/><rect x="156" y="124" width="8" height="6" fill="#9aa2b2"/><ellipse cx="160" cy="132" rx="26" ry="5" fill="#4a3018" opacity=".55"/><path d="M120 118 a44 26 0 0 1 34 -22" stroke="#dfe4ec" stroke-width="2" fill="none" opacity=".7"/><path d="M200 120 a44 26 0 0 0 -32 -24" stroke="#dfe4ec" stroke-width="2" fill="none" opacity=".7"/></svg>`},
+{t:"Life of Pi",y:2012,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lp1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1030"/><stop offset="1" stop-color="#123a5c"/></linearGradient></defs><rect width="320" height="118" fill="url(#lp1)"/><rect y="118" width="320" height="82" fill="#0d4a66"/><g fill="#fff" opacity=".85"><circle cx="30" cy="24" r="1.6"/><circle cx="80" cy="40" r="1.3"/><circle cx="130" cy="18" r="1.6"/><circle cx="190" cy="36" r="1.3"/><circle cx="250" cy="20" r="1.6"/><circle cx="292" cy="46" r="1.3"/><circle cx="160" cy="60" r="1.2"/><circle cx="60" cy="70" r="1.2"/></g><circle cx="270" cy="40" r="18" fill="#f2ecd0"/><g fill="#3ae8d8" opacity=".6"><circle cx="60" cy="150" r="3"/><circle cx="110" cy="170" r="2.4"/><circle cx="220" cy="160" r="3"/><circle cx="270" cy="180" r="2.4"/><circle cx="40" cy="185" r="2"/><circle cx="170" cy="186" r="2"/></g><path d="M70 118 L250 118 L232 148 L88 148 Z" fill="#e8e0d0"/><path d="M70 118 L250 118" stroke="#c9bfa8" stroke-width="3"/><g><path d="M100 118 l0 -22 q0 -8 8 -8 q10 0 10 10 l0 20 z" fill="#e8873a"/><circle cx="108" cy="84" r="8" fill="#e8873a"/><path d="M102 80 l-3 -7 5 3 z M114 80 l3 -7 -5 3 z" fill="#e8873a"/><g stroke="#1a1a1a" stroke-width="2.4"><path d="M102 96 l12 0 M101 104 l14 0 M102 112 l12 0"/></g><path d="M104 82 l3 3 M112 82 l-3 3" stroke="#1a1a1a" stroke-width="1.6"/></g><path d="M204 118 l0 -16 q0 -7 6 -7 q8 0 8 9 l0 14 z" fill="#5c3a26"/><circle cx="211" cy="90" r="6" fill="#8a5a3a"/><path d="M232 148 q10 16 4 30 M88 148 q-10 16 -4 30" stroke="#3ae8d8" stroke-width="2" fill="none" opacity=".5"/></svg>`},
+{t:"Gravity",y:2013,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#05070f"/><g fill="#fff"><circle cx="40" cy="30" r="1.4"/><circle cx="90" cy="16" r="1.1"/><circle cx="150" cy="34" r="1.4"/><circle cx="210" cy="14" r="1.1"/><circle cx="270" cy="30" r="1.4"/><circle cx="300" cy="60" r="1.1"/><circle cx="24" cy="70" r="1.1"/><circle cx="180" cy="56" r="1"/></g><path d="M0 200 L320 200 L320 130 Q160 90 0 130 Z" fill="#1d5c8f"/><path d="M0 145 Q160 105 320 145 L320 138 Q160 98 0 138 Z" fill="#6bc9f2" opacity=".7"/><path d="M40 168 q30 -12 70 -8 M180 158 q50 -6 100 8" stroke="#3a8ac4" stroke-width="10" fill="none" opacity=".6"/><ellipse cx="120" cy="180" rx="40" ry="10" fill="#e8f4fa" opacity=".25"/><g transform="rotate(-24 160 74)"><rect x="146" y="58" width="28" height="34" rx="8" fill="#e8ecf2"/><circle cx="160" cy="50" r="11" fill="#dfe4ec"/><circle cx="160" cy="50" r="7" fill="#2d3a4a"/><path d="M148 66 l-16 14 M172 66 l18 10" stroke="#e8ecf2" stroke-width="7"/><path d="M152 92 l-8 18 M168 92 l10 16" stroke="#e8ecf2" stroke-width="7"/></g><path d="M186 84 q30 -8 44 -28" stroke="#c9ced9" stroke-width="1.6" fill="none" opacity=".7"/><g fill="#8a95a8"><rect x="240" y="44" width="10" height="4" transform="rotate(24 245 46)"/><rect x="262" y="30" width="8" height="3" transform="rotate(-14 266 31)"/><rect x="228" y="60" width="6" height="3"/><rect x="60" y="90" width="9" height="3" transform="rotate(30 64 91)"/><rect x="88" y="70" width="6" height="3"/></g></svg>`},
+{t:"Frozen",y:2013,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fr1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2350"/><stop offset="1" stop-color="#2d5c9e"/></linearGradient></defs><rect width="320" height="200" fill="url(#fr1)"/><g fill="#cfeaff" opacity=".9"><path d="M50 30 l0 16 m-8 -8 l16 0 m-13 -5 l10 10 m0 -10 l-10 10" stroke="#cfeaff" stroke-width="2"/><path d="M270 50 l0 14 m-7 -7 l14 0 m-11 -5 l8 10 m0 -10 l-8 10" stroke="#cfeaff" stroke-width="2"/><path d="M180 20 l0 12 m-6 -6 l12 0" stroke="#cfeaff" stroke-width="2"/><path d="M90 70 l0 10 m-5 -5 l10 0" stroke="#cfeaff" stroke-width="1.6"/></g><path d="M0 200 L60 130 L120 200 Z" fill="#1a3a6b"/><path d="M200 200 L260 120 L320 200 Z" fill="#1a3a6b"/><path d="M160 96 L206 200 L114 200 Z" fill="#7ac4f2" opacity=".55"/><path d="M160 40 L172 96 L148 96 Z" fill="#a8dcfa" opacity=".85"/><path d="M148 96 L160 60 L172 96 L186 200 L134 200 Z" fill="#8fd0f7" opacity=".8"/><path d="M126 110 L148 96 L142 200 L112 200 Z" fill="#5ca8e0" opacity=".7"/><path d="M194 110 L172 96 L178 200 L208 200 Z" fill="#5ca8e0" opacity=".7"/><path d="M160 60 L160 200" stroke="#dff2ff" stroke-width="2" opacity=".6"/><path d="M240 200 l0 -34 q0 -9 7 -9 q9 0 9 11 l0 32 z" fill="#4ac4d8"/><path d="M240 176 q-10 22 -26 24 l40 0 q-6 -12 -6 -24 z" fill="#7ae0ea" opacity=".8"/><circle cx="248" cy="146" r="8" fill="#f2d8c4"/><path d="M240 142 q8 -8 16 0 l0 -4 q-2 -6 -8 -6 q-6 0 -8 6 z" fill="#f2ecd8"/><path d="M256 146 q8 6 8 18 l-4 12" stroke="#f2ecd8" stroke-width="5" fill="none"/><path d="M240 158 l-14 -10 M262 156 l14 -12" stroke="#4ac4d8" stroke-width="5"/><circle cx="224" cy="144" r="3" fill="#cfeaff"/><circle cx="278" cy="140" r="3" fill="#cfeaff"/></svg>`},
+{t:"The Grand Budapest Hotel",y:2014,a:["grand budapest hotel"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#c98a9e"/><path d="M0 200 L50 90 L110 200 Z" fill="#8a5a72"/><path d="M210 200 L270 80 L320 200 Z" fill="#8a5a72"/><path d="M36 122 L50 90 L66 122 Z" fill="#f2e8ec"/><path d="M252 116 L270 80 L290 116 Z" fill="#f2e8ec"/><rect x="80" y="46" width="160" height="154" fill="#f2b8cb"/><rect x="74" y="38" width="172" height="12" fill="#d8879f"/><rect x="96" y="20" width="128" height="20" fill="#e8a0b8"/><rect x="150" y="6" width="20" height="14" fill="#d8879f"/><g fill="#7a3a52"><rect x="92" y="58" width="14" height="20"/><rect x="120" y="58" width="14" height="20"/><rect x="148" y="58" width="14" height="20"/><rect x="176" y="58" width="14" height="20"/><rect x="204" y="58" width="14" height="20"/><rect x="92" y="92" width="14" height="20"/><rect x="120" y="92" width="14" height="20"/><rect x="148" y="92" width="14" height="20"/><rect x="176" y="92" width="14" height="20"/><rect x="204" y="92" width="14" height="20"/><rect x="92" y="126" width="14" height="20"/><rect x="120" y="126" width="14" height="20"/><rect x="176" y="126" width="14" height="20"/><rect x="204" y="126" width="14" height="20"/></g><g fill="#fff" opacity=".85"><rect x="90" y="54" width="18" height="3"/><rect x="118" y="54" width="18" height="3"/><rect x="146" y="54" width="18" height="3"/><rect x="174" y="54" width="18" height="3"/><rect x="202" y="54" width="18" height="3"/><rect x="90" y="88" width="18" height="3"/><rect x="118" y="88" width="18" height="3"/><rect x="146" y="88" width="18" height="3"/><rect x="174" y="88" width="18" height="3"/><rect x="202" y="88" width="18" height="3"/></g><rect x="146" y="126" width="28" height="74" fill="#8a4a62"/><rect x="152" y="134" width="16" height="34" rx="8" fill="#ffd97a"/><path d="M60 200 L110 148 L114 152 L64 200 Z" fill="#6b4a58"/><rect x="84" y="164" width="18" height="12" fill="#b03a3a" transform="rotate(-45 93 170)"/><rect y="192" width="320" height="8" fill="#f2e8ec"/></svg>`},
+{t:"Interstellar",y:2014,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#03040a"/><g fill="#fff" opacity=".8"><circle cx="30" cy="26" r="1.2"/><circle cx="80" cy="14" r="1"/><circle cx="270" cy="20" r="1.2"/><circle cx="300" cy="50" r="1"/><circle cx="20" cy="170" r="1"/><circle cx="60" cy="188" r="1.2"/><circle cx="290" cy="176" r="1"/></g><ellipse cx="160" cy="100" rx="118" ry="26" fill="none" stroke="#ffca7a" stroke-width="7" opacity=".85"/><ellipse cx="160" cy="100" rx="94" ry="18" fill="none" stroke="#ffe3b0" stroke-width="4" opacity=".7"/><circle cx="160" cy="100" r="53" fill="none" stroke="#ffdf9e" stroke-width="9" opacity=".9"/><circle cx="160" cy="100" r="40" fill="#000"/><circle cx="160" cy="100" r="42" fill="none" stroke="#fff3d6" stroke-width="2.4"/><path d="M42 100 a118 26 0 0 1 236 0" fill="none" stroke="#ffca7a" stroke-width="7" opacity="0"/><rect x="150" y="94" width="20" height="0" fill="#000"/><path d="M56 128 l7 -2 2 4 -7 2 z" fill="#c9ced9"/><path d="M63 126 l4 -1" stroke="#8fa0b8" stroke-width="1.4"/><circle cx="260" cy="146" r="2" fill="#9fd2e8" opacity=".8"/></svg>`},
+{t:"Mad Max: Fury Road",y:2015,a:["mad max","fury road"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mm1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8873a"/><stop offset="1" stop-color="#c9541f"/></linearGradient></defs><rect width="320" height="200" fill="url(#mm1)"/><path d="M180 0 Q230 60 210 200 L320 200 L320 0 Z" fill="#a83c14" opacity=".85"/><path d="M210 0 Q260 70 244 200 L320 200 L320 0 Z" fill="#8f2d0d" opacity=".85"/><path d="M244 0 Q290 80 280 200 L320 200 L320 0 Z" fill="#701f08" opacity=".9"/><circle cx="60" cy="44" r="24" fill="#ffe3a0" opacity=".9"/><rect y="160" width="320" height="40" fill="#8f4a1d"/><path d="M0 164 q80 -10 160 0 q80 10 160 0" stroke="#7a3a12" stroke-width="5" fill="none"/><g><rect x="60" y="118" width="110" height="34" rx="4" fill="#2d2a2e"/><rect x="70" y="100" width="44" height="22" rx="3" fill="#3d383e"/><rect x="76" y="104" width="14" height="10" fill="#8fb8c9" opacity=".7"/><path d="M118 100 l8 -14 6 0 -6 14 z" fill="#2d2a2e"/><circle cx="84" cy="154" r="13" fill="#141216"/><circle cx="84" cy="154" r="6" fill="#3d383e"/><circle cx="146" cy="154" r="13" fill="#141216"/><circle cx="146" cy="154" r="6" fill="#3d383e"/><path d="M60 130 l-18 -4 0 10 18 2 z" fill="#2d2a2e"/></g><path d="M176 120 l20 -4 M196 116 l0 -32" stroke="#2d2a2e" stroke-width="5"/><path d="M192 84 l0 -14 q0 -6 5 -6 q7 0 7 8 l0 12 z" fill="#1d1a20"/><circle cx="197" cy="58" r="6" fill="#e8d5c4"/><path d="M204 78 l14 -8" stroke="#1d1a20" stroke-width="4"/><path d="M216 66 q14 -8 10 -20 q8 2 8 12 q10 -6 6 -16 q10 6 4 20 q-10 14 -28 10 z" fill="#ff9d2a"/><path d="M220 64 q8 -6 8 -14" stroke="#ffd97a" stroke-width="3" fill="none"/><g stroke="#5c2408" stroke-width="3" opacity=".7"><path d="M20 120 l24 -6 M10 96 l20 -4 M240 130 l30 -8"/></g></svg>`},
+{t:"La La Land",y:2016,a:["lala land"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ll1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1b5e"/><stop offset=".6" stop-color="#7a3f8f"/><stop offset="1" stop-color="#d86a9a"/></linearGradient></defs><rect width="320" height="200" fill="url(#ll1)"/><g fill="#fff" opacity=".8"><circle cx="40" cy="26" r="1.4"/><circle cx="110" cy="16" r="1.2"/><circle cx="200" cy="26" r="1.4"/><circle cx="280" cy="18" r="1.2"/><circle cx="250" cy="46" r="1"/><circle cx="70" cy="50" r="1"/></g><g fill="#ffd97a" opacity=".85"><circle cx="20" cy="150" r="1.8"/><circle cx="44" cy="144" r="1.6"/><circle cx="70" cy="152" r="1.8"/><circle cx="96" cy="146" r="1.5"/><circle cx="120" cy="152" r="1.8"/><circle cx="200" cy="150" r="1.8"/><circle cx="226" cy="144" r="1.5"/><circle cx="252" cy="152" r="1.8"/><circle cx="278" cy="146" r="1.6"/><circle cx="302" cy="152" r="1.8"/><circle cx="34" cy="158" r="1.4"/><circle cx="86" cy="160" r="1.4"/><circle cx="214" cy="160" r="1.4"/><circle cx="266" cy="160" r="1.4"/></g><path d="M0 200 L0 168 Q160 132 320 168 L320 200 Z" fill="#12081f"/><rect x="286" y="86" width="5" height="82" fill="#12081f"/><path d="M288 86 q-14 -2 -12 -14 q10 -4 14 6 q4 -10 14 -6 q2 12 -12 14 z" fill="#12081f"/><circle cx="276" cy="76" r="5" fill="#ffe9a8"/><circle cx="300" cy="76" r="5" fill="#ffe9a8"/><path d="M136 168 l0 -38 q0 -9 8 -9 l6 0 q8 0 8 9 l0 38 z" fill="#f2f2ec"/><path d="M148 130 l-4 38 -8 0 z" fill="#3a3a44" opacity="0"/><circle cx="147" cy="112" r="8" fill="#e8b48c"/><path d="M140 106 q7 -7 14 0 l0 -4 -14 0 z" fill="#5c3a26"/><path d="M144 124 l6 0 0 10 -6 0 z" fill="#2d2d38"/><path d="M136 134 l-16 -10 M158 132 l16 -14" stroke="#f2f2ec" stroke-width="5"/><path d="M140 168 l-8 24 M152 168 l4 24" stroke="#2d2d38" stroke-width="5"/><path d="M184 168 l-6 -36 q-2 -10 8 -12 q10 0 10 10 l0 38 z" fill="#f2c518"/><circle cx="190" cy="106" r="8" fill="#d8a074"/><path d="M182 102 q8 -8 16 0 l0 -6 -16 0 z" fill="#3a2618"/><path d="M196 120 l18 -14 M182 122 l-14 -6" stroke="#f2c518" stroke-width="5"/><path d="M186 168 l-2 24 M196 168 l8 22" stroke="#d8a074" stroke-width="4"/><path d="M198 190 l10 2" stroke="#e84a6a" stroke-width="4"/><path d="M130 192 l-10 2" stroke="#2d2d38" stroke-width="4"/></svg>`},
+{t:"Moana",y:2016,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mo1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd8f2"/><stop offset="1" stop-color="#c9f0fa"/></linearGradient></defs><rect width="320" height="110" fill="url(#mo1)"/><circle cx="60" cy="40" r="20" fill="#fff3c4"/><rect y="110" width="320" height="90" fill="#1d8fb8"/><path d="M0 110 q40 -10 80 0 q40 10 80 0 q40 -10 80 0 q40 10 80 0 l0 14 q-40 8 -80 0 q-40 -10 -80 0 q-40 8 -80 0 q-40 -10 -80 0 z" fill="#3ab0d8" opacity=".8"/><path d="M250 120 q46 -10 50 -56 q-34 2 -44 34 q-4 -30 -30 -38 q-8 34 24 60 z" fill="#2da8d2"/><path d="M256 112 q34 -10 38 -44" stroke="#e8f8ff" stroke-width="4" fill="none"/><path d="M262 106 a20 20 0 1 1 18 -26" stroke="#e8f8ff" stroke-width="3" fill="none"/><g><path d="M60 148 L170 148 L156 170 L74 170 Z" fill="#8a5a32"/><path d="M60 148 L54 138 L176 138 L170 148 Z" fill="#a8713e"/><rect x="110" y="70" width="6" height="70" fill="#6b4426"/><path d="M116 74 Q160 78 152 134 L116 134 Z" fill="#d84a3a"/><path d="M116 82 Q150 88 146 128" stroke="#f2e8c9" stroke-width="4" fill="none"/><path d="M46 158 L64 178 M186 158 L166 178" stroke="#6b4426" stroke-width="5"/><path d="M40 176 l150 0" stroke="#8a5a32" stroke-width="6"/></g><path d="M92 138 l0 -20 q0 -7 6 -7 q8 0 8 9 l0 18 z" fill="#e8873a"/><circle cx="99" cy="102" r="8" fill="#a8663c"/><path d="M90 98 q4 -12 18 -8 q4 10 -2 16 q4 -16 -16 -8 z" fill="#1d1a20"/><path d="M92 122 l-10 10 M108 120 l12 -14" stroke="#a8663c" stroke-width="4"/><circle cx="124" cy="100" r="7" fill="#f2e8c9" opacity=".9"/><path d="M120 100 a5 5 0 0 1 8 0 a3 3 0 0 1 -4 4 a3 3 0 0 1 -4 -4" fill="#3ecfc0"/></svg>`},
+{t:"Get Out",y:2017,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="go1" cx=".5" cy=".4" r=".9"><stop offset="0" stop-color="#101226"/><stop offset="1" stop-color="#020308"/></radialGradient></defs><rect width="320" height="200" fill="url(#go1)"/><rect x="120" y="26" width="80" height="52" rx="4" fill="#9fd2e8" opacity=".92"/><rect x="126" y="32" width="68" height="40" fill="#cfeaf7"/><path d="M132 40 l20 24 M150 36 l24 30 M172 38 l16 22" stroke="#8ab8d0" stroke-width="3" opacity=".7"/><path d="M156 100 q-3 14 4 22 q7 -8 4 -22 l-4 -8 z" fill="#3d4866" opacity=".7"/><path d="M158 130 l0 -14 q0 -5 4 -5 q5 0 5 6 l0 13 z" fill="#1a2138" opacity="0"/><g transform="translate(160 128)"><path d="M-6 14 l0 -12 q0 -6 6 -6 q6 0 6 6 l0 12 z" fill="#242c48"/><circle cx="0" cy="-10" r="6" fill="#6b4a34"/><path d="M-7 16 l-5 10 M7 16 l5 10" stroke="#242c48" stroke-width="3"/><path d="M-5 -2 l-6 8 M5 -2 l6 8" stroke="#242c48" stroke-width="3"/></g><g transform="translate(58 138)"><ellipse cx="0" cy="24" rx="30" ry="7" fill="#f2ede4"/><path d="M-20 2 q-2 20 20 20 q22 0 20 -20 l0 -4 -40 0 z" fill="#fff"/><path d="M20 2 q12 0 12 8 q0 8 -12 8" fill="none" stroke="#fff" stroke-width="4"/><path d="M-16 -2 l32 0" stroke="#d8ceb8" stroke-width="2"/><path d="M-26 -18 q4 -8 10 -4 l4 18 -6 2 z" fill="#c9c2b0"/><path d="M-14 6 a14 14 0 0 0 22 8" stroke="#c9a86a" stroke-width="2" fill="none"/></g><path d="M164 118 l1 8" stroke="#8fd2f2" stroke-width="2" opacity=".8"/><circle cx="165" cy="128" r="1.6" fill="#aee2f7"/></svg>`},
+{t:"Coco",y:2017,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#150a2e"/><g fill="#3d1f66"><rect x="10" y="40" width="34" height="90"/><rect x="52" y="20" width="30" height="110"/><rect x="238" y="30" width="32" height="100"/><rect x="278" y="50" width="34" height="80"/></g><g fill="#ff9d2a" opacity=".85"><rect x="16" y="50" width="6" height="8"/><rect x="30" y="66" width="6" height="8"/><rect x="16" y="86" width="6" height="8"/><rect x="58" y="30" width="6" height="8"/><rect x="70" y="50" width="6" height="8"/><rect x="58" y="74" width="6" height="8"/><rect x="244" y="40" width="6" height="8"/><rect x="256" y="60" width="6" height="8"/><rect x="284" y="60" width="6" height="8"/><rect x="296" y="80" width="6" height="8"/></g><g fill="#e84a8f" opacity=".8"><rect x="30" y="100" width="6" height="8"/><rect x="70" y="96" width="6" height="8"/><rect x="250" y="90" width="6" height="8"/><rect x="290" y="104" width="6" height="8"/></g><path d="M0 160 Q160 96 320 160 L320 178 Q160 116 0 178 Z" fill="#ff8f1f"/><path d="M0 172 Q160 110 320 172 L320 184 Q160 124 0 184 Z" fill="#ffb02a" opacity=".85"/><g fill="#ffca4a"><circle cx="60" cy="152" r="3"/><circle cx="120" cy="136" r="3"/><circle cx="200" cy="136" r="3"/><circle cx="260" cy="152" r="3"/><circle cx="160" cy="128" r="3"/></g><g transform="translate(160 118)"><path d="M-5 16 l0 -14 q0 -6 5 -6 q6 0 6 7 l0 13 z" fill="#8a1f3a"/><circle cx="0" cy="-10" r="7" fill="#f2ede4"/><circle cx="-2.5" cy="-11" r="1.8" fill="#1a1026"/><circle cx="2.5" cy="-11" r="1.8" fill="#1a1026"/><path d="M-2 -5 l4 0" stroke="#1a1026" stroke-width="1.2"/><path d="M-7 -16 q7 -5 14 0 l0 -3 -14 0 z" fill="#2d2d38"/><path d="M-6 18 l-4 12 M6 18 l4 12" stroke="#8a1f3a" stroke-width="3"/><path d="M6 2 l10 6" stroke="#8a1f3a" stroke-width="3"/><path d="M14 4 q10 2 8 14 l-4 8 q-8 2 -8 -6 z" fill="#f2ede4"/><path d="M16 10 l6 0 M15 16 l6 0" stroke="#c9a86a" stroke-width="1.4"/></g></svg>`},
+{t:"Black Panther",y:2018,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bp1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1040"/><stop offset=".6" stop-color="#5c2a7a"/><stop offset="1" stop-color="#c95a8f"/></linearGradient></defs><rect width="320" height="200" fill="url(#bp1)"/><g fill="#e88ab0" opacity=".5"><ellipse cx="60" cy="60" rx="44" ry="10"/><ellipse cx="250" cy="40" rx="50" ry="12"/><ellipse cx="280" cy="90" rx="36" ry="8"/></g><path d="M40 168 l0 -50 M40 122 q-20 -16 -34 -14 M40 122 q-16 -24 -10 -38 M40 122 q4 -26 18 -34 M40 122 q20 -14 32 -10" stroke="#12081f" stroke-width="4" fill="none"/><rect y="168" width="320" height="32" fill="#12081f"/><path d="M160 52 q-34 0 -38 40 q-2 30 14 46 q11 11 24 11 q13 0 24 -11 q16 -16 14 -46 q-4 -40 -38 -40 z" fill="#16121e"/><path d="M132 60 l-8 -14 14 8 z M188 60 l8 -14 -14 8 z" fill="#16121e"/><path d="M138 96 l16 6 M182 96 l-16 6" stroke="#8f9dc9" stroke-width="3"/><path d="M144 98 q6 -6 12 2 M176 98 q-6 -6 -12 2" stroke="#c9d2f2" stroke-width="2" fill="none" opacity="0"/><path d="M160 104 l0 30 M148 122 l24 0 M140 136 q20 12 40 0" stroke="#3d4a80" stroke-width="2.4" fill="none" opacity=".9"/><path d="M126 84 q10 -10 22 -6 M194 84 q-10 -10 -22 -6" stroke="#3d4a80" stroke-width="2.4" fill="none"/><path d="M146 70 l8 10 M174 70 l-8 10" stroke="#8f9dc9" stroke-width="2"/></svg>`},
+{t:"Joker",y:2019,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#4a5a5c"/><rect x="0" y="0" width="90" height="200" fill="#3a4648"/><rect x="230" y="0" width="90" height="200" fill="#3a4648"/><g fill="#5c6b6b"><path d="M90 200 L90 0 L110 0 L104 200 Z" opacity=".5"/><path d="M230 200 L230 0 L210 0 L216 200 Z" opacity=".5"/></g><g stroke="#2d3638" stroke-width="4" fill="none"><path d="M90 30 L230 30 M92 60 L228 60 M94 92 L226 92 M96 126 L224 126 M98 162 L222 162"/></g><g fill="#556263"><rect x="96" y="30" width="128" height="4"/><rect x="96" y="62" width="126" height="4"/><rect x="98" y="94" width="124" height="4"/><rect x="98" y="128" width="122" height="4"/></g><path d="M84 0 l0 200 M236 0 l0 200" stroke="#1d4a3a" stroke-width="7"/><g transform="translate(158 92)"><path d="M-7 22 l2 -22 q0 -8 6 -8 l4 0 q6 0 6 8 l-2 14 z" fill="#b03a3a"/><path d="M-3 -8 q-8 -2 -10 6 l4 14 6 -4 z" fill="#b03a3a"/><path d="M-1 -4 l8 0 -1 12 -7 0 z" fill="#c9a83c"/><circle cx="2" cy="-16" r="7.4" fill="#f2ede4"/><path d="M-5 -21 q7 -6 14 0 q2 -8 -7 -8 q-9 0 -7 8 z" fill="#2d7a3a"/><path d="M-1 -16 l1.6 2 M5 -16 l-1.6 2" stroke="#1d4a8f" stroke-width="1.6"/><path d="M-2 -11 q4 4 8 -1" stroke="#b03030" stroke-width="2" fill="none"/><path d="M-8 14 l-12 10 M9 8 l14 -14" stroke="#b03a3a" stroke-width="4"/><path d="M5 22 l4 22 M-5 22 l-12 18" stroke="#8a6a3c" stroke-width="4"/><path d="M9 44 l8 4 M-17 40 l-8 6" stroke="#3d2d20" stroke-width="4"/></g></svg>`},
+{t:"Parasite",y:2019,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1d2622"/><rect x="30" y="24" width="260" height="70" rx="3" fill="#3d4a44"/><rect x="36" y="30" width="248" height="58" fill="#5c7a68"/><g stroke="#8fa895" stroke-width="2" opacity=".6"><path d="M60 30 l-10 58 M120 30 l-8 58 M240 30 l8 58 M290 88 l-8 -58"/></g><rect x="150" y="30" width="6" height="58" fill="#3d4a44"/><g fill="#242c28"><path d="M70 88 l0 -26 q0 -8 7 -8 q9 0 9 10 l0 24 z"/><path d="M74 88 l-2 -34 4 -8 4 8 -2 34 z" opacity="0"/><path d="M196 88 l0 -22 q0 -7 6 -7 q8 0 8 9 l0 20 z"/></g><path d="M96 66 q10 -6 18 0 l-4 22 -10 0 z" fill="#1a1f1c"/><g fill="#2d3630"><rect x="250" y="70" width="22" height="18" rx="3"/><rect x="256" y="58" width="20" height="16" rx="3"/></g><g stroke="#9fb8a8" stroke-width="1.4" opacity=".5"><path d="M50 24 l-6 70 M100 24 l-4 70 M170 24 l4 70 M220 24 l6 70"/></g><rect x="0" y="94" width="320" height="106" fill="#171d1a"/><rect x="30" y="94" width="260" height="8" fill="#0f1512"/><g stroke="#3d4a44" stroke-width="3"><path d="M60 120 l200 0 M60 120 l0 -12 M260 120 l0 -12"/></g><g fill="#c9d2c4" opacity=".8"><path d="M90 116 l10 0 2 -8 -14 0 z"/><path d="M140 116 l10 0 2 -8 -14 0 z"/><path d="M210 116 l10 0 2 -8 -14 0 z"/></g><path d="M40 140 l40 0 0 40 -40 0 z" fill="#242c28"/><path d="M46 148 q14 -8 28 0 l-4 26 -20 0 z" fill="#4a4238"/><path d="M52 152 q8 -14 16 0 q6 12 -8 18 q-14 -6 -8 -18 z" fill="#6b6152"/><circle cx="240" cy="160" r="12" fill="#12321f"/><rect x="236" y="140" width="8" height="12" fill="#12321f"/></svg>`},
+{t:"Dune",y:2021,a:["dune part one","dune part 1"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="du1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8c99a"/><stop offset="1" stop-color="#c9995c"/></linearGradient></defs><rect width="320" height="200" fill="url(#du1)"/><circle cx="270" cy="40" r="16" fill="#f2e8d0" opacity=".9"/><circle cx="238" cy="28" r="8" fill="#e8d5b0" opacity=".8"/><path d="M0 130 Q80 110 160 130 Q240 150 320 126 L320 200 L0 200 Z" fill="#b5824a"/><path d="M0 160 Q100 142 200 162 Q270 174 320 160 L320 200 L0 200 Z" fill="#a06e3a"/><circle cx="130" cy="86" r="54" fill="#3d2a18"/><circle cx="130" cy="86" r="54" fill="none" stroke="#8a5e34" stroke-width="8"/><g fill="#c9995c"><path d="M130 40 l6 12 -12 0 z"/><path d="M166 50 l0 14 -11 -5 z" transform="rotate(8 160 56)"/><path d="M180 84 l-12 6 1 -12 z"/><path d="M170 118 l-12 -2 6 -10 z"/><path d="M132 132 l-6 -12 12 0 z"/><path d="M96 122 l0 -14 11 5 z"/><path d="M82 88 l12 -6 -1 12 z"/><path d="M92 54 l12 2 -6 10 z"/></g><circle cx="130" cy="86" r="22" fill="#1d1208"/><path d="M60 168 q30 -6 60 2" stroke="#8a5e34" stroke-width="3" fill="none" opacity=".6"/><g fill="#2d2318"><path d="M228 158 l0 -12 q0 -5 4 -5 q5 0 5 6 l0 11 z"/><circle cx="232" cy="136" r="4.4"/><path d="M248 160 l0 -10 q0 -5 4 -5 q5 0 5 6 l0 9 z"/><circle cx="252" cy="140" r="4"/></g><path d="M236 132 q6 -4 12 2" stroke="#2d2318" stroke-width="2" fill="none" opacity="0"/></svg>`},
+{t:"Everything Everywhere All at Once",y:2022,a:["eeaao","everything everywhere"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ee1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8dfe8"/><stop offset="1" stop-color="#f2ede0"/></linearGradient></defs><rect width="320" height="200" fill="url(#ee1)"/><circle cx="160" cy="54" r="26" fill="#12100e"/><circle cx="160" cy="54" r="12" fill="#e8e3d6"/><path d="M0 200 L0 150 Q60 128 130 140 L130 200 Z" fill="#8a7a5e"/><path d="M130 140 L130 200 L320 200 L320 170 Q220 150 130 140" fill="#a89272"/><path d="M0 152 Q60 132 130 142" stroke="#6b5e44" stroke-width="3" fill="none"/><ellipse cx="80" cy="128" rx="34" ry="22" fill="#5c5244"/><ellipse cx="80" cy="122" rx="30" ry="17" fill="#6e6252"/><ellipse cx="196" cy="146" rx="28" ry="18" fill="#5c5244"/><ellipse cx="196" cy="141" rx="24" ry="14" fill="#786a56"/><g><circle cx="70" cy="116" r="7" fill="#fff"/><circle cx="72" cy="118" r="3.4" fill="#12100e"/><circle cx="92" cy="114" r="7" fill="#fff"/><circle cx="90" cy="116" r="3.4" fill="#12100e"/></g><g><circle cx="188" cy="136" r="6" fill="#fff"/><circle cx="189" cy="138" r="3" fill="#12100e"/><circle cx="206" cy="134" r="6" fill="#fff"/><circle cx="204" cy="136" r="3" fill="#12100e"/></g><g fill="#9aa2ac" opacity=".7"><ellipse cx="260" cy="176" rx="10" ry="4"/><ellipse cx="40" cy="180" rx="12" ry="4"/></g></svg>`},
+{t:"Barbie",y:2023,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ba1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ec4"/><stop offset="1" stop-color="#ffc9de"/></linearGradient></defs><rect width="320" height="200" fill="url(#ba1)"/><circle cx="60" cy="44" r="22" fill="#fff3f7"/><g fill="#ff7ab0"><path d="M180 200 l0 -90 14 -22 14 22 0 90 z"/><rect x="212" y="128" width="58" height="72"/><path d="M212 128 l29 -22 29 22 z"/></g><g fill="#fff"><rect x="188" y="120" width="12" height="16" rx="6"/><rect x="188" y="150" width="12" height="16" rx="6"/><rect x="222" y="140" width="14" height="18" rx="7"/><rect x="246" y="140" width="14" height="18" rx="7"/><rect x="228" y="172" width="24" height="28" rx="4"/></g><path d="M30 168 q40 -34 96 -22 l-6 16 q-46 -8 -80 18 z" fill="#e84a8f"/><ellipse cx="52" cy="184" rx="13" ry="12" fill="#fff"/><ellipse cx="52" cy="184" rx="6" ry="6" fill="#e84a8f"/><ellipse cx="108" cy="172" rx="13" ry="12" fill="#fff"/><ellipse cx="108" cy="172" rx="6" ry="6" fill="#e84a8f"/><path d="M112 148 q8 -18 24 -20 l4 8 q-14 4 -18 16 z" fill="#e84a8f"/><path d="M60 140 l14 -18 10 0 -12 18 z" fill="#ff5c9e"/><path d="M136 120 q10 -16 4 -30 q14 6 12 24 q10 -12 4 -24 q12 8 8 26 q-6 18 -28 12 z" fill="#ffe9a8"/><g fill="#fff"><path d="M150 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z"/><path d="M280 60 l2.4 6 6 2.4 -6 2.4 -2.4 6 -2.4 -6 -6 -2.4 6 -2.4 z"/><path d="M108 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z"/></g></svg>`},
+{t:"Oppenheimer",y:2023,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="op1" cx=".5" cy=".62" r=".75"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffb02a"/><stop offset=".7" stop-color="#c9451d"/><stop offset="1" stop-color="#1d0a08"/></radialGradient></defs><rect width="320" height="200" fill="#120806"/><circle cx="160" cy="118" r="96" fill="url(#op1)"/><circle cx="160" cy="112" r="40" fill="#fff3c4" opacity=".95"/><circle cx="160" cy="110" r="24" fill="#fffbe8"/><path d="M110 156 q50 -22 100 0" stroke="#ffca6b" stroke-width="6" fill="none" opacity=".7"/><path d="M96 168 q64 -26 128 0" stroke="#e8752a" stroke-width="5" fill="none" opacity=".6"/><ellipse cx="160" cy="70" rx="52" ry="18" fill="#ff9d3a" opacity=".55"/><ellipse cx="160" cy="56" rx="34" ry="12" fill="#ffc96b" opacity=".5"/><rect y="176" width="320" height="24" fill="#0a0503"/><path d="M262 176 l0 -60 M256 118 l12 0" stroke="#0a0503" stroke-width="3"/><g fill="#0a0503"><path d="M40 176 l0 -26 q0 -8 7 -8 q9 0 9 10 l0 24 z"/><circle cx="47" cy="134" r="7"/><path d="M36 130 q11 -8 22 0 l0 -4 q-3 -5 -11 -5 q-8 0 -11 5 z"/><rect x="34" y="128" width="26" height="3" rx="1.5"/></g></svg>`},
+];
+
+/* ================================================================
+   HARD — 30 minimal, more-abstract frames (1986–2020)
+   one or two motifs, heavy negative space, mood over detail
+   ================================================================ */
+const HARD=[
+{t:"Aliens",y:1986,a:["alien"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0a1410"/><g transform="rotate(-15 160 105)"><path d="M28 110 Q150 68 302 94 Q160 120 58 140 Q38 128 28 110 Z" fill="#050c09"/><path d="M64 100 Q160 82 262 100" stroke="#173029" stroke-width="5" fill="none" opacity=".85"/><path d="M250 92 l40 -6" stroke="#0f221c" stroke-width="6"/></g><path d="M116 130 l18 7 -3 8 -17 -7 z" fill="#0a1410"/><path d="M56 152 q54 -6 90 -36" stroke="#0f221c" stroke-width="7" fill="none"/></svg>`},
+{t:"The Silence of the Lambs",y:1991,a:["silence of the lambs"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#443f36"/><ellipse cx="160" cy="112" rx="8" ry="48" fill="#241c14"/><path d="M154 78 Q80 52 60 108 Q88 144 154 124 Z" fill="#4a3826"/><path d="M166 78 Q240 52 260 108 Q232 144 166 124 Z" fill="#4a3826"/><path d="M150 86 Q96 68 78 106" stroke="#2e2216" stroke-width="4" fill="none"/><path d="M170 86 Q224 68 242 106" stroke="#2e2216" stroke-width="4" fill="none"/><path d="M98 110 Q128 102 150 110" stroke="#7a6248" stroke-width="3" fill="none" opacity=".55"/><path d="M170 110 Q192 102 222 110" stroke="#7a6248" stroke-width="3" fill="none" opacity=".55"/><ellipse cx="160" cy="88" rx="11" ry="13" fill="#c9bfa8"/><circle cx="156" cy="86" r="2.4" fill="#241c14"/><circle cx="164" cy="86" r="2.4" fill="#241c14"/><path d="M157 94 l6 0 -1 6 -4 0 z" fill="#241c14"/><path d="M160 66 l-6 -12 M160 66 l6 -12" stroke="#241c14" stroke-width="3"/></svg>`},
+{t:"Reservoir Dogs",y:1992,a:["reservoir dogs"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#e6ddcf"/><rect y="178" width="320" height="22" fill="#cdc4b3"/><g fill="#15130f"><circle cx="36" cy="58" r="11"/><rect x="16" y="70" width="40" height="130"/><circle cx="96" cy="58" r="11"/><rect x="76" y="70" width="40" height="130"/><circle cx="156" cy="58" r="11"/><rect x="136" y="70" width="40" height="130"/><circle cx="216" cy="58" r="11"/><rect x="196" y="70" width="40" height="130"/><circle cx="276" cy="58" r="11"/><rect x="256" y="70" width="40" height="130"/></g><g fill="#e6ddcf"><path d="M28 70 L36 98 L44 70 Z"/><path d="M88 70 L96 98 L104 70 Z"/><path d="M148 70 L156 98 L164 70 Z"/><path d="M208 70 L216 98 L224 70 Z"/><path d="M268 70 L276 98 L284 70 Z"/></g><g fill="#15130f"><rect x="34" y="72" width="4" height="26"/><rect x="94" y="72" width="4" height="26"/><rect x="154" y="72" width="4" height="26"/><rect x="214" y="72" width="4" height="26"/><rect x="274" y="72" width="4" height="26"/></g><g fill="#000"><rect x="28" y="55" width="16" height="4"/><rect x="88" y="55" width="16" height="4"/><rect x="148" y="55" width="16" height="4"/><rect x="208" y="55" width="16" height="4"/><rect x="268" y="55" width="16" height="4"/></g></svg>`},
+{t:"Groundhog Day",y:1993,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#22456f"/><g fill="#b8342f"><ellipse cx="128" cy="58" rx="20" ry="16"/><ellipse cx="192" cy="58" rx="20" ry="16"/><rect x="156" y="40" width="8" height="16"/></g><line x1="160" y1="40" x2="160" y2="28" stroke="#7a1f1c" stroke-width="4"/><circle cx="160" cy="112" r="60" fill="#b8342f"/><circle cx="160" cy="112" r="50" fill="#f4ecd6"/><g stroke="#8a1f1c" stroke-width="3" stroke-linecap="round"><line x1="160" y1="112" x2="160" y2="74"/><line x1="160" y1="112" x2="160" y2="148"/></g><circle cx="160" cy="112" r="5" fill="#8a1f1c"/><g stroke="#c9b98a" stroke-width="3"><line x1="160" y1="66" x2="160" y2="72"/><line x1="160" y1="152" x2="160" y2="158"/><line x1="114" y1="112" x2="120" y2="112"/><line x1="200" y1="112" x2="206" y2="112"/></g><path d="M120 168 l-14 24 M200 168 l14 24" stroke="#7a1f1c" stroke-width="6"/></svg>`},
+{t:"The Shawshank Redemption",y:1994,a:["shawshank","shawshank redemption"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1a2333"/><ellipse cx="160" cy="20" rx="150" ry="80" fill="#42536f" opacity=".55"/><ellipse cx="160" cy="10" rx="90" ry="60" fill="#5a6b88" opacity=".5"/><g stroke="#8fa0bc" stroke-width="1.4" opacity=".55"><path d="M20 0 l-16 60"/><path d="M60 -10 l-16 70"/><path d="M120 0 l-12 60"/><path d="M180 -6 l-14 66"/><path d="M240 0 l-16 60"/><path d="M300 -8 l-14 64"/><path d="M100 40 l-12 60"/><path d="M220 30 l-12 66"/></g><g fill="#0c1220"><path d="M148 200 l-6 -70 q0 -8 8 -12 l0 -26 20 0 0 26 q8 4 8 12 l-6 70 z"/><circle cx="160" cy="72" r="13"/><path d="M152 96 l-42 -30 6 -9 44 26 z"/><path d="M168 96 l42 -30 -6 -9 -44 26 z"/></g></svg>`},
+{t:"Se7en",y:1995,a:["seven"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0d0e0b"/><ellipse cx="160" cy="150" rx="120" ry="50" fill="#1c1d15" opacity=".7"/><g stroke="#3a3b30" stroke-width="1.4" opacity=".7"><path d="M10 0 l40 200"/><path d="M60 0 l40 200"/><path d="M110 0 l40 200"/><path d="M160 0 l40 200"/><path d="M210 0 l40 200"/><path d="M260 0 l40 200"/><path d="M35 0 l40 200"/><path d="M135 0 l40 200"/><path d="M235 0 l40 200"/></g><rect x="128" y="120" width="64" height="46" fill="#b58a4a"/><path d="M128 120 l32 -12 32 12 -32 10 z" fill="#c99a58"/><path d="M160 130 l0 36" stroke="#8a6636" stroke-width="2"/><path d="M128 138 l64 0" stroke="#8a6636" stroke-width="2"/><path d="M160 108 l0 -14 M150 100 l20 0" stroke="#6b5228" stroke-width="3"/></svg>`},
+{t:"Trainspotting",y:1996,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#f47a1a"/><rect y="172" width="320" height="28" fill="#d9640d"/><g fill="#131110"><circle cx="170" cy="52" r="12"/><path d="M168 64 q16 0 22 16 l22 -8 4 11 -28 12 q-10 0 -18 -12 z"/><path d="M150 78 q-18 6 -22 22 l-16 4 3 11 24 -6 q10 -4 16 -16 z"/><path d="M162 92 l-20 34 -20 20 9 8 26 -24 12 -30 z"/><path d="M172 90 l10 32 24 14 -6 10 -30 -18 -14 -32 z"/></g></svg>`},
+{t:"Saving Private Ryan",y:1998,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#9b9583"/><rect width="320" height="200" fill="#8e8876" opacity=".4"/><rect y="150" width="320" height="50" fill="#7c7562"/><ellipse cx="80" cy="60" rx="70" ry="30" fill="#a7a18e" opacity=".6"/><ellipse cx="250" cy="50" rx="80" ry="34" fill="#a7a18e" opacity=".5"/><g stroke="#3d3a30" stroke-width="5"><path d="M40 168 l30 -34 M40 134 l30 34 M46 130 l18 42"/><path d="M120 172 l24 -28 M120 144 l24 28 M126 140 l12 34"/><path d="M230 168 l26 -30 M230 138 l26 30"/><path d="M290 172 l22 -26 M290 146 l22 26"/></g><g fill="#5c5648" opacity=".5"><ellipse cx="180" cy="120" rx="40" ry="18"/><ellipse cx="60" cy="110" rx="30" ry="14"/></g><g fill="#2e2b23"><rect x="165" y="150" width="4" height="20"/><path d="M160 150 l14 0 -7 -10 z"/></g></svg>`},
+{t:"American Beauty",y:1999,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#e6dcc6"/><g fill="#bc2e22"><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(60 40) rotate(20)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(110 30) rotate(-30)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(160 50) rotate(10)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(210 35) rotate(50)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(260 45) rotate(-20)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(90 82) rotate(40)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(150 92) rotate(-10)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(210 86) rotate(30)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(70 122) rotate(-40)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(132 132) rotate(20)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(192 126) rotate(60)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(252 116) rotate(-30)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(100 162) rotate(10)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(162 170) rotate(-50)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(222 160) rotate(40)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(40 92) rotate(-15)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(282 92) rotate(25)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(130 60) rotate(70)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(240 70) rotate(-45)"/><path d="M0 -6 Q4 0 0 8 Q-4 0 0 -6 Z" transform="translate(160 118) rotate(0)"/></g><g fill="#8f2018" opacity=".8"><path d="M0 -5 Q3 0 0 6 Q-3 0 0 -5 Z" transform="translate(112 100) rotate(-60)"/><path d="M0 -5 Q3 0 0 6 Q-3 0 0 -5 Z" transform="translate(200 105) rotate(15)"/><path d="M0 -5 Q3 0 0 6 Q-3 0 0 -5 Z" transform="translate(60 150) rotate(50)"/><path d="M0 -5 Q3 0 0 6 Q-3 0 0 -5 Z" transform="translate(272 150) rotate(-25)"/></g></svg>`},
+{t:"The Sixth Sense",y:1999,a:["sixth sense"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0c0e13"/><rect x="108" y="30" width="104" height="170" fill="#161a22"/><rect x="118" y="38" width="84" height="162" fill="#7f1d1d"/><rect x="118" y="38" width="24" height="162" fill="#b83232"/><path d="M142 38 L142 200 L160 200 L160 38 Z" fill="#f6d98a" opacity=".9"/><path d="M160 38 L160 200 L176 200 L172 38 Z" fill="#e8a94a" opacity=".5"/><circle cx="132" cy="120" r="4" fill="#e8c060"/><g fill="#5c1414"><rect x="126" y="60" width="10" height="40"/><rect x="126" y="122" width="10" height="48"/></g></svg>`},
+{t:"Amélie",y:2001,a:["amelie"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#2f6b2c"/><ellipse cx="160" cy="110" rx="180" ry="120" fill="#3a7a34" opacity=".6"/><path d="M120 70 q40 -34 80 0 q10 40 2 76 q-8 30 -42 30 q-34 0 -42 -30 q-8 -36 2 -76 z" fill="#161512"/><path d="M124 96 q36 -22 72 0 l0 40 q-36 20 -72 0 z" fill="#e9c3a0"/><path d="M120 70 q40 -34 80 0 q4 24 0 36 q-40 -22 -80 0 q-4 -12 0 -36 z" fill="#161512"/><circle cx="142" cy="108" r="5" fill="#161512"/><circle cx="178" cy="108" r="5" fill="#161512"/><circle cx="130" cy="120" r="7" fill="#d76a6a" opacity=".55"/><circle cx="190" cy="120" r="7" fill="#d76a6a" opacity=".55"/><path d="M150 126 q10 8 20 0" stroke="#b23a3a" stroke-width="3" fill="none"/><path d="M132 150 q28 16 56 0 l-2 26 -52 0 z" fill="#b83030"/></svg>`},
+{t:"Monsters, Inc.",y:2001,a:["monsters inc","monsters incorporated"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#151230"/><ellipse cx="160" cy="120" rx="120" ry="80" fill="#241d4a" opacity=".7"/><rect x="112" y="20" width="96" height="8" fill="#6e4620"/><rect x="112" y="26" width="96" height="168" rx="3" fill="#8a5a2a"/><rect x="118" y="32" width="84" height="156" fill="#b07a38"/><g fill="#8a5a2a"><rect x="126" y="42" width="30" height="52" rx="3"/><rect x="164" y="42" width="30" height="52" rx="3"/><rect x="126" y="104" width="30" height="72" rx="3"/><rect x="164" y="104" width="30" height="72" rx="3"/></g><g fill="#d89a50"><rect x="130" y="46" width="22" height="44" rx="2"/><rect x="168" y="46" width="22" height="44" rx="2"/><rect x="130" y="108" width="22" height="64" rx="2"/><rect x="168" y="108" width="22" height="64" rx="2"/></g><circle cx="196" cy="112" r="5" fill="#f2d97a"/></svg>`},
+{t:"Pirates of the Caribbean",y:2003,a:["pirates","black pearl","curse of the black pearl","pirates of the caribbean the curse of the black pearl"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#16233c"/><circle cx="240" cy="56" r="34" fill="#dfe6ee" opacity=".85"/><circle cx="240" cy="56" r="44" fill="#dfe6ee" opacity=".12"/><rect y="150" width="320" height="50" fill="#0d1626"/><path d="M0 156 q40 -6 80 0 q40 6 80 0 q40 -6 80 0 q40 6 80 0 l0 44 -320 0 z" fill="#101d33" opacity=".8"/><rect x="90" y="20" width="6" height="150" fill="#0a1120"/><path d="M96 30 q60 -6 60 40 q0 46 -60 40 z" fill="#0c1424"/><path d="M96 34 l52 0 M96 62 l58 0 M96 90 l52 0" stroke="#243247" stroke-width="2" opacity=".6"/><g fill="#e8ecf2"><circle cx="122" cy="66" r="13"/><rect x="115" y="78" width="14" height="8"/><circle cx="117" cy="64" r="3" fill="#0c1424"/><circle cx="127" cy="64" r="3" fill="#0c1424"/><path d="M116 82 l2 6 M122 82 l0 6 M128 82 l-2 6" stroke="#0c1424" stroke-width="1.4"/></g></svg>`},
+{t:"Eternal Sunshine of the Spotless Mind",y:2004,a:["eternal sunshine"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#aebfcc"/><rect y="118" width="320" height="82" fill="#c6d5de"/><path d="M0 118 q80 -6 160 0 q80 6 160 0" stroke="#9fb2c0" stroke-width="2" fill="none"/><g stroke="#9db0be" stroke-width="1.4" opacity=".8"><path d="M40 130 l60 30 M120 124 l40 40 M200 140 l50 20 M60 170 l80 -20 M180 168 l70 -26"/></g><ellipse cx="160" cy="150" rx="70" ry="14" fill="#b4c5d0" opacity=".6"/><g fill="#2f3a44"><ellipse cx="140" cy="150" rx="26" ry="7"/><circle cx="118" cy="146" r="6"/><ellipse cx="176" cy="156" rx="24" ry="6"/><circle cx="156" cy="153" r="5"/></g><g fill="#e8eef2" opacity=".5"><rect x="70" y="40" width="24" height="24" rx="4"/><rect x="210" y="30" width="20" height="20" rx="4"/><rect x="150" y="24" width="16" height="16" rx="3"/></g></svg>`},
+{t:"The Incredibles",y:2004,a:["incredibles"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#b8301f"/><g transform="translate(160 100)"><path d="M-52 -40 Q0 -56 52 -40 Q60 0 52 40 Q0 56 -52 40 Q-60 0 -52 -40 Z" fill="#161210"/><path d="M-40 -30 Q0 -42 40 -30 Q46 0 40 30 Q0 42 -40 30 Q-46 0 -40 -30 Z" fill="#e8a021"/><circle cx="0" cy="-20" r="9" fill="#161210"/><path d="M-9 -4 q0 -6 9 -6 q9 0 9 6 l0 30 q0 6 -9 6 q-9 0 -9 -6 z" fill="#161210"/></g></svg>`},
+{t:"Pan's Labyrinth",y:2006,a:["pans labyrinth"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#132420"/><ellipse cx="160" cy="100" rx="150" ry="90" fill="#1c332b" opacity=".6"/><g fill="none" stroke="#c98a3a" stroke-width="5" stroke-linecap="round"><circle cx="160" cy="100" r="10"/><path d="M160 62 a38 38 0 1 1 -26 66"/><path d="M132 128 a44 44 0 1 0 60 -62"/><path d="M196 66 a70 70 0 1 1 -80 6"/></g><path d="M160 30 a70 70 0 0 1 66 46" stroke="#e8b45c" stroke-width="3" fill="none" opacity=".7"/><g fill="#e8b45c" opacity=".5"><circle cx="60" cy="40" r="2"/><circle cx="270" cy="150" r="2"/></g></svg>`},
+{t:"There Will Be Blood",y:2007,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tw1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8781e"/><stop offset=".6" stop-color="#a83c12"/><stop offset="1" stop-color="#160a06"/></linearGradient></defs><rect width="320" height="200" fill="url(#tw1)"/><circle cx="60" cy="46" r="24" fill="#ffd27a" opacity=".55"/><rect y="168" width="320" height="32" fill="#0c0603"/><path d="M130 168 L146 60 L174 60 L190 168 Z" fill="#0e0704"/><g stroke="#0e0704" stroke-width="4"><path d="M136 130 l48 0 M140 100 l40 0 M150 150 l20 0"/><path d="M130 168 L190 60 M190 168 L130 60"/></g><path d="M160 60 q-10 -28 6 -42 q4 16 10 20 q10 -10 8 -26 q16 20 6 44 q-6 14 -18 12 q-12 -2 -18 -8 z" fill="#ffb43a"/><path d="M160 40 q-4 -14 4 -22 q4 10 8 12 q4 -8 2 -18 q10 14 2 30 z" fill="#ffe08a"/><g fill="#0e0704"><circle cx="120" cy="150" r="2"/><circle cx="210" cy="140" r="2.4"/><circle cx="230" cy="160" r="2"/></g></svg>`},
+{t:"Django Unchained",y:2012,a:["django"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dj1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8a83a"/><stop offset=".55" stop-color="#c9451d"/><stop offset="1" stop-color="#5c1a10"/></linearGradient></defs><rect width="320" height="200" fill="url(#dj1)"/><circle cx="160" cy="96" r="52" fill="#ffd270" opacity=".85"/><rect y="150" width="320" height="50" fill="#3a120a"/><ellipse cx="160" cy="152" rx="160" ry="14" fill="#4a180c"/><g fill="#160805"><path d="M96 150 q6 -18 26 -20 l8 -10 6 0 2 8 14 2 q10 2 10 12 l0 8 -8 0 -2 -8 -12 -2 q6 6 6 10 z"/><path d="M110 128 l-4 -14 8 8 z"/><path d="M126 118 l-3 -12 7 8 z"/><path d="M132 150 l4 -18 6 0 -2 18 z"/><path d="M100 150 l-3 -16 6 0 1 16 z"/></g></svg>`},
+{t:"The Wolf of Wall Street",y:2013,a:["wolf of wall street"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#c9a648"/><rect width="320" height="200" fill="#d8b85a" opacity=".5"/><g fill="#2f6b3a"><g transform="translate(50 40) rotate(-18)"><rect width="34" height="16" rx="2"/><circle cx="17" cy="8" r="5" fill="#3a7a48"/></g><g transform="translate(230 30) rotate(24)"><rect width="34" height="16" rx="2"/><circle cx="17" cy="8" r="5" fill="#3a7a48"/></g><g transform="translate(90 150) rotate(12)"><rect width="34" height="16" rx="2"/><circle cx="17" cy="8" r="5" fill="#3a7a48"/></g><g transform="translate(214 152) rotate(-20)"><rect width="34" height="16" rx="2"/><circle cx="17" cy="8" r="5" fill="#3a7a48"/></g><g transform="translate(30 110) rotate(30)"><rect width="30" height="14" rx="2"/></g><g transform="translate(260 120) rotate(-14)"><rect width="30" height="14" rx="2"/></g></g><g fill="#17140d"><path d="M136 200 l0 -70 q0 -14 12 -16 l0 -8 24 0 0 8 q12 2 12 16 l0 70 z"/><circle cx="160" cy="72" r="15"/></g><path d="M150 106 l10 26 10 -26 4 8 -6 68 -16 0 -6 -68 z" fill="#e8ddc4"/><path d="M156 106 l4 26 4 -26 z" fill="#8a1f1f"/></svg>`},
+{t:"Whiplash",y:2014,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0a0a09"/><ellipse cx="160" cy="90" rx="110" ry="30" fill="#0f0f0d"/><ellipse cx="160" cy="86" rx="104" ry="26" fill="#c8912e"/><ellipse cx="160" cy="86" rx="104" ry="26" fill="none" stroke="#e8b850" stroke-width="2"/><g stroke="#8a6420" stroke-width="1.4" opacity=".8" fill="none"><ellipse cx="160" cy="86" rx="80" ry="19"/><ellipse cx="160" cy="86" rx="54" ry="13"/><ellipse cx="160" cy="86" rx="28" ry="7"/></g><ellipse cx="160" cy="86" rx="10" ry="4" fill="#7a5618"/><g fill="#b01818"><path d="M120 108 q-3 14 3 20 q6 -6 3 -20 z"/><path d="M180 112 q-2 18 4 26 q6 -8 2 -26 z"/><path d="M150 110 q-2 10 2 16 q5 -6 2 -16 z"/><circle cx="123" cy="140" r="4"/><circle cx="185" cy="146" r="5"/><circle cx="153" cy="132" r="3"/></g></svg>`},
+{t:"Inside Out",y:2015,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#141a30"/><circle cx="80" cy="90" r="34" fill="#f2c31e" opacity=".2"/><circle cx="80" cy="90" r="22" fill="#f7d64a"/><circle cx="72" cy="82" r="7" fill="#fff" opacity=".7"/><circle cx="150" cy="70" r="30" fill="#2f7fd8" opacity=".2"/><circle cx="150" cy="70" r="19" fill="#4a9be8"/><circle cx="143" cy="63" r="6" fill="#fff" opacity=".6"/><circle cx="210" cy="110" r="30" fill="#d83030" opacity=".2"/><circle cx="210" cy="110" r="19" fill="#e8483a"/><circle cx="203" cy="103" r="6" fill="#fff" opacity=".5"/><circle cx="120" cy="140" r="28" fill="#8a4ad8" opacity=".2"/><circle cx="120" cy="140" r="17" fill="#a066e8"/><circle cx="114" cy="134" r="5" fill="#fff" opacity=".5"/><circle cx="250" cy="66" r="26" fill="#3aa84a" opacity=".2"/><circle cx="250" cy="66" r="16" fill="#5cc46a"/><circle cx="244" cy="60" r="5" fill="#fff" opacity=".5"/></svg>`},
+{t:"The Revenant",y:2015,a:["revenant"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#bcccd4"/><rect width="320" height="200" fill="#cdd9df" opacity=".5"/><rect y="140" width="320" height="60" fill="#dbe4e8"/><g stroke="#a4b6bf" stroke-width="1.6" opacity=".7"><path d="M40 20 l-6 40 M120 10 l-6 40 M220 16 l-6 40 M290 24 l-6 40"/></g><ellipse cx="150" cy="168" rx="60" ry="10" fill="#c2ced4"/><g fill="#3a3f44"><ellipse cx="140" cy="166" rx="30" ry="8"/><circle cx="116" cy="162" r="7"/></g><path d="M162 168 q14 -6 26 0" stroke="#3a3f44" stroke-width="6" fill="none"/><path d="M108 158 q6 -8 2 -16" stroke="#e8eef0" stroke-width="4" fill="none" opacity=".8"/><g stroke="#a81818" stroke-width="6" stroke-linecap="round"><path d="M196 40 L250 150"/><path d="M216 34 L268 140"/><path d="M236 30 L286 128"/></g></svg>`},
+{t:"Arrival",y:2016,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#d7d1c4"/><rect width="320" height="200" fill="#cbc5b7" opacity=".4"/><g transform="translate(160 100)"><circle r="62" fill="none" stroke="#14110c" stroke-width="15"/><path d="M-62 0 a62 62 0 0 1 30 -54" stroke="#14110c" stroke-width="26" fill="none" stroke-linecap="round"/><path d="M44 -44 a62 62 0 0 1 12 30" stroke="#14110c" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="-58" cy="20" r="8" fill="#14110c"/><circle cx="40" cy="48" r="6" fill="#14110c"/><circle cx="10" cy="-60" r="5" fill="#14110c"/><path d="M-30 58 q30 10 58 -6" stroke="#14110c" stroke-width="5" fill="none" opacity=".5"/></g></svg>`},
+{t:"Blade Runner 2049",y:2017,a:["blade runner 2049","blade runner"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="br1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0902a"/><stop offset=".6" stop-color="#d85f1e"/><stop offset="1" stop-color="#a83c14"/></linearGradient></defs><rect width="320" height="200" fill="url(#br1)"/><g fill="#b8501a" opacity=".5"><ellipse cx="40" cy="120" rx="20" ry="26"/><rect x="26" y="120" width="30" height="80"/></g><g fill="#a8481a" opacity=".5"><ellipse cx="280" cy="120" rx="24" ry="30"/><rect x="266" y="120" width="30" height="80"/></g><ellipse cx="160" cy="150" rx="120" ry="40" fill="#e07a24" opacity=".4"/><g fill="#3a1608"><path d="M158 170 l0 -36 q0 -6 5 -6 q6 0 6 6 l0 36 z"/><circle cx="163" cy="122" r="6"/><path d="M156 170 l-3 20 6 0 z M170 170 l3 20 -6 0 z"/></g><ellipse cx="163" cy="178" rx="20" ry="4" fill="#7a2c10" opacity=".6"/></svg>`},
+{t:"Us",y:2019,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="us1" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#b01818"/><stop offset="1" stop-color="#4a0808"/></radialGradient></defs><rect width="320" height="200" fill="url(#us1)"/><g fill="#3a0606"><path d="M132 200 l0 -70 q0 -16 14 -18 l0 -12 20 0 0 12 q14 2 14 18 l0 70 z"/><circle cx="156" cy="66" r="16"/></g><g stroke="#e8c24a" stroke-width="7" fill="none" stroke-linecap="round"><path d="M172 40 L206 96"/><path d="M206 40 L172 96"/></g><circle cx="176" cy="46" r="8" fill="none" stroke="#e8c24a" stroke-width="5"/><circle cx="202" cy="46" r="8" fill="none" stroke="#e8c24a" stroke-width="5"/><path d="M189 78 L214 118" stroke="#e8c24a" stroke-width="8" stroke-linecap="round"/></svg>`},
+{t:"1917",y:2019,a:["nineteen seventeen"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#090910"/><ellipse cx="190" cy="118" rx="130" ry="96" fill="#c9541a" opacity=".5"/><ellipse cx="196" cy="128" rx="76" ry="64" fill="#f0902a" opacity=".5"/><rect y="160" width="320" height="40" fill="#060609"/><ellipse cx="180" cy="162" rx="160" ry="12" fill="#7a3010" opacity=".45"/><g fill="#050508"><rect x="176" y="46" width="18" height="114"/><path d="M176 46 L185 22 L194 46 Z"/><rect x="124" y="66" width="24" height="94"/><path d="M124 66 l12 -16 12 16 z"/><rect x="222" y="84" width="20" height="76"/><path d="M222 84 l10 -14 10 14 z"/></g><g fill="#050508"><path d="M92 160 l0 -22 q0 -5 5 -5 q5 0 5 5 l0 22 z"/><circle cx="97" cy="128" r="5"/><path d="M90 160 l-4 16 6 0 z M104 160 l4 16 -6 0 z"/></g><path d="M92 140 l-10 8 M104 140 l10 6" stroke="#050508" stroke-width="4"/></svg>`},
+{t:"Tenet",y:2020,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0d1420"/><rect width="320" height="200" fill="#0f1826" opacity=".5"/><circle cx="160" cy="112" r="92" fill="#fff" opacity=".05"/><path d="M40 80 L230 80 L230 66 L280 92 L230 118 L230 104 L40 104 Z" fill="#c0392b"/><path d="M280 120 L90 120 L90 106 L40 132 L90 158 L90 144 L280 144 Z" fill="#2f6fc0"/></svg>`},
+{t:"Soul",y:2020,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#0a1226"/><ellipse cx="160" cy="70" rx="120" ry="60" fill="#1a2b52" opacity=".7"/><rect y="150" width="320" height="50" fill="#0d0d12"/><rect x="20" y="150" width="280" height="40" fill="#f2efe6"/><g fill="#141018"><rect x="44" y="150" width="12" height="26"/><rect x="76" y="150" width="12" height="26"/><rect x="128" y="150" width="12" height="26"/><rect x="160" y="150" width="12" height="26"/><rect x="192" y="150" width="12" height="26"/><rect x="244" y="150" width="12" height="26"/></g><g stroke="#c9c4b6" stroke-width="1.4"><path d="M50 150 v40 M80 150 v40 M110 150 v40 M140 150 v40 M170 150 v40 M200 150 v40 M230 150 v40 M260 150 v40"/></g><ellipse cx="160" cy="86" rx="30" ry="40" fill="#7fd8f2" opacity=".35"/><path d="M160 50 q-22 0 -22 30 q0 30 22 44 q22 -14 22 -44 q0 -30 -22 -30 z" fill="#8fe0f7"/><circle cx="152" cy="78" r="4" fill="#0a1226"/><circle cx="168" cy="78" r="4" fill="#0a1226"/><path d="M152 92 q8 6 16 0" stroke="#0a1226" stroke-width="2.4" fill="none"/><circle cx="160" cy="40" r="4" fill="#bff0ff"/></svg>`},
+{t:"Drive",y:2011,a:[],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#170e26"/><ellipse cx="160" cy="100" rx="150" ry="90" fill="#3a1a4a" opacity=".5"/><ellipse cx="160" cy="110" rx="90" ry="50" fill="#e84a8f" opacity=".12"/><g fill="#d4a63a"><ellipse cx="150" cy="112" rx="10" ry="16"/><ellipse cx="150" cy="128" rx="12" ry="12"/><ellipse cx="150" cy="98" rx="8" ry="10"/><path d="M150 88 q0 -12 12 -16 q14 -6 18 -20 q10 -8 18 -2 q-2 8 -10 8 q4 6 -2 12 q-8 -2 -8 -8 q-6 10 -18 12 q-8 2 -10 12 z"/><circle cx="212" cy="52" r="6"/><path d="M144 96 q-14 -4 -20 -16 q-8 -2 -12 4 q4 6 10 4 q2 8 12 10 z"/><path d="M156 96 q14 -4 20 -16 q8 -2 12 4 q-4 6 -10 4 q-2 8 -12 10 z" opacity=".85"/></g><g stroke="#c99a30" stroke-width="3" fill="none" stroke-linecap="round"><path d="M142 108 l-22 -6 M142 116 l-24 2 M144 126 l-20 10 M158 108 l22 -6 M158 116 l24 2 M156 126 l20 10"/></g></svg>`},
+{t:"The Lighthouse",y:2019,a:["lighthouse"],s:`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="200" fill="#1a1a1c"/><rect width="320" height="120" fill="#2a2a2e"/><circle cx="70" cy="44" r="16" fill="#d8d8d4" opacity=".5"/><path d="M160 40 L110 200 L40 200 L120 40 Z" fill="#e8e6df" opacity=".22"/><path d="M160 40 L210 200 L280 200 L200 40 Z" fill="#e8e6df" opacity=".18"/><path d="M168 54 L305 28 L305 80 Z" fill="#f4eec4" opacity=".33"/><rect y="176" width="320" height="24" fill="#0d0d0f"/><g fill="#c9c7c0"><path d="M150 176 L152 60 L168 60 L170 176 Z"/><rect x="146" y="44" width="28" height="18" rx="2"/><path d="M146 44 l14 -14 14 14 z" fill="#8a8880"/><rect x="152" y="48" width="16" height="12" fill="#f2ecc0"/></g><path d="M250 58 q8 -6 16 0 q-8 5 -16 0 z" fill="#8a8880"/></svg>`},
+];
+
+EASY.forEach(m=>m.d="easy");
+HARD.forEach(m=>m.d="hard");
+const MOVIES = EASY.concat(HARD);
+
+/* ================================================================
+   ANSWER MATCHING — normalized + typo-tolerant (Levenshtein)
+   ================================================================ */
+function norm(s){
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/&/g," and ").replace(/[^a-z0-9]+/g," ").trim();
+}
+function answerKey(s){
+  let n = norm(s).replace(/^(the|a|an) /,"");
+  return n.replace(/ /g,"");
+}
+function lev(a,b){
+  if(Math.abs(a.length-b.length)>3) return 99;
+  const m=a.length,n=b.length;
+  let prev=new Array(n+1),cur=new Array(n+1);
+  for(let j=0;j<=n;j++) prev[j]=j;
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function isMatch(guess, movie){
+  const g = answerKey(guess);
+  if(!g) return false;
+  const cands = [movie.t, ...(movie.a||[])].map(answerKey);
+  return cands.some(c=>{
+    if(!c) return false;
+    if(c===g) return true;
+    const tol = c.length<=4 ? 0 : c.length<=7 ? 1 : 2;
+    return lev(g,c)<=tol;
+  });
+}
+
+/* ================================================================
+   STATE + DOM HELPERS
+   ================================================================ */
+const $ = id=>document.getElementById(id);
+const ROUND_MS=45000, REVEAL_MS=5000, HINT_AT_MS=20000, MAX_PLAYERS=12;
+const ID_PREFIX="frame-game-v1-";
+const CODE_CHARS="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+let peer=null, isHost=false, hostConn=null;
+let conns={};                 // host only: peerId -> DataConnection
+let players=[];               // [{id,name,score}] — mirrored to clients
+let myId="", myName="", roomCode="";
+let totalRounds=10;
+let difficulty="easy";        // host's lobby selection
+let gameDiff="easy";          // difficulty of the game in progress (all clients)
+// round state (all clients)
+let curIdx=-1, roundNum=0, roundActive=false, roundStart=0, roundDur=ROUND_MS;
+let tickInt=null, guessCooldown=false;
+// host only
+let order=[], hostTimer=null, nextTimer=null, gameRunning=false;
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+function genCode(){let c="";for(let i=0;i<4;i++)c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];return c;}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function getName(){
+  const n=$("name").value.trim();
+  if(!n){$("home-err").textContent="Pick a nickname first."; $("name").focus(); return null;}
+  $("home-err").textContent="";
+  return n;
+}
+function setErr(msg){$("home-err").textContent=msg;}
+
+/* ================================================================
+   RENDERING
+   ================================================================ */
+function renderLobby(){
+  $("lobby-players").innerHTML = players.map(p=>
+    `<span class="chip">${p.id==="host"?'<span class="crown">👑</span>':""}${esc(p.name)}${p.id===myId?" (you)":""}</span>`
+  ).join("");
+  $("host-controls").classList.toggle("hidden", !isHost);
+  $("lobby-wait").classList.toggle("hidden", isHost);
+}
+function renderScores(){
+  const sorted=[...players].sort((a,b)=>b.score-a.score);
+  $("scores").innerHTML = sorted.map(p=>
+    `<li class="${p.id===myId?"me":""}"><span>${p.id==="host"?"👑 ":""}${esc(p.name)}</span><b>${p.score}</b></li>`
+  ).join("");
+}
+function feedAdd(html, cls){
+  const div=document.createElement("div");
+  div.className="g "+(cls||"");
+  div.innerHTML=html;
+  const feed=$("feed");
+  feed.appendChild(div);
+  while(feed.children.length>40) feed.removeChild(feed.firstChild);
+  feed.scrollTop=feed.scrollHeight;
+}
+function mountArt(idx){
+  $("art").innerHTML = MOVIES[idx].s;
+}
+function startRoundUI(n, idx, dur){
+  curIdx=idx; roundNum=n; roundActive=true; roundStart=Date.now(); roundDur=dur;
+  $("round-pill").textContent=`Round ${n} / ${totalRounds} · ${gameDiff==="hard"?"🔥 Hard":"😌 Easy"}`;
+  $("hint").textContent="";
+  $("reveal").classList.add("hidden");
+  $("guess").disabled=false; $("btn-guess").disabled=false;
+  $("guess").value="";
+  mountArt(idx);
+  renderScores();
+  $("feed").innerHTML="";
+  feedAdd("New frame — name that movie!","sys");
+  show("scr-game");
+  $("guess").focus();
+  clearInterval(tickInt);
+  tickInt=setInterval(tick,150);
+  tick();
+}
+function tick(){
+  const left=Math.max(0, roundDur-(Date.now()-roundStart));
+  const bar=$("timerbar");
+  bar.style.width=(left/roundDur*100)+"%";
+  bar.classList.toggle("low", left<10000);
+  $("t-num").textContent=Math.ceil(left/1000);
+  if(roundActive && left<=HINT_AT_MS && curIdx>=0){
+    $("hint").textContent=`Hint: ${MOVIES[curIdx].y}`;
+  }
+  if(left<=0) clearInterval(tickInt);
+}
+function showReveal(who, idx){
+  roundActive=false;
+  clearInterval(tickInt);
+  $("guess").disabled=true; $("btn-guess").disabled=true;
+  $("reveal-who").innerHTML=who;
+  $("reveal-title").textContent=MOVIES[idx].t;
+  $("reveal-yr").textContent=MOVIES[idx].y;
+  $("reveal").classList.remove("hidden");
+  renderScores();
+}
+function showEnd(){
+  const sorted=[...players].sort((a,b)=>b.score-a.score);
+  const medals=["🥇","🥈","🥉"];
+  $("podium").innerHTML=sorted.map((p,i)=>
+    `<div class="pod ${i===0?"first":""}"><span class="medal">${medals[i]||"•"}</span><span class="nm">${esc(p.name)}${p.id===myId?" (you)":""}</span><span class="sc">${p.score} pt${p.score===1?"":"s"}</span></div>`
+  ).join("");
+  $("btn-again").classList.toggle("hidden", !isHost);
+  $("end-wait").classList.toggle("hidden", isHost);
+  show("scr-end");
+}
+
+/* ================================================================
+   HOST
+   ================================================================ */
+function hostGame(){
+  const n=getName(); if(!n) return;
+  myName=n; isHost=true; myId="host";
+  $("btn-host").disabled=true;
+  setErr("Creating room…");
+  tryHostCode(0);
+}
+function tryHostCode(attempt){
+  if(attempt>5){ setErr("Could not claim a room code. Try again."); $("btn-host").disabled=false; return; }
+  const code=genCode();
+  peer=new Peer(ID_PREFIX+code,{debug:1});
+  peer.on("open",()=>{
+    roomCode=code;
+    players=[{id:"host",name:myName,score:0}];
+    conns={};
+    $("code-big").textContent=code;
+    setErr("");
+    $("btn-host").disabled=false;
+    renderLobby();
+    show("scr-lobby");
+  });
+  peer.on("connection",c=>setupHostConn(c));
+  peer.on("error",e=>{
+    if(e.type==="unavailable-id"){ try{peer.destroy();}catch(_){} tryHostCode(attempt+1); }
+    else if(e.type==="network"||e.type==="server-error"||e.type==="socket-error"){
+      setErr("Can't reach the matchmaking server — check your internet."); $("btn-host").disabled=false;
+    }
+  });
+}
+function setupHostConn(c){
+  c.on("data",msg=>{
+    if(!msg||typeof msg!=="object") return;
+    if(msg.t==="join"){
+      if(gameRunning){ c.send({t:"reject",reason:"Game already in progress — wait for the lobby."}); setTimeout(()=>c.close(),300); return; }
+      if(players.length>=MAX_PLAYERS){ c.send({t:"reject",reason:"Room is full."}); setTimeout(()=>c.close(),300); return; }
+      let nm=String(msg.name||"Player").slice(0,14);
+      conns[c.peer]=c;
+      players.push({id:c.peer,name:nm,score:0});
+      c.send({t:"joined",you:c.peer,code:roomCode,players});
+      bcast({t:"players",players},c.peer);
+      renderLobby();
+    }
+    else if(msg.t==="guess"){
+      const p=players.find(p=>p.id===c.peer);
+      if(p) hostHandleGuess(p, String(msg.g||"").slice(0,60));
+    }
+  });
+  c.on("close",()=>dropPlayer(c.peer));
+  c.on("error",()=>dropPlayer(c.peer));
+}
+function dropPlayer(pid){
+  if(!conns[pid] && !players.find(p=>p.id===pid)) return;
+  delete conns[pid];
+  const p=players.find(p=>p.id===pid);
+  players=players.filter(p=>p.id!==pid);
+  bcast({t:"players",players});
+  if(p) feedSafe(`<span class="nm">${esc(p.name)}</span> left the game`,"sys");
+  renderLobby(); renderScores();
+}
+function feedSafe(html,cls){ if($("scr-game").classList.contains("active")) feedAdd(html,cls); }
+function bcast(msg, exceptPid){
+  Object.entries(conns).forEach(([pid,c])=>{ if(pid!==exceptPid && c.open) c.send(msg); });
+}
+function hostStart(){
+  gameRunning=true;
+  gameDiff=difficulty;
+  players.forEach(p=>p.score=0);
+  const pool=MOVIES.map((m,i)=>i).filter(i=>MOVIES[i].d===difficulty);
+  const rounds=Math.min(totalRounds, pool.length);
+  totalRounds=rounds;
+  order=shuffle(pool).slice(0,rounds);
+  roundNum=0;
+  bcast({t:"start",total:rounds,players,diff:difficulty});
+  hostNextRound();
+}
+function hostNextRound(){
+  if(roundNum>=totalRounds){ return hostEndGame(); }
+  const idx=order[roundNum];
+  roundNum++;
+  bcast({t:"round",n:roundNum,idx,dur:ROUND_MS});
+  startRoundUI(roundNum, idx, ROUND_MS);
+  clearTimeout(hostTimer);
+  hostTimer=setTimeout(()=>hostTimeUp(idx), ROUND_MS);
+}
+function hostHandleGuess(p, text){
+  if(!gameRunning || !roundActive || !text) return;
+  if(isMatch(text, MOVIES[curIdx])){
+    clearTimeout(hostTimer);
+    p.score++;
+    roundActive=false;
+    bcast({t:"win",pid:p.id,name:p.name,idx:curIdx,players});
+    onWin(p.id,p.name,curIdx);
+    clearTimeout(nextTimer);
+    nextTimer=setTimeout(hostNextRound, REVEAL_MS);
+  }else{
+    bcast({t:"guess",pid:p.id,name:p.name,g:text});
+    feedAdd(`<span class="nm">${esc(p.name)}${p.id===myId?" (you)":""}</span>${esc(text)}`);
+  }
+}
+function hostTimeUp(idx){
+  if(!roundActive) return;
+  roundActive=false;
+  bcast({t:"timeup",idx,players});
+  showReveal("⏰ Time's up! It was…", idx);
+  clearTimeout(nextTimer);
+  nextTimer=setTimeout(hostNextRound, REVEAL_MS);
+}
+function hostEndGame(){
+  gameRunning=false;
+  bcast({t:"gameover",players});
+  showEnd();
+}
+function hostBackToLobby(){
+  bcast({t:"lobby",players});
+  renderLobby();
+  show("scr-lobby");
+}
+
+/* ================================================================
+   CLIENT
+   ================================================================ */
+function joinGame(){
+  const n=getName(); if(!n) return;
+  const code=$("code").value.trim().toUpperCase();
+  if(code.length!==4){ setErr("Room codes are 4 letters."); $("code").focus(); return; }
+  myName=n; isHost=false;
+  $("btn-join").disabled=true;
+  setErr("Connecting…");
+  peer=new Peer({debug:1});
+  let joined=false;
+  peer.on("open",()=>{
+    hostConn=peer.connect(ID_PREFIX+code,{reliable:true});
+    hostConn.on("open",()=>{ hostConn.send({t:"join",name:myName}); });
+    hostConn.on("data",msg=>{ joined = clientHandle(msg, code) || joined; });
+    hostConn.on("close",()=>{
+      if(joined){ teardown("The host disconnected."); }
+      else { setErr("Room not found — check the code."); $("btn-join").disabled=false; try{peer.destroy();}catch(_){} }
+    });
+  });
+  peer.on("error",e=>{
+    if(e.type==="peer-unavailable"){ setErr("Room "+code+" not found."); }
+    else { setErr("Connection failed — check your internet."); }
+    $("btn-join").disabled=false;
+    try{peer.destroy();}catch(_){}
+  });
+}
+function clientHandle(msg, code){
+  if(!msg||typeof msg!=="object") return false;
+  switch(msg.t){
+    case "joined":
+      myId=msg.you; roomCode=msg.code||code; players=msg.players;
+      $("code-big").textContent=roomCode;
+      $("btn-join").disabled=false; setErr("");
+      renderLobby(); show("scr-lobby");
+      return true;
+    case "reject":
+      setErr(msg.reason||"Couldn't join."); $("btn-join").disabled=false;
+      return false;
+    case "players":
+      players=msg.players; renderLobby(); renderScores();
+      feedSafe("Player list updated","sys");
+      return true;
+    case "start":
+      totalRounds=msg.total; players=msg.players; gameDiff=msg.diff||"easy";
+      return true;
+    case "round":
+      startRoundUI(msg.n, msg.idx, msg.dur);
+      return true;
+    case "guess":
+      feedAdd(`<span class="nm">${esc(msg.name)}${msg.pid===myId?" (you)":""}</span>${esc(msg.g)}`);
+      return true;
+    case "win":
+      players=msg.players;
+      onWin(msg.pid,msg.name,msg.idx);
+      return true;
+    case "timeup":
+      players=msg.players;
+      showReveal("⏰ Time's up! It was…", msg.idx);
+      return true;
+    case "gameover":
+      players=msg.players; showEnd();
+      return true;
+    case "lobby":
+      players=msg.players; renderLobby(); show("scr-lobby");
+      return true;
+  }
+  return false;
+}
+function onWin(pid,name,idx){
+  const you = pid===myId;
+  feedAdd(`<span class="nm">${esc(name)}</span> got it! 🎉`,"win");
+  showReveal(you ? "🎉 <b>You</b> got it first!" : `🎉 <b>${esc(name)}</b> got it first!`, idx);
+}
+
+/* ================================================================
+   SHARED ACTIONS + WIRING
+   ================================================================ */
+function submitGuess(){
+  const inp=$("guess");
+  const text=inp.value.trim().slice(0,60);
+  inp.value="";
+  if(!text || !roundActive || guessCooldown) return;
+  guessCooldown=true; setTimeout(()=>guessCooldown=false,700);
+  if(isHost){
+    hostHandleGuess(players.find(p=>p.id==="host"), text);
+  }else if(hostConn && hostConn.open){
+    hostConn.send({t:"guess",g:text});
+  }
+  inp.focus();
+}
+function teardown(msg){
+  clearInterval(tickInt); clearTimeout(hostTimer); clearTimeout(nextTimer);
+  try{ if(peer) peer.destroy(); }catch(_){}
+  peer=null; hostConn=null; conns={}; players=[]; isHost=false; gameRunning=false; roundActive=false;
+  show("scr-home");
+  if(msg) setErr(msg);
+}
+
+$("btn-host").addEventListener("click",hostGame);
+$("btn-join").addEventListener("click",joinGame);
+$("code").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();joinGame();} });
+$("name").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("code").value?joinGame():$("btn-host").focus();} });
+$("btn-copy").addEventListener("click",()=>{
+  navigator.clipboard && navigator.clipboard.writeText(roomCode);
+  $("btn-copy").textContent="copied!";
+  setTimeout(()=>$("btn-copy").textContent="copy code",1200);
+});
+$("rounds-seg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  totalRounds=parseInt(b.dataset.n,10);
+  document.querySelectorAll("#rounds-seg button").forEach(x=>x.classList.toggle("on",x===b));
+});
+$("diff-seg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  difficulty=b.dataset.d;
+  document.querySelectorAll("#diff-seg button").forEach(x=>x.classList.toggle("on",x===b));
+});
+$("btn-start").addEventListener("click",()=>{ if(isHost) hostStart(); });
+$("btn-again").addEventListener("click",()=>{ if(isHost) hostBackToLobby(); });
+$("btn-exit").addEventListener("click",()=>teardown());
+$("btn-leave-lobby").addEventListener("click",()=>teardown());
+$("guess-form").addEventListener("submit",e=>{ e.preventDefault(); submitGuess(); });
+window.addEventListener("beforeunload",()=>{ try{ if(peer) peer.destroy(); }catch(_){} });
+</script>
+</body>
+</html>
