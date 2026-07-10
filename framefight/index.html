@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRAME FIGHT — abstract movie trivia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<style>
+:root{
+  --ink:#191524;
+  --ink2:#211b31;
+  --panel:#282040;
+  --line:#3a2f58;
+  --text:#ece7f8;
+  --dim:#9d93bd;
+  --amber:#ffc960;
+  --pink:#ff5d8f;
+  --green:#5de4a8;
+  --red:#ff6b5d;
+  --blue:#6db7ff;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--ink);
+  background-image:radial-gradient(1200px 600px at 50% -10%, #2a2244 0%, transparent 60%);
+  color:var(--text);
+  font-family:"Space Grotesk",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+}
+.display{font-family:"Bungee",system-ui,sans-serif;font-weight:400;letter-spacing:.02em}
+
+/* ---------- shared bits ---------- */
+.wrap{width:min(1100px,100% - 32px);margin-inline:auto}
+header.top{padding:18px 0 8px}
+.logo{display:flex;align-items:baseline;gap:10px;cursor:default;user-select:none}
+.logo .display{font-size:clamp(20px,3.4vw,30px);color:var(--amber);text-shadow:0 0 24px rgba(255,201,96,.35)}
+.logo small{color:var(--dim);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+main{flex:1;display:flex;flex-direction:column;padding-bottom:40px}
+.screen{display:none;flex:1}
+.screen.on{display:flex;flex-direction:column}
+button{
+  font-family:inherit;font-size:16px;font-weight:700;color:var(--ink);
+  background:var(--amber);border:none;border-radius:12px;padding:13px 22px;cursor:pointer;
+  box-shadow:0 4px 0 #b0812f;transition:transform .08s ease, box-shadow .08s ease, filter .15s;
+}
+button:hover{filter:brightness(1.06)}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #b0812f}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button.alt{background:var(--pink);box-shadow:0 4px 0 #a63057;color:#fff}
+button.alt:active{box-shadow:0 1px 0 #a63057}
+button.ghost{background:transparent;color:var(--dim);box-shadow:none;border:2px solid var(--line)}
+button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+input[type=text]{
+  font-family:inherit;font-size:17px;color:var(--text);
+  background:var(--ink2);border:2px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;
+}
+input[type=text]:focus{outline:none;border-color:var(--amber)}
+input.code{letter-spacing:.4em;text-transform:uppercase;font-weight:700;text-align:center}
+.hint{color:var(--dim);font-size:13.5px;line-height:1.5}
+.tag{display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+
+/* ---------- home ---------- */
+#s-home{align-items:center;justify-content:center;text-align:center;gap:0}
+.hero-title{font-size:clamp(38px,8vw,76px);line-height:1.02;color:var(--text)}
+.hero-title em{font-style:normal;color:var(--amber);text-shadow:0 0 34px rgba(255,201,96,.45)}
+.hero-sub{color:var(--dim);margin-top:10px;max-width:52ch;font-size:16px}
+.hero-frame{margin:26px auto 30px;max-width:430px;width:100%}
+.home-card{
+  width:min(430px,100%);background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:14px;text-align:left;
+}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:12px;letter-spacing:.2em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+#home-err{color:var(--red);font-size:14px;min-height:18px}
+
+/* ---------- lobby ---------- */
+#s-lobby{align-items:center;justify-content:center;gap:22px;text-align:center}
+.code-marquee{
+  background:var(--panel);border:2px dashed var(--amber);border-radius:18px;
+  padding:16px 34px;display:inline-flex;flex-direction:column;gap:4px;align-items:center;
+}
+.code-marquee .display{font-size:clamp(34px,7vw,58px);color:var(--amber);letter-spacing:.18em}
+.players{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:640px}
+.ticket{
+  background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:9px 16px;
+  font-weight:700;position:relative;
+}
+.ticket::before,.ticket::after{
+  content:"";position:absolute;top:50%;width:12px;height:12px;border-radius:50%;
+  background:var(--ink);transform:translateY(-50%);border:1px solid var(--line);
+}
+.ticket::before{left:-7px}
+.ticket::after{right:-7px}
+.ticket.host{border-color:var(--amber);color:var(--amber)}
+.lobby-controls{display:flex;flex-direction:column;gap:12px;align-items:center}
+select{
+  font-family:inherit;font-size:15px;background:var(--ink2);color:var(--text);
+  border:2px solid var(--line);border-radius:10px;padding:9px 12px;
+}
+
+/* ---------- game ---------- */
+#s-game{gap:16px;padding-top:6px}
+.game-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.round-tag{color:var(--dim);font-size:14px}
+.round-tag b{color:var(--text)}
+.timerbar{flex:1;min-width:140px;height:10px;background:var(--ink2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.timerbar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--amber));border-radius:99px;transition:width .25s linear}
+.timerbar.low i{background:var(--red)}
+.yearhint{font-size:13px;color:var(--dim);background:var(--ink2);border:1px solid var(--line);border-radius:99px;padding:5px 13px;white-space:nowrap;animation:pop .25s ease}
+.yearhint b{color:var(--amber);font-weight:700}
+.host-skip{margin-top:10px;display:flex;justify-content:flex-end}
+.host-skip button{padding:9px 16px;font-size:14px}
+.game-grid{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+@media (max-width:860px){.game-grid{grid-template-columns:1fr}}
+
+/* the signature: a film cell */
+.filmcell{background:#0b0812;border-radius:16px;padding:14px 34px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.filmcell::before,.filmcell::after{
+  content:"";position:absolute;top:10px;bottom:10px;width:16px;border-radius:6px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 8px,#241d38 8px 22px,transparent 22px 30px);
+}
+.filmcell::before{left:9px}
+.filmcell::after{right:9px}
+.artbox{border-radius:8px;overflow:hidden;background:#000;line-height:0;border:1px solid #2a2342}
+.artbox svg{width:100%;height:auto;display:block}
+.guess-zone{margin-top:14px;display:flex;gap:10px}
+.guess-zone input{flex:1}
+.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.card h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.score-row{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px dashed var(--line);font-size:15px}
+.score-row:last-child{border-bottom:none}
+.score-row .pts{color:var(--amber);font-weight:700}
+.score-row.me .name{color:var(--blue)}
+.score-row.off .name{color:var(--dim);text-decoration:line-through}
+.feed{display:flex;flex-direction:column-reverse;gap:7px;max-height:260px;overflow-y:auto;font-size:14.5px}
+.feed div{background:var(--ink2);border-radius:8px;padding:7px 10px;color:var(--dim);animation:pop .18s ease}
+.feed div b{color:var(--text)}
+.feed div.hit{background:rgba(93,228,168,.14);color:var(--green);border:1px solid rgba(93,228,168,.4)}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.feed div{animation:none}}
+
+/* ---------- reveal overlay ---------- */
+#reveal{
+  position:fixed;inset:0;background:rgba(12,9,20,.9);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;z-index:50;padding:20px;
+}
+#reveal.on{display:flex}
+.reveal-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px;max-width:480px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.reveal-card .who{color:var(--green);font-weight:700;font-size:17px}
+.reveal-card .who.nobody{color:var(--red)}
+.reveal-card .title{font-size:clamp(22px,5vw,32px);color:var(--amber);line-height:1.15}
+.reveal-card .yr{color:var(--dim)}
+.reveal-art{width:min(360px,100%)}
+.reveal-art .artbox{border-radius:10px}
+
+/* ---------- end ---------- */
+#s-end{align-items:center;justify-content:center;gap:20px;text-align:center}
+.podium{display:flex;flex-direction:column;gap:8px;width:min(420px,100%)}
+.podium .score-row{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.podium .score-row:first-child{border-color:var(--amber);box-shadow:0 0 24px rgba(255,201,96,.18)}
+.winner-name{font-size:clamp(26px,6vw,44px);color:var(--amber)}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+  padding:11px 18px;border-radius:12px;font-size:14.5px;z-index:99;display:none;max-width:90vw;
+}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="logo"><span class="display">FRAME FIGHT</span><small>guess the movie from abstract art</small></div>
+</header>
+
+<main class="wrap">
+
+  <!-- HOME -->
+  <section id="s-home" class="screen on">
+    <h1 class="hero-title display">FIFTY FRAMES.<br><em>ZERO PIXELS.</em></h1>
+    <p class="hero-sub">Famous movie moments, redrawn as abstract shapes. Race your friends to name the film first — peer-to-peer, no server, no signup.</p>
+    <div class="hero-frame filmcell"><div class="artbox" id="hero-art"></div></div>
+    <div class="home-card">
+      <label class="tag" for="name-in">Your name</label>
+      <input id="name-in" type="text" maxlength="14" placeholder="e.g. Popcorn Pete" autocomplete="off">
+      <button id="btn-host">Host a game</button>
+      <div class="or">OR JOIN A ROOM</div>
+      <div class="row">
+        <input id="code-in" class="code" type="text" maxlength="4" placeholder="CODE" autocomplete="off">
+        <button id="btn-join" class="alt">Join</button>
+      </div>
+      <div id="home-err" role="alert"></div>
+      <p class="hint">Hosting creates a 4-letter room code — share it with players on any device. Guests just enter the code. Everyone needs an internet connection (connections are brokered, then run peer-to-peer).</p>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="s-lobby" class="screen">
+    <div class="code-marquee">
+      <span class="tag">Room code</span>
+      <span class="display" id="lobby-code">····</span>
+    </div>
+    <div class="players" id="lobby-players"></div>
+    <div class="lobby-controls" id="lobby-host-controls">
+      <label class="hint" for="rounds-sel">Rounds:
+        <select id="rounds-sel">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </label>
+      <button id="btn-start">Start the show</button>
+    </div>
+    <p class="hint" id="lobby-wait" style="display:none">Waiting for the host to start…</p>
+    <button class="ghost" id="btn-leave">Leave</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="s-game" class="screen">
+    <div class="game-head">
+      <span class="round-tag">Round <b id="round-n">1</b> / <span id="round-total">10</span></span>
+      <span class="yearhint" id="yearhint" hidden>Released <b id="yearhint-val"></b></span>
+      <span class="yearhint" id="dirhint" hidden>Dir. <b id="dirhint-val"></b></span>
+      <div class="timerbar" id="timerbar"><i id="timerfill"></i></div>
+    </div>
+    <div class="game-grid">
+      <div>
+        <div class="filmcell">
+          <div class="artbox" id="game-art"></div>
+        </div>
+        <div class="guess-zone">
+          <input id="guess-in" type="text" maxlength="60" placeholder="Name that movie…" autocomplete="off">
+          <button id="btn-guess" class="alt">Guess</button>
+        </div>
+        <div class="host-skip" id="host-skip" hidden>
+          <button class="ghost" id="btn-skip">Skip this frame →</button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="card"><h3>Scoreboard</h3><div id="scores"></div></div>
+        <div class="card"><h3>Guesses</h3><div class="feed" id="feed"></div></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="s-end" class="screen">
+    <span class="tag">And the winner is…</span>
+    <div class="winner-name display" id="winner-name"></div>
+    <div class="podium" id="podium"></div>
+    <div class="row" style="max-width:420px;width:100%">
+      <button id="btn-again">Play again</button>
+      <button class="ghost" id="btn-exit">Exit</button>
+    </div>
+    <p class="hint" id="end-wait" style="display:none">Waiting for the host…</p>
+  </section>
+
+</main>
+
+<!-- REVEAL OVERLAY -->
+<div id="reveal">
+  <div class="reveal-card">
+    <div class="who" id="reveal-who"></div>
+    <div class="title display" id="reveal-title"></div>
+    <div class="yr" id="reveal-yr"></div>
+    <div class="reveal-art"><div class="artbox" id="reveal-art"></div></div>
+    <p class="hint" id="reveal-next"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* ================= MOVIE FRAME DATABASE =================
+   52 famous frames (1986–2023), redrawn as original abstract SVG art.
+   t = title, y = year, a = accepted answers (normalized), s = svg    */
+const VB = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="abstract movie frame">';
+const MOVIES = [
+{t:"Top Gun",y:1986,d:"Tony Scott",a:["top gun"],s:VB+
+'<defs><linearGradient id="m1a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#ff8a3c"/><stop offset="1" stop-color="#c2274b"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m1a)"/><circle cx="160" cy="132" r="36" fill="#fff3bd"/>'+
+'<rect y="152" width="320" height="28" fill="#3a1030"/><rect x="70" y="150" width="180" height="4" fill="#2a0b24"/>'+
+'<path d="M92 78l34 10-9-24h13l17 28 48 9v9l-103-16z" fill="#2b0f2e"/>'+
+'<path d="M212 40l19 6-5-14h8l10 16 27 5v6l-59-9z" fill="#2b0f2e" opacity=".85"/>'+
+'<path d="M60 96q20 3 40 2" stroke="#ffffff55" stroke-width="2" fill="none"/>'},
+{t:"Aliens",y:1986,d:"James Cameron",a:["aliens"],s:VB+
+'<rect width="320" height="180" fill="#0a1418"/><ellipse cx="160" cy="170" rx="200" ry="30" fill="#12242a"/>'+
+'<circle cx="60" cy="30" r="26" fill="#1b3a44" opacity=".5"/><circle cx="260" cy="150" r="40" fill="#0f2028" opacity=".7"/>'+
+'<rect x="52" y="40" width="12" height="110" rx="4" fill="#e8b33a"/><rect x="112" y="40" width="12" height="110" rx="4" fill="#e8b33a"/>'+
+'<rect x="46" y="34" width="86" height="14" rx="6" fill="#e8b33a"/><rect x="40" y="86" width="26" height="12" rx="5" fill="#c98f22"/><rect x="110" y="86" width="30" height="12" rx="5" fill="#c98f22"/>'+
+'<circle cx="88" cy="70" r="10" fill="#e8d9c4"/><rect x="80" y="80" width="16" height="34" rx="6" fill="#4a5a63"/>'+
+'<path d="M196 96q60-52 104-20-16 34-58 30-34-2-46-10z" fill="#04070a"/>'+
+'<path d="M196 96q26 16 44 34" stroke="#04070a" stroke-width="10" fill="none"/>'+
+'<path d="M236 108q2 14-2 24" stroke="#9fd4d4" stroke-width="2" fill="none" opacity=".6"/>'+
+'<ellipse cx="262" cy="82" rx="34" ry="8" fill="#173038" opacity=".8"/>'},
+{t:"The Princess Bride",y:1987,d:"Rob Reiner",a:["princess bride"],s:VB+
+'<rect width="320" height="180" fill="#cfe6ee"/><circle cx="262" cy="36" r="20" fill="#fff6d8"/>'+
+'<path d="M0 180V120q60-28 130-24l40 6q30-40 80-44l70-6v128z" fill="#5f8f5a"/>'+
+'<path d="M0 180v-50q50-20 120-16v66z" fill="#4c7a49"/>'+
+'<circle cx="128" cy="82" r="6" fill="#1d1a26"/><path d="M124 88l-6 24m10-24l4 24" stroke="#1d1a26" stroke-width="4"/>'+
+'<circle cx="168" cy="78" r="6" fill="#1d1a26"/><path d="M164 84l-4 24m8-24l6 24" stroke="#1d1a26" stroke-width="4"/>'+
+'<path d="M133 92l26-14" stroke="#e8eef2" stroke-width="2.4"/><path d="M163 90l-24-16" stroke="#e8eef2" stroke-width="2.4"/>'+
+'<path d="M96 130q10-10 24-8" stroke="#7a7466" stroke-width="8" fill="none"/><circle cx="228" cy="120" r="10" fill="#8a8272"/>'},
+{t:"Die Hard",y:1988,d:"John McTiernan",a:["die hard"],s:VB+
+'<defs><pattern id="m4w" width="15" height="13" patternUnits="userSpaceOnUse"><rect x="3" y="3" width="8" height="6" fill="#ffd75e"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#0d1026"/><circle cx="52" cy="34" r="14" fill="#fdf6de" opacity=".9"/>'+
+'<rect x="20" y="120" width="50" height="60" fill="#141838"/><rect x="250" y="108" width="46" height="72" fill="#141838"/>'+
+'<rect x="122" y="16" width="78" height="164" rx="4" fill="#181c3e"/><rect x="128" y="24" width="66" height="150" fill="url(#m4w)" opacity=".9"/>'+
+'<rect x="122" y="76" width="78" height="16" fill="#0d1026"/>'+
+'<circle cx="150" cy="84" r="15" fill="#ff8a3c"/><circle cx="171" cy="82" r="10" fill="#ffc45e"/><circle cx="188" cy="86" r="7" fill="#fff0b0"/>'+
+'<path d="M205 84q22 0 34-8" stroke="#5a5f8a" stroke-width="3" fill="none" opacity=".7"/>'+
+'<rect x="236" y="52" width="22" height="8" rx="4" fill="#05060f"/><line x1="228" y1="50" x2="266" y2="50" stroke="#05060f" stroke-width="3"/>'},
+{t:"My Neighbor Totoro",y:1988,d:"Hayao Miyazaki",a:["my neighbor totoro","my neighbour totoro","totoro"],s:VB+
+'<defs><pattern id="m5r" width="14" height="20" patternUnits="userSpaceOnUse"><line x1="12" y1="0" x2="8" y2="20" stroke="#cfdbe4" stroke-width="1.4"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#57677a"/><rect width="320" height="180" fill="url(#m5r)" opacity=".55"/>'+
+'<rect y="156" width="320" height="24" fill="#3c4a42"/>'+
+'<ellipse cx="205" cy="118" rx="54" ry="56" fill="#6f7a82"/><ellipse cx="205" cy="132" rx="38" ry="36" fill="#cfd4cd"/>'+
+'<path d="M178 66l6-18 8 16zM224 64l6-18 8 16z" fill="#6f7a82"/>'+
+'<circle cx="190" cy="94" r="4" fill="#1d222b"/><circle cx="220" cy="94" r="4" fill="#1d222b"/>'+
+'<path d="M186 122h6m8 0h6m8 0h6" stroke="#8a938c" stroke-width="2.4"/>'+
+'<path d="M84 96q22-26 44 0z" fill="#c04438"/><line x1="106" y1="96" x2="106" y2="148" stroke="#5a4638" stroke-width="3"/>'+
+'<circle cx="106" cy="116" r="7" fill="#2a2f38"/><rect x="99" y="122" width="14" height="26" rx="5" fill="#2a2f38"/>'+
+'<line x1="46" y1="70" x2="46" y2="156" stroke="#4a5560" stroke-width="4"/><rect x="30" y="58" width="32" height="18" rx="4" fill="#d8a13c"/>'},
+{t:"Batman",y:1989,d:"Tim Burton",a:["batman"],s:VB+
+'<rect width="320" height="180" fill="#0a1022"/>'+
+'<ellipse cx="70" cy="40" rx="60" ry="16" fill="#131c38"/><ellipse cx="280" cy="60" rx="70" ry="18" fill="#131c38"/>'+
+'<polygon points="150,152 190,26 240,26" fill="#f7e9a0" opacity=".8"/>'+
+'<ellipse cx="215" cy="26" rx="38" ry="15" fill="#fdf3bd"/>'+
+'<path d="M197 26q4-8 10-6l2 4 4-6 4 6 4-6 2 6q8-2 10 6-10 5-18 5t-18-5z" fill="#0a1022"/>'+
+'<rect x="0" y="120" width="60" height="60" fill="#060a18"/><rect x="60" y="140" width="46" height="40" fill="#060a18"/>'+
+'<rect x="120" y="150" width="70" height="30" fill="#060a18"/><rect x="240" y="128" width="80" height="52" fill="#060a18"/>'+
+'<rect x="12" y="128" width="6" height="6" fill="#3a4468"/><rect x="30" y="140" width="6" height="6" fill="#3a4468"/><rect x="258" y="140" width="6" height="6" fill="#3a4468"/>'},
+{t:"Dead Poets Society",y:1989,d:"Peter Weir",a:["dead poets society","dead poet society"],s:VB+
+'<rect width="320" height="180" fill="#e9dcc0"/><rect y="130" width="320" height="50" fill="#8a6a4a"/>'+
+'<rect x="18" y="20" width="60" height="80" fill="#fff6de" stroke="#b09468" stroke-width="4"/><line x1="48" y1="20" x2="48" y2="100" stroke="#b09468" stroke-width="4"/>'+
+'<rect x="250" y="24" width="52" height="70" fill="#3a5a44" stroke="#b09468" stroke-width="4"/>'+
+'<rect x="96" y="112" width="52" height="10" fill="#6a4a30"/><rect x="100" y="122" width="6" height="26" fill="#5a3d26"/><rect x="138" y="122" width="6" height="26" fill="#5a3d26"/>'+
+'<rect x="176" y="106" width="52" height="10" fill="#6a4a30"/><rect x="180" y="116" width="6" height="32" fill="#5a3d26"/><rect x="218" y="116" width="6" height="32" fill="#5a3d26"/>'+
+'<circle cx="122" cy="62" r="9" fill="#2d2a33"/><rect x="113" y="72" width="18" height="40" rx="7" fill="#2d2a33"/>'+
+'<circle cx="202" cy="54" r="9" fill="#2d2a33"/><rect x="193" y="64" width="18" height="42" rx="7" fill="#2d2a33"/><path d="M193 74l-12 10m30-10l12 10" stroke="#2d2a33" stroke-width="5"/>'},
+{t:"Home Alone",y:1990,d:"Chris Columbus",a:["home alone"],s:VB+
+'<defs><pattern id="m8t" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="26" height="26" fill="#d6e6ea"/><path d="M0 26h26M26 0v26" stroke="#bcd2d8" stroke-width="2"/></pattern></defs>'+
+'<rect width="320" height="180" fill="url(#m8t)"/>'+
+'<circle cx="160" cy="96" r="46" fill="#ffd9ae"/>'+
+'<path d="M124 66q8-16 22-18l-6 12 14-12-2 12 12-10 2 12 12-8 6 12q8 2 8 12l-68 4z" fill="#d8a04e"/>'+
+'<circle cx="144" cy="90" r="9" fill="#fff"/><circle cx="176" cy="90" r="9" fill="#fff"/>'+
+'<circle cx="144" cy="91" r="3.6" fill="#2a2a33"/><circle cx="176" cy="91" r="3.6" fill="#2a2a33"/>'+
+'<ellipse cx="160" cy="120" rx="13" ry="17" fill="#63201f"/><ellipse cx="160" cy="128" rx="7" ry="6" fill="#c96a6a"/>'+
+'<rect x="98" y="86" width="24" height="42" rx="11" fill="#ffd9ae" transform="rotate(-8 110 107)"/>'+
+'<rect x="198" y="86" width="24" height="42" rx="11" fill="#ffd9ae" transform="rotate(8 210 107)"/>'},
+{t:"Terminator 2: Judgment Day",y:1991,d:"James Cameron",a:["terminator 2","terminator 2 judgment day","terminator two","t2","terminator"],s:VB+
+'<defs><radialGradient id="m9g"><stop offset="0" stop-color="#ffe27a"/><stop offset=".6" stop-color="#ff7a2e"/><stop offset="1" stop-color="#b3341f"/></radialGradient></defs>'+
+'<rect width="320" height="180" fill="#14161f"/><rect x="0" y="30" width="320" height="6" fill="#232636"/><rect x="30" y="0" width="8" height="120" fill="#232636"/><rect x="282" y="0" width="8" height="120" fill="#232636"/>'+
+'<ellipse cx="160" cy="150" rx="150" ry="34" fill="url(#m9g)"/>'+
+'<ellipse cx="160" cy="150" rx="150" ry="34" fill="none" stroke="#ffd98c" stroke-width="2" opacity=".5"/>'+
+'<rect x="146" y="96" width="26" height="46" rx="10" fill="#0c0d14" transform="rotate(-8 159 119)"/>'+
+'<circle cx="152" cy="88" r="15" fill="#0c0d14"/><rect x="140" y="62" width="13" height="26" rx="6" fill="#0c0d14" transform="rotate(-14 146 75)"/>'+
+'<circle cx="96" cy="132" r="2.4" fill="#ffd98c"/><circle cx="230" cy="126" r="2" fill="#ffd98c"/><circle cx="204" cy="112" r="1.6" fill="#ffe8b0"/>'},
+{t:"The Silence of the Lambs",y:1991,d:"Jonathan Demme",a:["silence of the lambs"],s:VB+
+'<rect width="320" height="180" fill="#08070c"/>'+
+'<ellipse cx="160" cy="96" rx="52" ry="66" fill="#e7d6c4"/>'+
+'<path d="M108 76q10-44 52-46 42 2 52 46-20-18-52-18t-52 18z" fill="#b8a68e"/>'+
+'<path d="M134 88q10-6 20 0M166 88q10-6 20 0" stroke="#5a4a3c" stroke-width="3" fill="none"/>'+
+'<path d="M154 108q6 6 12 0" stroke="#b09478" stroke-width="2.4" fill="none"/>'+
+'<ellipse cx="152" cy="132" rx="11" ry="7" fill="#c8a25a" transform="rotate(-18 152 132)"/>'+
+'<ellipse cx="170" cy="132" rx="11" ry="7" fill="#c8a25a" transform="rotate(18 170 132)"/>'+
+'<ellipse cx="161" cy="129" rx="4.6" ry="7.6" fill="#6a5232"/><circle cx="161" cy="127" r="1.6" fill="#efe2ce"/>'},
+{t:"Thelma & Louise",y:1991,d:"Ridley Scott",a:["thelma and louise","thelma louise"],s:VB+
+'<rect width="320" height="180" fill="#ffd9a0"/><circle cx="72" cy="42" r="22" fill="#fff2cc"/>'+
+'<path d="M0 180v-44l96-8 20-56h88v108z" fill="#b3603a"/>'+
+'<path d="M204 180v-96l116-16v112z" fill="#8a4630"/>'+
+'<path d="M118 74q4-14 18-14h48q16 0 20 12l6 12h-98z" fill="#3fb8ac" transform="rotate(9 180 76)"/>'+
+'<rect x="120" y="82" width="102" height="16" rx="8" fill="#2e948a" transform="rotate(9 171 90)"/>'+
+'<circle cx="139" cy="70" r="6" fill="#2a2430"/><circle cx="164" cy="66" r="6" fill="#2a2430"/>'+
+'<circle cx="140" cy="106" r="9" fill="#2a2430" transform="rotate(9 140 106)"/><circle cx="206" cy="116" r="9" fill="#2a2430"/>'+
+'<path d="M96 120q10 8 24 8M226 128q14 10 12 24" stroke="#e8b06a" stroke-width="4" fill="none"/>'},
+{t:"Jurassic Park",y:1993,d:"Steven Spielberg",a:["jurassic park"],s:VB+
+'<defs><pattern id="m12r" width="16" height="22" patternUnits="userSpaceOnUse"><line x1="14" y1="0" x2="9" y2="22" stroke="#3d4c5c" stroke-width="1.4"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#111a24"/><rect width="320" height="180" fill="url(#m12r)"/>'+
+'<rect y="156" width="320" height="24" fill="#0b1218"/>'+
+'<path d="M292 156V88q0-34-30-40-30-4-44 12l-28-6 30 16q-6 16 6 26l-14 34 22-24q14 14 34 12l4 38z" fill="#0e1720"/>'+
+'<path d="M218 60l-26-6 28 15" fill="none" stroke="#0e1720" stroke-width="7"/>'+
+'<rect x="52" y="118" width="72" height="30" rx="12" fill="#33424e" transform="rotate(-16 88 133)"/>'+
+'<polygon points="118,110 210,84 212,98 122,122" fill="#fff8cf" opacity=".85"/>'+
+'<polygon points="112,124 196,124 196,136 112,134" fill="#fff8cf" opacity=".6"/>'+
+'<circle cx="118" cy="114" r="5" fill="#fffbe2"/><circle cx="114" cy="128" r="5" fill="#fffbe2"/>'},
+{t:"Forrest Gump",y:1994,d:"Robert Zemeckis",a:["forrest gump","forest gump","gump"],s:VB+
+'<rect width="320" height="180" fill="#bcd6b2"/><rect y="140" width="320" height="40" fill="#a8b6a0"/>'+
+'<ellipse cx="160" cy="140" rx="140" ry="10" fill="#8f9c88"/>'+
+'<rect x="92" y="92" width="136" height="10" rx="4" fill="#e8e2d2"/><rect x="92" y="106" width="136" height="8" rx="4" fill="#e8e2d2"/>'+
+'<rect x="98" y="114" width="8" height="30" fill="#5a5348"/><rect x="214" y="114" width="8" height="30" fill="#5a5348"/><rect x="92" y="70" width="136" height="8" rx="4" fill="#e8e2d2"/>'+
+'<circle cx="150" cy="52" r="11" fill="#caa06a"/><rect x="136" y="63" width="28" height="34" rx="8" fill="#e2d8c2"/>'+
+'<rect x="138" y="96" width="10" height="34" fill="#7a6a4e"/><rect x="152" y="96" width="10" height="34" fill="#7a6a4e"/>'+
+'<rect x="134" y="128" width="18" height="8" rx="4" fill="#fff"/><rect x="150" y="128" width="18" height="8" rx="4" fill="#fff"/>'+
+'<rect x="176" y="112" width="26" height="20" rx="3" fill="#8a5a3a"/>'+
+'<path d="M76 30q14-8 22 2-2 12-16 12-10-2-6-14z" fill="#fff" stroke="#d8d2c2" stroke-width="1.6"/><path d="M84 44q-6 14-14 20" stroke="#fff" stroke-width="2" fill="none"/>'},
+{t:"The Lion King",y:1994,d:"Allers & Minkoff",a:["lion king"],s:VB+
+'<defs><linearGradient id="m14a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffca6a"/><stop offset=".6" stop-color="#ff8a4a"/><stop offset="1" stop-color="#d84a3a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m14a)"/><circle cx="160" cy="86" r="52" fill="#ffe8a8"/>'+
+'<rect y="150" width="320" height="30" fill="#3a1a22"/>'+
+'<path d="M0 150V96l44-8 92 14 24 12q28-4 22 14l-6 22z" fill="#4a2028"/>'+
+'<path d="M160 102l52 8-10 14-46-8z" fill="#3a161e"/>'+
+'<circle cx="196" cy="76" r="7" fill="#2a1016"/><rect x="190" y="82" width="13" height="18" rx="5" fill="#2a1016"/>'+
+'<path d="M188 88l-8-10m22 10l8-10" stroke="#2a1016" stroke-width="4"/>'+
+'<ellipse cx="196" cy="58" rx="9" ry="7" fill="#2a1016"/><circle cx="190" cy="53" r="2.6" fill="#2a1016"/><circle cx="202" cy="53" r="2.6" fill="#2a1016"/>'+
+'<path d="M48 44q6-4 10 0m180 10q6-4 10 0" stroke="#5a2430" stroke-width="2.4" fill="none"/>'},
+{t:"Pulp Fiction",y:1994,d:"Quentin Tarantino",a:["pulp fiction"],s:VB+
+'<rect width="320" height="180" fill="#38101c"/>'+
+'<rect x="0" y="0" width="26" height="180" fill="#5a1626"/><rect x="294" y="0" width="26" height="180" fill="#5a1626"/>'+
+'<ellipse cx="160" cy="156" rx="120" ry="18" fill="#c8bfae"/><ellipse cx="160" cy="152" rx="96" ry="12" fill="#e2d9c6"/>'+
+'<circle cx="160" cy="30" r="34" fill="#ff5d8f" opacity=".22"/>'+
+'<circle cx="128" cy="66" r="10" fill="#14090e"/><path d="M118 60q-4-10 4-14 8-2 14 4" fill="#14090e"/>'+
+'<rect x="118" y="76" width="20" height="42" rx="8" fill="#14090e"/><path d="M118 84l-14 14m34-16l16-22" stroke="#14090e" stroke-width="5"/>'+
+'<path d="M124 116l-8 32m18-32l6 32" stroke="#14090e" stroke-width="6"/>'+
+'<circle cx="196" cy="62" r="10" fill="#14090e"/><rect x="186" y="72" width="20" height="44" rx="8" fill="#14090e"/>'+
+'<path d="M186 80l-16 20m36-20l14-18" stroke="#14090e" stroke-width="5"/><path d="M192 116l-6 34m16-34l8 34" stroke="#14090e" stroke-width="6"/>'+
+'<path d="M212 60l10-4m-118 8l-10-4" stroke="#14090e" stroke-width="3"/>'},
+{t:"Toy Story",y:1995,d:"John Lasseter",a:["toy story"],s:VB+
+'<rect width="320" height="180" fill="#7ec3ea"/>'+
+'<ellipse cx="60" cy="40" rx="30" ry="14" fill="#fff"/><ellipse cx="150" cy="24" rx="26" ry="12" fill="#fff"/><ellipse cx="250" cy="52" rx="34" ry="15" fill="#fff"/><ellipse cx="105" cy="86" rx="24" ry="11" fill="#fff"/><ellipse cx="285" cy="110" rx="26" ry="12" fill="#fff"/>'+
+'<rect y="152" width="320" height="28" fill="#b98a54"/><line x1="0" y1="162" x2="320" y2="162" stroke="#a67846" stroke-width="2"/>'+
+'<circle cx="106" cy="90" r="9" fill="#2b2536"/><path d="M88 86q18-12 36 0l-6-10h-24z" fill="#6a4a2e"/><rect x="84" y="82" width="44" height="5" rx="2.5" fill="#6a4a2e"/>'+
+'<rect x="97" y="99" width="18" height="34" rx="7" fill="#2b2536"/><path d="M97 106l-12 16m30-16l14 6" stroke="#2b2536" stroke-width="5"/>'+
+'<path d="M101 133l-6 20m16-20l6 20" stroke="#2b2536" stroke-width="5"/>'+
+'<g transform="rotate(-22 216 84)"><circle cx="216" cy="66" r="11" fill="#2b2536"/><path d="M204 66a12 12 0 0 1 24 0" fill="none" stroke="#8ac4e2" stroke-width="4"/>'+
+'<rect x="205" y="77" width="22" height="30" rx="9" fill="#2b2536"/><path d="M205 84l-22-6m44 6l22-6" stroke="#2b2536" stroke-width="6"/>'+
+'<path d="M209 107l-6 18m20-18l6 18" stroke="#2b2536" stroke-width="6"/><path d="M198 92h-18m64 0h18" stroke="#c9baE8" stroke-width="3" opacity=".8"/></g>'+
+'<path d="M244 44q14 6 16 18M186 60q-10 8-10 20" stroke="#ffffff" stroke-width="2.4" fill="none" opacity=".7"/>'},
+{t:"Independence Day",y:1996,d:"Roland Emmerich",a:["independence day","id4"],s:VB+
+'<defs><linearGradient id="m17a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2440"/><stop offset="1" stop-color="#c86a4a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m17a)"/>'+
+'<path d="M-20 74a180 70 0 0 1 360 0z" fill="#232030"/>'+
+'<path d="M-6 74a166 58 0 0 1 332 0z" fill="none" stroke="#3c3852" stroke-width="3"/>'+
+'<path d="M40 74a120 40 0 0 1 240 0z" fill="none" stroke="#3c3852" stroke-width="3"/>'+
+'<circle cx="160" cy="66" r="16" fill="#4a4462"/><circle cx="160" cy="66" r="7" fill="#9fd4ff"/>'+
+'<rect x="60" y="52" width="6" height="5" fill="#ffd98c"/><rect x="250" y="56" width="6" height="5" fill="#ffd98c"/>'+
+'<polygon points="150,74 170,74 186,150 134,150" fill="#bfe4ff" opacity=".8"/>'+
+'<rect y="150" width="320" height="30" fill="#1c1826"/>'+
+'<rect x="138" y="128" width="44" height="24" fill="#efe6d2"/><path d="M134 128h52l-26-12z" fill="#efe6d2"/>'+
+'<rect x="144" y="134" width="4" height="18" fill="#c9bda2"/><rect x="152" y="134" width="4" height="18" fill="#c9bda2"/><rect x="164" y="134" width="4" height="18" fill="#c9bda2"/><rect x="172" y="134" width="4" height="18" fill="#c9bda2"/>'},
+{t:"Titanic",y:1997,d:"James Cameron",a:["titanic"],s:VB+
+'<defs><linearGradient id="m18a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a8"/><stop offset=".55" stop-color="#ff9a6a"/><stop offset="1" stop-color="#e05a56"/></linearGradient></defs>'+
+'<rect width="320" height="120" fill="url(#m18a)"/><circle cx="230" cy="74" r="22" fill="#fff2c8"/>'+
+'<rect y="104" width="320" height="76" fill="#8a3a4e"/><path d="M180 110q40 4 70 0M160 122q60 6 110 0" stroke="#ffca9a" stroke-width="2.4" fill="none" opacity=".7"/>'+
+'<path d="M0 180v-96l60 8 160 20q26 4 28 12l-6 20z" fill="#241722"/>'+
+'<path d="M12 92l224 30" stroke="#3c2836" stroke-width="3"/>'+
+'<line x1="60" y1="92" x2="60" y2="108" stroke="#3c2836" stroke-width="2.4"/><line x1="120" y1="100" x2="120" y2="115" stroke="#3c2836" stroke-width="2.4"/><line x1="180" y1="107" x2="180" y2="122" stroke="#3c2836" stroke-width="2.4"/>'+
+'<circle cx="238" cy="86" r="6" fill="#140c14"/><rect x="233" y="92" width="10" height="20" rx="4" fill="#140c14"/><path d="M214 96l19-2m10 1l19 4" stroke="#140c14" stroke-width="4"/>'+
+'<circle cx="220" cy="98" r="5" fill="#140c14"/><rect x="215" y="103" width="10" height="16" rx="4" fill="#140c14"/>'},
+{t:"Men in Black",y:1997,d:"Barry Sonnenfeld",a:["men in black","mib"],s:VB+
+'<rect width="320" height="180" fill="#39404e"/><rect y="140" width="320" height="40" fill="#2b313c"/>'+
+'<circle cx="118" cy="58" r="14" fill="#c99a72"/><rect x="106" y="52" width="24" height="7" rx="3.5" fill="#101216"/>'+
+'<path d="M100 74q18-8 36 0l6 60h-48z" fill="#14161c"/><polygon points="112,74 124,74 118,92" fill="#f2f2f2"/><rect x="116" y="74" width="5" height="22" fill="#14161c"/>'+
+'<circle cx="196" cy="54" r="14" fill="#a06a4a"/><rect x="184" y="48" width="24" height="7" rx="3.5" fill="#101216"/>'+
+'<path d="M178 70q18-8 36 0l6 64h-48z" fill="#14161c"/><polygon points="190,70 202,70 196,88" fill="#f2f2f2"/>'+
+'<rect x="212" y="46" width="26" height="8" rx="4" fill="#8f97a4" transform="rotate(-32 225 50)"/>'+
+'<circle cx="238" cy="34" r="10" fill="#fff"/><polygon points="238,6 243,26 262,20 248,36 266,44 245,42 246,62 238,44 226,58 231,38 212,36 230,30 222,14" fill="#fff" opacity=".95"/>'+
+'<circle cx="238" cy="34" r="26" fill="#fff" opacity=".22"/>'},
+{t:"The Truman Show",y:1998,d:"Peter Weir",a:["truman show","truman"],s:VB+
+'<rect width="320" height="180" fill="#8fd0f0"/>'+
+'<ellipse cx="64" cy="40" rx="34" ry="13" fill="#fff"/><ellipse cx="170" cy="26" rx="28" ry="11" fill="#fff"/><ellipse cx="120" cy="70" rx="24" ry="9" fill="#fff"/><ellipse cx="36" cy="96" rx="26" ry="10" fill="#fff"/>'+
+'<rect y="150" width="320" height="30" fill="#4a7f9e"/><path d="M0 150h320" stroke="#3a6a86" stroke-width="3"/>'+
+'<path d="M40 168l14-8 14 8-14 3z" fill="#f2ede0"/><line x1="54" y1="160" x2="54" y2="146" stroke="#4a4438" stroke-width="2"/><polygon points="54,146 54,158 66,154" fill="#e86a4a"/>'+
+'<rect x="222" y="42" width="42" height="76" fill="#1c2530"/><rect x="228" y="42" width="30" height="76" fill="#0c1218"/>'+
+'<path d="M186 150l36-14v14zm18-16l24-10v10zm16-14l20-8v9z" fill="#c9cdd4"/>'+
+'<circle cx="238" cy="86" r="5" fill="#e8e4da"/><rect x="233" y="91" width="10" height="18" rx="4" fill="#e8e4da"/>'},
+{t:"The Big Lebowski",y:1998,d:"The Coen Brothers",a:["big lebowski","lebowski"],s:VB+
+'<rect width="320" height="180" fill="#2d1b4e"/>'+
+'<circle cx="60" cy="30" r="3" fill="#ff5d8f"/><circle cx="120" cy="18" r="2.4" fill="#5de4a8"/><circle cx="230" cy="26" r="3" fill="#6db7ff"/><circle cx="286" cy="44" r="2.4" fill="#ffc960"/><circle cx="30" cy="66" r="2.4" fill="#6db7ff"/>'+
+'<polygon points="120,180 200,180 176,52 144,52" fill="#c99a5e"/><polygon points="146,52 174,52 172,64 148,64" fill="#e2b878"/>'+
+'<polygon points="158,120 162,110 166,120 162,128" fill="#8a6238"/><polygon points="150,140 155,128 160,140 155,150" fill="#8a6238"/><polygon points="164,140 169,128 174,140 169,150" fill="#8a6238"/>'+
+'<g fill="#f5f1e6"><rect x="150" y="40" width="5" height="14" rx="2.5"/><rect x="158" y="40" width="5" height="14" rx="2.5"/><rect x="166" y="40" width="5" height="14" rx="2.5"/><rect x="154" y="36" width="5" height="12" rx="2.5"/><rect x="162" y="36" width="5" height="12" rx="2.5"/></g>'+
+'<g fill="#c23a3a"><rect x="150" y="44" width="5" height="3"/><rect x="158" y="44" width="5" height="3"/><rect x="166" y="44" width="5" height="3"/></g>'+
+'<circle cx="158" cy="138" r="13" fill="#6a2a4a"/><circle cx="154" cy="134" r="1.8" fill="#2d1b4e"/><circle cx="160" cy="132" r="1.8" fill="#2d1b4e"/>'+
+'<path d="M132 158q26 10 52 0" stroke="#42305e" stroke-width="3" fill="none"/>'+
+'<rect x="14" y="130" width="66" height="40" rx="4" fill="#7a2e2e"/><rect x="20" y="136" width="54" height="28" rx="3" fill="none" stroke="#d8b26a" stroke-width="3"/><circle cx="47" cy="150" r="6" fill="#d8b26a"/>'},
+{t:"The Matrix",y:1999,d:"The Wachowskis",a:["matrix"],s:VB+
+'<defs><pattern id="m22c" width="18" height="26" patternUnits="userSpaceOnUse"><rect x="4" y="2" width="7" height="4" fill="#2ec962"/><rect x="4" y="10" width="7" height="4" fill="#2ec962" opacity=".7"/><rect x="4" y="18" width="7" height="4" fill="#2ec962" opacity=".4"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#020703"/><rect width="320" height="180" fill="url(#m22c)" opacity=".8"/>'+
+'<rect x="9" y="0" width="9" height="180" fill="url(#m22c)" opacity=".5"/>'+
+'<g transform="rotate(-44 150 120)"><circle cx="150" cy="76" r="11" fill="#050b06"/><rect x="139" y="87" width="22" height="44" rx="9" fill="#050b06"/>'+
+'<path d="M139 96l-20 26m42-26l18 24" stroke="#050b06" stroke-width="6"/><path d="M144 131l-10 30m22-30l14 26" stroke="#050b06" stroke-width="7"/>'+
+'<path d="M150 65a12 12 0 0 1 11 8" stroke="#4dff88" stroke-width="2" fill="none"/></g>'+
+'<line x1="20" y1="52" x2="300" y2="40" stroke="#cfe" stroke-width="1.6" opacity=".8"/><line x1="20" y1="64" x2="300" y2="56" stroke="#cfe" stroke-width="1.4" opacity=".6"/>'+
+'<ellipse cx="230" cy="44" rx="9" ry="4" fill="none" stroke="#cfe" stroke-width="1.4" opacity=".7"/><ellipse cx="130" cy="56" rx="7" ry="3.4" fill="none" stroke="#cfe" stroke-width="1.2" opacity=".6"/>'},
+{t:"Fight Club",y:1999,d:"David Fincher",a:["fight club"],s:VB+
+'<rect width="320" height="180" fill="#101623"/>'+
+'<rect x="0" y="0" width="14" height="180" fill="#050810"/><rect x="306" y="0" width="14" height="180" fill="#050810"/><rect x="0" y="0" width="320" height="12" fill="#050810"/><rect x="155" y="0" width="10" height="180" fill="#050810"/>'+
+'<g transform="rotate(-3 60 120)"><rect x="44" y="52" width="34" height="112" fill="#1d2638"/><rect x="49" y="58" width="6" height="8" fill="#ffd98c"/><rect x="60" y="72" width="6" height="8" fill="#ffd98c"/><rect x="49" y="96" width="6" height="8" fill="#ffd98c"/></g>'+
+'<g transform="rotate(4 250 120)"><rect x="236" y="40" width="38" height="124" fill="#1d2638"/><rect x="243" y="50" width="6" height="8" fill="#ffd98c"/><rect x="256" y="66" width="6" height="8" fill="#ffd98c"/><rect x="243" y="90" width="6" height="8" fill="#ffd98c"/></g>'+
+'<rect x="120" y="66" width="26" height="98" fill="#1d2638"/><rect x="188" y="76" width="24" height="88" fill="#1d2638"/>'+
+'<circle cx="62" cy="160" r="14" fill="#ff8a3c"/><circle cx="252" cy="156" r="16" fill="#ffc45e"/><ellipse cx="62" cy="164" rx="26" ry="8" fill="#7a7466" opacity=".7"/><ellipse cx="254" cy="162" rx="30" ry="9" fill="#7a7466" opacity=".7"/>'+
+'<circle cx="146" cy="150" r="8" fill="#0a0d16"/><circle cx="176" cy="150" r="8" fill="#0a0d16"/>'+
+'<rect x="138" y="158" width="16" height="22" fill="#0a0d16"/><rect x="168" y="158" width="16" height="22" fill="#0a0d16"/>'+
+'<path d="M152 168q9-8 18 0" stroke="#0a0d16" stroke-width="5" fill="none"/>'},
+{t:"Gladiator",y:2000,d:"Ridley Scott",a:["gladiator"],s:VB+
+'<defs><pattern id="m24w" width="10" height="90" patternUnits="userSpaceOnUse"><line x1="3" y1="0" x2="5" y2="90" stroke="#c9952f" stroke-width="2.6"/><line x1="8" y1="4" x2="9" y2="90" stroke="#e8b84a" stroke-width="2"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#f2e3b8"/><circle cx="248" cy="40" r="26" fill="#fff6d2"/>'+
+'<rect y="86" width="320" height="94" fill="#d8a63a"/><rect y="86" width="320" height="94" fill="url(#m24w)"/>'+
+'<g fill="#b3821f"><ellipse cx="30" cy="86" rx="4" ry="8"/><ellipse cx="70" cy="82" rx="4" ry="8"/><ellipse cx="112" cy="88" rx="4" ry="8"/><ellipse cx="150" cy="84" rx="4" ry="8"/><ellipse cx="196" cy="86" rx="4" ry="8"/><ellipse cx="244" cy="83" rx="4" ry="8"/><ellipse cx="286" cy="87" rx="4" ry="8"/></g>'+
+'<path d="M0 60q60 4 118 26" stroke="#3a2c22" stroke-width="16" fill="none" stroke-linecap="round"/>'+
+'<path d="M118 86l14-8m-12 12l16-4m-14 9l16 0m-16 5l14 4" stroke="#3a2c22" stroke-width="5" stroke-linecap="round"/>'},
+{t:"Cast Away",y:2000,d:"Robert Zemeckis",a:["cast away","castaway"],s:VB+
+'<rect width="320" height="180" fill="#bfe3ef"/>'+
+'<rect y="92" width="320" height="30" fill="#5fa8bf"/><path d="M0 92h320" stroke="#8fc9d8" stroke-width="3"/>'+
+'<rect y="118" width="320" height="62" fill="#e8d5a8"/><path d="M0 122q80 8 160 0t160 0" stroke="#d8c090" stroke-width="4" fill="none"/>'+
+'<circle cx="160" cy="112" r="37" fill="#f5f1e6"/>'+
+'<path d="M126 100a38 38 0 0 1 40-24M194 124a38 38 0 0 1-42 24" stroke="#d8cfba" stroke-width="3" fill="none"/>'+
+'<ellipse cx="158" cy="106" rx="9" ry="11" fill="#b3502e"/>'+
+'<ellipse cx="146" cy="94" rx="3.4" ry="7" fill="#b3502e" transform="rotate(-24 146 94)"/><ellipse cx="154" cy="90" rx="3.4" ry="8" fill="#b3502e" transform="rotate(-8 154 90)"/><ellipse cx="163" cy="90" rx="3.4" ry="8" fill="#b3502e" transform="rotate(8 163 90)"/><ellipse cx="171" cy="95" rx="3.4" ry="7" fill="#b3502e" transform="rotate(24 171 95)"/>'+
+'<circle cx="152" cy="112" r="2.6" fill="#7a3018"/><circle cx="164" cy="112" r="2.6" fill="#7a3018"/><path d="M150 122q8 7 17 1" stroke="#7a3018" stroke-width="3" fill="none"/>'+
+'<path d="M40 98l10-6v10zM52 100l7-4v7z" fill="#e2ded2"/><ellipse cx="220" cy="150" rx="22" ry="5" fill="#d8c090"/>'},
+{t:"Amélie",y:2001,d:"Jean-Pierre Jeunet",a:["amelie"],s:VB+
+'<defs><radialGradient id="m26g"><stop offset="0" stop-color="#2e6a4a"/><stop offset="1" stop-color="#153426"/></radialGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m26g)"/>'+
+'<circle cx="56" cy="36" r="4" fill="#ffc960" opacity=".8"/><circle cx="276" cy="30" r="3" fill="#ff5d8f" opacity=".8"/><circle cx="292" cy="126" r="4" fill="#ffc960" opacity=".6"/>'+
+'<path d="M96 128h128l-10 30H106z" fill="#f5f1e6"/><ellipse cx="160" cy="128" rx="64" ry="12" fill="#fff"/>'+
+'<ellipse cx="160" cy="124" rx="52" ry="9" fill="#e8a83a"/>'+
+'<path d="M132 120l20 6-14 4zM168 118l22 4-16 7z" fill="#c9821f"/>'+
+'<path d="M150 108l12 12" stroke="#8a5a1f" stroke-width="2.4"/>'+
+'<g transform="rotate(34 216 76)"><rect x="210" y="42" width="9" height="52" rx="4.5" fill="#b8bec4"/><ellipse cx="214" cy="34" rx="12" ry="15" fill="#cfd5da"/></g>'+
+'<path d="M238 60q26-4 40 12l-6 40q-20 6-34-4z" fill="#a82838"/>'+
+'<circle cx="252" cy="46" r="14" fill="#e8bc94"/><path d="M238 42q0-16 16-16 14 0 14 16l-4 10q-12-8-26-10z" fill="#2a1a14"/>'},
+{t:"The Lord of the Rings: The Fellowship of the Ring",y:2001,d:"Peter Jackson",a:["lord of the rings","fellowship of the ring","lord of the rings the fellowship of the ring","lotr"],s:VB+
+'<rect width="320" height="180" fill="#0c0a10"/>'+
+'<circle cx="230" cy="70" r="60" fill="#ff7a2e" opacity=".16"/><circle cx="230" cy="70" r="34" fill="#ff9a3c" opacity=".2"/>'+
+'<path d="M186 110q-4-44 34-60 40-14 62 16-8 34-34 44 18 8 24 28l-30 12q-30 2-44-16z" fill="#c2451f"/>'+
+'<path d="M206 96q0-30 28-40 30-8 44 14-10 26-32 32z" fill="#ff8a3c"/>'+
+'<path d="M224 90q4-16 20-18 14 0 18 12-8 14-22 14z" fill="#ffd25e"/>'+
+'<path d="M212 52q-8-16 2-28m34 26q2-16 16-22" stroke="#c2451f" stroke-width="7" fill="none"/>'+
+'<path d="M262 118q30 8 44 34" stroke="#ff9a3c" stroke-width="4" fill="none"/>'+
+'<rect x="0" y="128" width="230" height="14" fill="#232030"/><path d="M0 142l230-2 10 40H0z" fill="#1a1824"/>'+
+'<circle cx="96" cy="102" r="8" fill="#3c3a46"/><rect x="89" y="110" width="14" height="22" rx="5" fill="#3c3a46"/>'+
+'<line x1="80" y1="80" x2="80" y2="130" stroke="#3c3a46" stroke-width="4"/><circle cx="80" cy="78" r="4" fill="#cfe6ff"/>'+
+'<path d="M84 116l-10 8" stroke="#3c3a46" stroke-width="4"/>'},
+{t:"Spirited Away",y:2001,d:"Hayao Miyazaki",a:["spirited away"],s:VB+
+'<defs><linearGradient id="m28a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7cfa8"/><stop offset="1" stop-color="#e8988a"/></linearGradient></defs>'+
+'<rect width="320" height="102" fill="url(#m28a)"/><ellipse cx="70" cy="34" rx="30" ry="9" fill="#fbe4c8"/><ellipse cx="240" cy="24" rx="26" ry="8" fill="#fbe4c8"/>'+
+'<rect y="102" width="320" height="78" fill="#c97a74"/><path d="M0 102h320" stroke="#fbe4c8" stroke-width="2"/>'+
+'<rect x="40" y="70" width="240" height="30" rx="4" fill="#7a2430"/>'+
+'<g fill="#ffd98c"><rect x="52" y="77" width="16" height="13" rx="2"/><rect x="76" y="77" width="16" height="13" rx="2"/><rect x="100" y="77" width="16" height="13" rx="2"/><rect x="124" y="77" width="16" height="13" rx="2"/><rect x="148" y="77" width="16" height="13" rx="2"/><rect x="172" y="77" width="16" height="13" rx="2"/><rect x="196" y="77" width="16" height="13" rx="2"/><rect x="220" y="77" width="16" height="13" rx="2"/><rect x="244" y="77" width="16" height="13" rx="2"/></g>'+
+'<rect x="40" y="66" width="240" height="6" rx="3" fill="#4a161e"/><rect x="40" y="100" width="240" height="4" fill="#4a161e"/>'+
+'<path d="M104 84a4 4 0 0 1 8 0v6h-8z" fill="#1a1216"/><path d="M128 83a4 4 0 0 1 8 0v7h-8z" fill="#26202a" opacity=".85"/>'+
+'<rect x="60" y="108" width="220" height="26" rx="4" fill="#8a3038" opacity=".5"/>'+
+'<line x1="300" y1="60" x2="300" y2="112" stroke="#5a3a3a" stroke-width="4"/><line x1="292" y1="68" x2="308" y2="68" stroke="#5a3a3a" stroke-width="3"/>'+
+'<line x1="20" y1="52" x2="20" y2="106" stroke="#5a3a3a" stroke-width="4"/><line x1="12" y1="60" x2="28" y2="60" stroke="#5a3a3a" stroke-width="3"/>'},
+{t:"Shrek",y:2001,d:"Adamson & Jenson",a:["shrek"],s:VB+
+'<rect width="320" height="180" fill="#6a8a3a"/>'+
+'<ellipse cx="160" cy="168" rx="200" ry="30" fill="#4c6a2a"/>'+
+'<ellipse cx="60" cy="150" rx="40" ry="10" fill="#3c5a22"/><ellipse cx="260" cy="156" rx="50" ry="12" fill="#3c5a22"/>'+
+'<circle cx="60" cy="40" r="20" fill="#f2ecc8" opacity=".9"/>'+
+'<ellipse cx="160" cy="104" rx="46" ry="42" fill="#9ab34a"/>'+
+'<path d="M118 84q-16-4-18-16 14-4 22 8zM202 84q16-4 18-16-14-4-22 8z" fill="#9ab34a"/>'+
+'<circle cx="112" cy="66" r="7" fill="#9ab34a"/><circle cx="208" cy="66" r="7" fill="#9ab34a"/>'+
+'<circle cx="146" cy="96" r="5" fill="#2a2a1a"/><circle cx="174" cy="96" r="5" fill="#2a2a1a"/>'+
+'<ellipse cx="160" cy="112" rx="12" ry="8" fill="#88a03e"/><circle cx="155" cy="112" r="2" fill="#5a7028"/><circle cx="165" cy="112" r="2" fill="#5a7028"/>'+
+'<path d="M142 126q18 12 36 0" stroke="#2a2a1a" stroke-width="4" fill="none"/>'+
+'<rect x="146" y="142" width="28" height="30" rx="6" fill="#7a5a38"/><rect x="146" y="142" width="28" height="8" fill="#e8e2c8"/>'+
+'<path d="M40 120q6-24 14 0m206-6q6-24 14 0" stroke="#3c5a22" stroke-width="5" fill="none"/>'},
+{t:"Spider-Man",y:2002,d:"Sam Raimi",a:["spiderman","spider man"],s:VB+
+'<defs><pattern id="m30r" width="14" height="22" patternUnits="userSpaceOnUse"><line x1="12" y1="0" x2="9" y2="22" stroke="#4a5c74" stroke-width="1.2"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#1e2a3c"/><rect width="320" height="180" fill="url(#m30r)" opacity=".7"/>'+
+'<rect x="0" y="0" width="34" height="180" fill="#141c2a"/><rect x="286" y="0" width="34" height="180" fill="#141c2a"/>'+
+'<line x1="160" y1="0" x2="160" y2="34" stroke="#cfd8e2" stroke-width="2.4"/>'+
+'<path d="M136 34q24-14 48 0 6 30-8 48-16 14-32 0-14-18-8-48z" fill="#b3242c"/>'+
+'<ellipse cx="147" cy="62" rx="10" ry="15" fill="#dfe8f0" transform="rotate(20 147 62)"/>'+
+'<ellipse cx="173" cy="62" rx="10" ry="15" fill="#dfe8f0" transform="rotate(-20 173 62)"/>'+
+'<path d="M160 36v52m-22-42l44 32m0-32l-44 32m-2-42q24 10 48 0" stroke="#701418" stroke-width="1.6" fill="none"/>'+
+'<circle cx="160" cy="126" r="13" fill="#241c22"/><rect x="146" y="138" width="28" height="42" rx="10" fill="#241c22"/>'+
+'<path d="M150 96q10 8 20 0" stroke="#e8bc94" stroke-width="6" fill="none"/>'},
+{t:"Kill Bill: Vol. 1",y:2003,d:"Quentin Tarantino",a:["kill bill","kill bill vol 1","kill bill volume 1"],s:VB+
+'<rect width="320" height="180" fill="#e8b23a"/>'+
+'<rect y="140" width="320" height="40" fill="#f2e8d2"/><circle cx="160" cy="52" r="44" fill="#c93a2e" opacity=".25"/>'+
+'<circle cx="150" cy="46" r="11" fill="#1a161c"/>'+
+'<rect x="138" y="57" width="24" height="44" rx="8" fill="#f2d03a"/><line x1="143" y1="57" x2="143" y2="100" stroke="#1a161c" stroke-width="4"/><line x1="157" y1="57" x2="157" y2="100" stroke="#1a161c" stroke-width="4"/>'+
+'<path d="M140 66l-20 18m40-20l24 10" stroke="#f2d03a" stroke-width="8" stroke-linecap="round"/>'+
+'<path d="M144 100l-8 40m20-40l10 38" stroke="#f2d03a" stroke-width="9" stroke-linecap="round"/>'+
+'<path d="M120 84l-6 8m30-32q6-6 12-4" stroke="#1a161c" stroke-width="3" fill="none"/>'+
+'<line x1="186" y1="72" x2="252" y2="34" stroke="#d8dde2" stroke-width="4"/><line x1="184" y1="74" x2="176" y2="79" stroke="#3c3640" stroke-width="6"/>'+
+'<circle cx="238" cy="94" r="3.4" fill="#b3242c"/><circle cx="254" cy="82" r="2.6" fill="#b3242c"/><circle cx="262" cy="102" r="2.2" fill="#b3242c"/><circle cx="228" cy="112" r="2.6" fill="#b3242c"/>'},
+{t:"Finding Nemo",y:2003,d:"Andrew Stanton",a:["finding nemo","nemo"],s:VB+
+'<defs><linearGradient id="m32a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3aa8d8"/><stop offset="1" stop-color="#12496e"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m32a)"/>'+
+'<polygon points="60,0 100,0 70,120" fill="#bfe8f5" opacity=".18"/><polygon points="140,0 190,0 150,140" fill="#bfe8f5" opacity=".14"/>'+
+'<g stroke="#e88aa0" stroke-width="9" stroke-linecap="round" fill="none"><path d="M30 180q-4-30 8-44"/><path d="M52 180q2-34 16-46"/><path d="M76 180q-2-28 10-40"/><path d="M98 180q4-30 16-38"/></g>'+
+'<ellipse cx="190" cy="86" rx="34" ry="21" fill="#f2792e"/>'+
+'<polygon points="220,86 246,70 246,102" fill="#f2792e"/><rect x="238" y="76" width="7" height="20" fill="#fff"/>'+
+'<path d="M172 66q10 20 0 40l-12-2q6-18 0-36z" fill="#fff"/><path d="M204 70q6 16 0 32l-10-1q5-15 0-30z" fill="#fff"/>'+
+'<circle cx="168" cy="80" r="5.6" fill="#fff"/><circle cx="169" cy="81" r="2.6" fill="#1a1a22"/>'+
+'<ellipse cx="192" cy="64" rx="9" ry="5" fill="#f2792e" transform="rotate(-16 192 64)"/>'+
+'<circle cx="140" cy="40" r="4" fill="#cfeef8" opacity=".7"/><circle cx="152" cy="26" r="3" fill="#cfeef8" opacity=".6"/><circle cx="260" cy="46" r="4" fill="#cfeef8" opacity=".6"/>'},
+{t:"Ratatouille",y:2007,d:"Brad Bird",a:["ratatouille"],s:VB+
+'<defs><pattern id="m33t" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="#f2ead2"/><path d="M0 30h30M30 0v30" stroke="#e2d6b8" stroke-width="2"/></pattern></defs>'+
+'<rect width="320" height="180" fill="url(#m33t)"/><rect y="128" width="320" height="52" fill="#9aa3ac"/><rect y="128" width="320" height="8" fill="#b8c0c8"/>'+
+'<circle cx="160" cy="66" r="26" fill="#fff"/><circle cx="138" cy="74" r="18" fill="#fff"/><circle cx="182" cy="74" r="18" fill="#fff"/>'+
+'<rect x="132" y="82" width="56" height="22" rx="4" fill="#fff"/><rect x="132" y="100" width="56" height="5" fill="#e2ddd2"/>'+
+'<ellipse cx="160" cy="118" rx="13" ry="10" fill="#8a8f96"/>'+
+'<circle cx="150" cy="106" r="7" fill="#a8adb4"/><circle cx="170" cy="106" r="7" fill="#a8adb4"/>'+
+'<circle cx="155" cy="116" r="1.8" fill="#2a2a30"/><circle cx="165" cy="116" r="1.8" fill="#2a2a30"/><ellipse cx="160" cy="122" rx="2.6" ry="1.8" fill="#e88aa0"/>'+
+'<path d="M172 124q18 2 22-10" stroke="#8a8f96" stroke-width="3" fill="none"/>'+
+'<rect x="238" y="96" width="52" height="32" rx="5" fill="#c9803a"/><ellipse cx="264" cy="96" rx="26" ry="6" fill="#e0964a"/><line x1="238" y1="104" x2="222" y2="98" stroke="#8a5a28" stroke-width="5"/>'+
+'<path d="M60 96q-6-14 2-24m14 24q-6-14 2-24" stroke="#c9c2ae" stroke-width="4" fill="none"/>'},
+{t:"WALL-E",y:2008,d:"Andrew Stanton",a:["walle","wall e"],s:VB+
+'<defs><linearGradient id="m34a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8b88a"/><stop offset="1" stop-color="#b3835a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m34a)"/><circle cx="264" cy="36" r="18" fill="#f2dcae" opacity=".8"/>'+
+'<g fill="#8a6038"><rect x="10" y="60" width="26" height="26"/><rect x="10" y="88" width="26" height="26"/><rect x="38" y="74" width="26" height="26"/><rect x="10" y="32" width="26" height="26"/><rect x="256" y="88" width="30" height="30"/><rect x="288" y="60" width="26" height="58"/></g>'+
+'<g fill="#6a4828" opacity=".6"><rect x="14" y="64" width="8" height="6"/><rect x="42" y="80" width="8" height="6"/><rect x="262" y="94" width="9" height="7"/><rect x="292" y="66" width="8" height="6"/></g>'+
+'<rect y="148" width="320" height="32" fill="#9a7048"/>'+
+'<rect x="128" y="94" width="44" height="36" rx="4" fill="#c97e2e"/><rect x="134" y="100" width="14" height="10" fill="#8a5620"/><circle cx="162" cy="112" r="6" fill="#e8b04a"/>'+
+'<rect x="122" y="130" width="18" height="20" rx="5" fill="#3c3630"/><rect x="160" y="130" width="18" height="20" rx="5" fill="#3c3630"/>'+
+'<rect x="146" y="78" width="6" height="18" fill="#8a8f96"/>'+
+'<ellipse cx="141" cy="72" rx="10" ry="8" fill="#c9ced4"/><ellipse cx="159" cy="72" rx="10" ry="8" fill="#c9ced4"/><circle cx="141" cy="72" r="4" fill="#2a2e34"/><circle cx="159" cy="72" r="4" fill="#2a2e34"/>'+
+'<path d="M206 128h20l-3 22h-14z" fill="#5a4028"/><line x1="216" y1="128" x2="216" y2="108" stroke="#5a8a3a" stroke-width="3"/><ellipse cx="210" cy="106" rx="7" ry="4" fill="#6aa040" transform="rotate(-24 210 106)"/><ellipse cx="222" cy="106" rx="7" ry="4" fill="#6aa040" transform="rotate(24 222 106)"/>'},
+{t:"The Dark Knight",y:2008,d:"Christopher Nolan",a:["dark knight"],s:VB+
+'<rect width="320" height="180" fill="#0a0e18"/>'+
+'<line x1="0" y1="40" x2="320" y2="34" stroke="#ffd98c" stroke-width="2.4" opacity=".6"/><line x1="0" y1="58" x2="320" y2="50" stroke="#8fc0ff" stroke-width="1.8" opacity=".5"/><line x1="0" y1="26" x2="320" y2="22" stroke="#fff" stroke-width="1.2" opacity=".4"/>'+
+'<rect y="140" width="320" height="40" fill="#060910"/>'+
+'<path d="M26 132q0-22 24-24h130q22 0 26 16l6 16H26z" fill="#141a28"/>'+
+'<rect x="70" y="96" width="14" height="8" rx="2" fill="#c93a3a"/><rect x="86" y="96" width="14" height="8" rx="2" fill="#3a6ac9"/>'+
+'<rect x="118" y="112" width="52" height="20" fill="#0c1018"/>'+
+'<circle cx="176" cy="106" r="11" fill="#e8d6c2"/><path d="M164 100q-4-12 8-14 12-2 16 8 2 8-4 12-14 4-20-6z" fill="#3c7a3c"/>'+
+'<path d="M186 112q16-4 30-2" stroke="#5a3a7a" stroke-width="9" stroke-linecap="round"/>'+
+'<path d="M170 116q4 5 12 4" stroke="#a83a4a" stroke-width="3" fill="none"/>'+
+'<path d="M226 118q26-4 48 4" stroke="#141a28" stroke-width="4" fill="none" opacity=".8"/>'+
+'<circle cx="42" cy="122" r="10" fill="#05070c"/><circle cx="150" cy="126" r="10" fill="#05070c"/>'},
+{t:"Up",y:2009,d:"Pete Docter",a:["up"],s:VB+
+'<rect width="320" height="180" fill="#9fd8f0"/>'+
+'<ellipse cx="56" cy="120" rx="34" ry="13" fill="#fff"/><ellipse cx="262" cy="60" rx="36" ry="14" fill="#fff"/><ellipse cx="130" cy="160" rx="30" ry="11" fill="#fff"/>'+
+'<g><circle cx="150" cy="38" r="10" fill="#e84a4a"/><circle cx="168" cy="30" r="11" fill="#ffc94a"/><circle cx="186" cy="40" r="10" fill="#4a90e8"/><circle cx="160" cy="52" r="11" fill="#8a4ae8"/><circle cx="180" cy="56" r="10" fill="#5de4a8"/><circle cx="142" cy="56" r="9" fill="#ff8ac0"/><circle cx="198" cy="52" r="9" fill="#ff8a3c"/><circle cx="152" cy="22" r="9" fill="#5de4a8"/><circle cx="180" cy="18" r="9" fill="#ff5d8f"/><circle cx="196" cy="30" r="8" fill="#ffc94a"/><circle cx="136" cy="42" r="8" fill="#4ad8e8"/><circle cx="208" cy="42" r="7" fill="#e84a4a"/></g>'+
+'<path d="M156 62l8 34m8-32l4 32m12-28l-8 28m-32-32l6 34" stroke="#9a9082" stroke-width="1.4"/>'+
+'<g transform="rotate(4 172 118)"><rect x="150" y="112" width="44" height="30" fill="#b8dce8"/><rect x="150" y="112" width="44" height="30" fill="none" stroke="#7a6a58" stroke-width="2"/><polygon points="146,112 198,112 172,94" fill="#8a4a6a"/><rect x="166" y="124" width="12" height="18" fill="#6a4a30"/><rect x="154" y="118" width="9" height="9" fill="#fff8d8"/><rect x="181" y="118" width="9" height="9" fill="#fff8d8"/></g>'},
+{t:"Avatar",y:2009,d:"James Cameron",a:["avatar"],s:VB+
+'<defs><linearGradient id="m37a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd8d8"/><stop offset="1" stop-color="#3a7a8a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m37a)"/>'+
+'<path d="M60 60q30-24 62-4 6 24-10 34-34 8-52-30z" fill="#4a6a52"/><ellipse cx="90" cy="52" rx="34" ry="8" fill="#6a9a5a"/>'+
+'<path d="M200 96q36-20 66 2 4 26-14 34-40 6-52-36z" fill="#42604c"/><ellipse cx="232" cy="92" rx="36" ry="9" fill="#66965a"/>'+
+'<path d="M120 30q20-14 38 0 2 16-8 20-24 4-30-20z" fill="#4a6a52" opacity=".85"/><ellipse cx="138" cy="28" rx="20" ry="6" fill="#6a9a5a"/>'+
+'<path d="M96 88q0 30-6 44M226 130q0 22-6 34M138 50q0 22-4 32" stroke="#e8f2e8" stroke-width="2.4" fill="none" opacity=".8"/>'+
+'<path d="M104 90v34m126 8v28" stroke="#3a5242" stroke-width="2"/>'+
+'<circle cx="52" cy="130" r="3" fill="#d8f5ff" opacity=".9"/><circle cx="160" cy="150" r="2.4" fill="#d8f5ff" opacity=".8"/><circle cx="290" cy="40" r="2.6" fill="#d8f5ff" opacity=".8"/>'+
+'<path d="M148 108q14-14 30 0-14 6-30 0z" fill="#8a2e4a"/><path d="M163 106v10" stroke="#8a2e4a" stroke-width="3"/>'},
+{t:"Inception",y:2010,d:"Christopher Nolan",a:["inception"],s:VB+
+'<defs><pattern id="m38w" width="12" height="12" patternUnits="userSpaceOnUse"><rect x="2" y="2" width="5" height="6" fill="#8a93a4"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#b3bcc6"/>'+
+'<path d="M0 106a150 150 0 0 1 300 0l-40 0a110 110 0 0 0-220 0z" fill="#5a6474"/>'+
+'<path d="M6 106a144 144 0 0 1 288 0l-30 0a114 114 0 0 0-228 0z" fill="url(#m38w)"/>'+
+'<g fill="#4c5666"><rect x="0" y="106" width="34" height="74"/><rect x="40" y="120" width="30" height="60"/><rect x="76" y="112" width="26" height="68"/><rect x="216" y="118" width="30" height="62"/><rect x="252" y="108" width="34" height="72"/><rect x="292" y="122" width="28" height="58"/></g>'+
+'<g fill="#8a93a4"><rect x="6" y="112" width="5" height="6"/><rect x="16" y="112" width="5" height="6"/><rect x="6" y="124" width="5" height="6"/><rect x="46" y="126" width="5" height="6"/><rect x="82" y="118" width="5" height="6"/><rect x="222" y="124" width="5" height="6"/><rect x="258" y="114" width="5" height="6"/><rect x="298" y="128" width="5" height="6"/></g>'+
+'<rect x="106" y="150" width="108" height="30" fill="#6a7484"/><line x1="112" y1="164" x2="208" y2="164" stroke="#d8dde4" stroke-width="2" stroke-dasharray="8 8"/>'+
+'<circle cx="150" cy="146" r="4.6" fill="#1c202a"/><rect x="146" y="150" width="9" height="16" rx="3" fill="#1c202a"/>'+
+'<circle cx="172" cy="146" r="4.6" fill="#1c202a"/><rect x="168" y="150" width="9" height="16" rx="3" fill="#1c202a"/>'},
+{t:"Gravity",y:2013,d:"Alfonso Cuarón",a:["gravity"],s:VB+
+'<rect width="320" height="180" fill="#04060c"/>'+
+'<circle cx="60" cy="30" r="1.6" fill="#fff"/><circle cx="130" cy="18" r="1.2" fill="#fff"/><circle cx="200" cy="36" r="1.4" fill="#fff"/><circle cx="280" cy="20" r="1.6" fill="#fff"/><circle cx="34" cy="80" r="1.2" fill="#fff"/><circle cx="250" cy="70" r="1.2" fill="#fff"/>'+
+'<circle cx="230" cy="270" r="170" fill="#1c5a9e"/>'+
+'<circle cx="230" cy="270" r="170" fill="none" stroke="#7ac8ff" stroke-width="4" opacity=".7"/>'+
+'<path d="M110 152q40-18 90-14M160 172q50-16 100-6" stroke="#e8f2ff" stroke-width="7" fill="none" opacity=".5" stroke-linecap="round"/>'+
+'<g transform="rotate(-34 120 70)"><rect x="112" y="62" width="17" height="22" rx="6" fill="#e8ecf2"/><circle cx="120" cy="54" r="8" fill="#e8ecf2"/><circle cx="120" cy="54" r="4.6" fill="#c9942e"/>'+
+'<path d="M112 68l-12 10m29-10l12 8m-25 16l-8 14m19-14l8 12" stroke="#e8ecf2" stroke-width="5" stroke-linecap="round"/></g>'+
+'<path d="M132 84q30 20 60 22" stroke="#9aa4b4" stroke-width="1.6" fill="none" stroke-dasharray="4 5"/>'+
+'<g fill="#7a8494"><polygon points="230,40 244,46 236,54"/><polygon points="270,90 282,92 274,102"/><polygon points="60,120 72,122 64,132"/><rect x="196" y="98" width="10" height="4" transform="rotate(24 201 100)"/></g>'},
+{t:"Frozen",y:2013,d:"Buck & Lee",a:["frozen"],s:VB+
+'<defs><linearGradient id="m40a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141c3c"/><stop offset="1" stop-color="#2a3c6a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m40a)"/>'+
+'<path d="M20 0q30 44 8 96" stroke="#5de4a8" stroke-width="10" fill="none" opacity=".28"/><path d="M60 0q24 38 6 84" stroke="#8a6ae8" stroke-width="9" fill="none" opacity=".24"/><path d="M100 0q18 30 6 66" stroke="#5dc9e4" stroke-width="8" fill="none" opacity=".2"/>'+
+'<circle cx="270" cy="30" r="2" fill="#fff"/><circle cx="230" cy="18" r="1.6" fill="#fff"/><circle cx="296" cy="66" r="1.6" fill="#fff"/>'+
+'<polygon points="0,180 110,60 220,180" fill="#c9d8ea"/><polygon points="60,120 110,60 160,120 110,96" fill="#e8f0f8"/>'+
+'<polygon points="150,180 250,84 320,180" fill="#a8bcd4"/>'+
+'<g opacity=".92"><polygon points="180,120 196,52 212,120" fill="#7ad4f0"/><polygon points="204,120 216,68 230,120" fill="#5ab8e0"/><polygon points="164,124 174,80 186,124" fill="#93e0f5"/><rect x="168" y="118" width="58" height="12" rx="3" fill="#6ac4e8"/></g>'+
+'<polygon points="196,58 200,74 192,74" fill="#d8f4ff"/>'+
+'<path d="M120 160l48-34" stroke="#e8f0f8" stroke-width="3" stroke-dasharray="6 5"/>'},
+{t:"The Grand Budapest Hotel",y:2014,d:"Wes Anderson",a:["grand budapest hotel","grand budapest"],s:VB+
+'<defs><pattern id="m41w" width="22" height="20" patternUnits="userSpaceOnUse"><rect x="5" y="4" width="12" height="12" rx="1.5" fill="#fdf2f4"/><rect x="5" y="4" width="12" height="5" fill="#e8c2cc"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#c9a8b8"/>'+
+'<polygon points="0,120 70,40 150,120" fill="#a88a9c"/><polygon points="150,120 240,30 320,120" fill="#977a90"/><polygon points="50,120 70,40 96,90 70,120" fill="#e8dce4"/>'+
+'<rect y="120" width="320" height="60" fill="#8a6a80"/>'+
+'<rect x="94" y="34" width="132" height="118" fill="#e88aa8"/><rect x="94" y="34" width="132" height="118" fill="url(#m41w)"/>'+
+'<rect x="88" y="24" width="144" height="14" rx="4" fill="#b34a6a"/><rect x="150" y="10" width="20" height="16" fill="#b34a6a"/><line x1="160" y1="10" x2="160" y2="0" stroke="#6a3048" stroke-width="2"/>'+
+'<rect x="94" y="140" width="132" height="12" fill="#c9607e"/><rect x="146" y="118" width="28" height="34" fill="#7a3048"/><path d="M146 118a14 14 0 0 1 28 0z" fill="#7a3048"/>'+
+'<line x1="10" y1="176" x2="86" y2="118" stroke="#5a4a56" stroke-width="4"/><rect x="34" y="138" width="20" height="13" rx="3" fill="#e8485e" transform="rotate(-37 44 144)"/>'+
+'<polygon points="262,152 272,124 282,152" fill="#3c5a46"/><polygon points="286,152 294,130 302,152" fill="#3c5a46"/>'},
+{t:"Interstellar",y:2014,d:"Christopher Nolan",a:["interstellar"],s:VB+
+'<rect width="320" height="180" fill="#03040a"/>'+
+'<circle cx="40" cy="30" r="1.4" fill="#fff"/><circle cx="90" cy="140" r="1.2" fill="#fff"/><circle cx="270" cy="150" r="1.4" fill="#fff"/><circle cx="300" cy="24" r="1.2" fill="#fff"/><circle cx="200" cy="14" r="1" fill="#fff"/>'+
+'<circle cx="160" cy="90" r="44" fill="none" stroke="#ffb45e" stroke-width="9" opacity=".9"/>'+
+'<circle cx="160" cy="90" r="52" fill="none" stroke="#ff9a3c" stroke-width="3" opacity=".4"/>'+
+'<ellipse cx="160" cy="90" rx="86" ry="13" fill="none" stroke="#ffd28c" stroke-width="5"/>'+
+'<ellipse cx="160" cy="90" rx="98" ry="17" fill="none" stroke="#c96a2e" stroke-width="2" opacity=".6"/>'+
+'<circle cx="160" cy="90" r="33" fill="#000"/>'+
+'<path d="M118 86a44 44 0 0 1 36-40" stroke="#ffe8c2" stroke-width="3" fill="none" opacity=".8"/>'+
+'<rect x="252" y="118" width="8" height="3" fill="#d8dde4"/><line x1="248" y1="119" x2="242" y2="120" stroke="#7ac8ff" stroke-width="1.6"/>'},
+{t:"Mad Max: Fury Road",y:2015,d:"George Miller",a:["mad max fury road","mad max","fury road"],s:VB+
+'<defs><linearGradient id="m43a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffca7a"/><stop offset="1" stop-color="#e0762e"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m43a)"/><rect y="140" width="320" height="40" fill="#b3541f"/>'+
+'<ellipse cx="70" cy="140" rx="90" ry="18" fill="#e8a860" opacity=".8"/><ellipse cx="250" cy="146" rx="110" ry="20" fill="#e8a860" opacity=".6"/>'+
+'<rect x="16" y="120" width="30" height="14" fill="#3c2a1e"/><rect x="52" y="122" width="24" height="12" fill="#3c2a1e"/><rect x="270" y="118" width="34" height="16" fill="#3c2a1e"/>'+
+'<rect x="120" y="82" width="84" height="58" rx="6" fill="#2a2018"/><rect x="128" y="92" width="68" height="10" fill="#443428"/><rect x="128" y="108" width="68" height="4" fill="#443428"/><rect x="128" y="118" width="68" height="4" fill="#443428"/>'+
+'<circle cx="136" cy="142" r="12" fill="#181008"/><circle cx="188" cy="142" r="12" fill="#181008"/>'+
+'<path d="M118 92l-12-10m14 22l-14-4m102-8l12-10m-14 22l14-4" stroke="#2a2018" stroke-width="4"/>'+
+'<circle cx="162" cy="56" r="7" fill="#1c140c"/><rect x="155" y="62" width="14" height="22" rx="5" fill="#8a2020"/>'+
+'<path d="M168 68l16-10" stroke="#c92e2e" stroke-width="6" stroke-linecap="round"/>'+
+'<path d="M184 56q16-8 22-20 4 12-2 22-8 8-20 4z" fill="#ff8a2e"/><path d="M190 52q10-6 14-14" stroke="#ffd25e" stroke-width="4" fill="none"/>'},
+{t:"La La Land",y:2016,d:"Damien Chazelle",a:["la la land","lalaland"],s:VB+
+'<defs><linearGradient id="m44a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2050"/><stop offset=".5" stop-color="#8a3a7a"/><stop offset="1" stop-color="#e05a8a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m44a)"/>'+
+'<circle cx="60" cy="26" r="1.6" fill="#fff"/><circle cx="240" cy="20" r="1.4" fill="#fff"/><circle cx="290" cy="48" r="1.6" fill="#fff"/>'+
+'<g fill="#ffd98c"><circle cx="20" cy="128" r="1.6"/><circle cx="44" cy="132" r="1.4"/><circle cx="70" cy="126" r="1.6"/><circle cx="100" cy="130" r="1.4"/><circle cx="130" cy="134" r="1.4"/><circle cx="210" cy="130" r="1.6"/><circle cx="240" cy="126" r="1.4"/><circle cx="270" cy="132" r="1.6"/><circle cx="300" cy="128" r="1.4"/><circle cx="170" cy="128" r="1.4"/></g>'+
+'<path d="M0 180v-30q160-24 320 0v30z" fill="#1c1434"/>'+
+'<line x1="52" y1="70" x2="52" y2="150" stroke="#141026" stroke-width="4"/><path d="M52 70q14 0 16 10" stroke="#141026" stroke-width="3.4" fill="none"/><circle cx="70" cy="82" r="6" fill="#ffe8a8"/><circle cx="70" cy="82" r="12" fill="#ffe8a8" opacity=".25"/>'+
+'<circle cx="150" cy="94" r="8" fill="#0e0a1c"/><path d="M143 102q-10 26 2 44h12q10-20 0-44z" fill="#3a70b3"/>'+
+'<path d="M148 108l-16-12m24 12l18-8" stroke="#0e0a1c" stroke-width="4.6"/>'+
+'<circle cx="196" cy="88" r="8" fill="#0e0a1c"/><rect x="188" y="96" width="16" height="34" rx="6" fill="#0e0a1c"/>'+
+'<path d="M190 104l-16 6m28-8l16-14" stroke="#0e0a1c" stroke-width="4.6"/>'+
+'<path d="M192 130l-6 20m14-20l10 18" stroke="#0e0a1c" stroke-width="5"/><path d="M146 146l-4 6m12-6l6 6" stroke="#0e0a1c" stroke-width="5"/>'},
+{t:"Arrival",y:2016,d:"Denis Villeneuve",a:["arrival"],s:VB+
+'<defs><linearGradient id="m45a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdd8cc"/><stop offset="1" stop-color="#9ab39a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m45a)"/>'+
+'<rect y="140" width="320" height="40" fill="#5f7a5c"/><path d="M0 140q80-10 160-6t160 6" fill="#6f8a6a"/>'+
+'<ellipse cx="185" cy="86" rx="34" ry="72" fill="#252a30" transform="rotate(8 185 86)"/>'+
+'<ellipse cx="176" cy="80" rx="12" ry="58" fill="#3a4048" transform="rotate(8 176 80)" opacity=".8"/>'+
+'<ellipse cx="160" cy="150" rx="120" ry="14" fill="#e8efe6" opacity=".75"/><ellipse cx="200" cy="158" rx="140" ry="12" fill="#e8efe6" opacity=".6"/>'+
+'<rect x="46" y="142" width="14" height="9" fill="#4a5a48"/><rect x="64" y="144" width="10" height="7" fill="#4a5a48"/>'+
+'<circle cx="60" cy="46" r="2" fill="#3c4440"/><line x1="54" y1="46" x2="66" y2="46" stroke="#3c4440" stroke-width="1.4"/>'+
+'<circle cx="96" cy="30" r="2" fill="#3c4440"/><line x1="90" y1="30" x2="102" y2="30" stroke="#3c4440" stroke-width="1.4"/>'},
+{t:"Get Out",y:2017,d:"Jordan Peele",a:["get out"],s:VB+
+'<rect width="320" height="180" fill="#05060a"/>'+
+'<rect x="130" y="14" width="60" height="38" rx="3" fill="#bfe0f5"/><rect x="130" y="14" width="60" height="38" rx="3" fill="none" stroke="#2a3448" stroke-width="3"/>'+
+'<circle cx="60" cy="60" r="1.2" fill="#20283a"/><circle cx="260" cy="100" r="1.2" fill="#20283a"/><circle cx="100" cy="140" r="1" fill="#20283a"/>'+
+'<g transform="rotate(-14 160 108)"><circle cx="160" cy="92" r="9" fill="#4a3226"/><rect x="152" y="101" width="17" height="30" rx="7" fill="#3c2a20"/>'+
+'<path d="M152 108l-18 12m34-12l16 14" stroke="#3c2a20" stroke-width="5" stroke-linecap="round"/>'+
+'<path d="M156 130l-10 22m18-22l12 20" stroke="#3c2a20" stroke-width="5.6" stroke-linecap="round"/>'+
+'<path d="M160 83a9 9 0 0 1 8 5" stroke="#7a95b8" stroke-width="1.8" fill="none"/></g>'+
+'<ellipse cx="266" cy="150" rx="26" ry="7" fill="#f2efe8"/><path d="M250 128a16 12 0 0 0 32 0z" fill="#fdfbf5"/>'+
+'<path d="M282 132q8 2 6 8-2 5-8 4" fill="none" stroke="#fdfbf5" stroke-width="3"/>'+
+'<line x1="250" y1="118" x2="262" y2="126" stroke="#c9cdd4" stroke-width="3"/><ellipse cx="247" cy="116" rx="4" ry="2.6" fill="#c9cdd4" transform="rotate(30 247 116)"/>'},
+{t:"Coco",y:2017,d:"Lee Unkrich",a:["coco"],s:VB+
+'<rect width="320" height="180" fill="#1c1034"/>'+
+'<g fill="#2e1c4e"><rect x="10" y="30" width="34" height="60" rx="4"/><rect x="52" y="14" width="30" height="76" rx="4"/><rect x="240" y="20" width="34" height="70" rx="4"/><rect x="282" y="38" width="30" height="52" rx="4"/></g>'+
+'<g fill="#5de4d0"><rect x="18" y="40" width="5" height="5"/><rect x="30" y="52" width="5" height="5"/><rect x="60" y="24" width="5" height="5"/><rect x="70" y="44" width="5" height="5"/><rect x="248" y="30" width="5" height="5"/><rect x="260" y="50" width="5" height="5"/><rect x="290" y="46" width="5" height="5"/></g>'+
+'<g fill="#ff8ac0"><rect x="24" y="66" width="5" height="5"/><rect x="64" y="66" width="5" height="5"/><rect x="254" y="70" width="5" height="5"/><rect x="298" y="60" width="5" height="5"/></g>'+
+'<path d="M0 132q160-64 320-6v54H0z" fill="#e8781f"/>'+
+'<path d="M0 132q160-64 320-6" stroke="#ffb03c" stroke-width="10" fill="none"/>'+
+'<g fill="#ffd25e"><circle cx="40" cy="120" r="2.4"/><circle cx="90" cy="106" r="2.4"/><circle cx="140" cy="99" r="2.4"/><circle cx="190" cy="98" r="2.4"/><circle cx="240" cy="104" r="2.4"/><circle cx="285" cy="116" r="2.4"/><circle cx="66" cy="128" r="2"/><circle cx="116" cy="116" r="2"/><circle cx="166" cy="112" r="2"/><circle cx="216" cy="114" r="2"/><circle cx="264" cy="124" r="2"/></g>'+
+'<circle cx="150" cy="84" r="6" fill="#0e0820"/><rect x="145" y="90" width="11" height="18" rx="4" fill="#0e0820"/>'+
+'<path d="M156 96l14 6-2 8-14-4z" fill="#8a4a20"/><line x1="168" y1="102" x2="176" y2="90" stroke="#0e0820" stroke-width="3"/>'+
+'<circle cx="186" cy="80" r="6" fill="#f2ede2"/><rect x="181" y="86" width="11" height="18" rx="4" fill="#3a3450"/>'+
+'<circle cx="52" cy="150" r="2" fill="#ffb03c"/><circle cx="270" cy="146" r="2" fill="#ffb03c"/><circle cx="160" cy="160" r="2" fill="#ffb03c"/>'},
+{t:"It",y:2017,d:"Andy Muschietti",a:["it"],s:VB+
+'<defs><pattern id="m48r" width="15" height="24" patternUnits="userSpaceOnUse"><line x1="13" y1="0" x2="10" y2="24" stroke="#8a95a0" stroke-width="1.3"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#5c6670"/><rect width="320" height="180" fill="url(#m48r)" opacity=".7"/>'+
+'<rect y="130" width="320" height="50" fill="#3c444c"/><rect y="124" width="320" height="10" fill="#4a525a"/>'+
+'<rect x="196" y="128" width="66" height="14" rx="3" fill="#14181c"/>'+
+'<circle cx="230" cy="66" r="15" fill="#d8232e"/><ellipse cx="230" cy="66" rx="15" ry="15" fill="none" stroke="#a8121c" stroke-width="1.6"/><circle cx="225" cy="60" r="4" fill="#f26a70" opacity=".8"/>'+
+'<path d="M230 81q-2 20 0 47" stroke="#e8ecf0" stroke-width="1.6" fill="none"/>'+
+'<path d="M96 106q4-14 18-14 14 0 18 14l4 34H92z" fill="#f2c22e"/>'+
+'<path d="M100 104a14 14 0 0 1 28 0" fill="none" stroke="#d8a81f" stroke-width="4"/>'+
+'<circle cx="114" cy="98" r="7" fill="#e8c49a"/>'+
+'<path d="M118 118l18 8m-40-6l-12 10" stroke="#f2c22e" stroke-width="7" stroke-linecap="round"/>'+
+'<path d="M140 132l10-4 10 4-10 4z" fill="#fdfbf2"/><path d="M150 128v8" stroke="#e2ddd2" stroke-width="1.4"/>'+
+'<ellipse cx="150" cy="152" rx="46" ry="6" fill="#68727c" opacity=".8"/>'},
+{t:"Parasite",y:2019,d:"Bong Joon-ho",a:["parasite"],s:VB+
+'<defs><pattern id="m49r" width="13" height="26" patternUnits="userSpaceOnUse"><line x1="11" y1="0" x2="8" y2="26" stroke="#5a6a78" stroke-width="1.4"/></pattern></defs>'+
+'<rect width="320" height="180" fill="#1a2430"/><rect width="320" height="180" fill="url(#m49r)" opacity=".8"/>'+
+'<polygon points="0,0 96,0 128,180 0,180" fill="#121a24"/><polygon points="320,0 224,0 192,180 320,180" fill="#121a24"/>'+
+'<g stroke="#2c3846" stroke-width="4"><line x1="118" y1="30" x2="202" y2="30"/><line x1="121" y1="48" x2="199" y2="48"/><line x1="124" y1="66" x2="196" y2="66"/><line x1="127" y1="84" x2="193" y2="84"/><line x1="130" y1="102" x2="190" y2="102"/><line x1="133" y1="120" x2="187" y2="120"/><line x1="136" y1="138" x2="184" y2="138"/></g>'+
+'<rect x="138" y="150" width="44" height="30" fill="#26404e"/><path d="M138 150h44" stroke="#3c5a6a" stroke-width="3"/>'+
+'<rect x="30" y="60" width="26" height="12" rx="2" fill="#ffd98c" opacity=".7"/>'+
+'<circle cx="160" cy="52" r="4.6" fill="#0a1016"/><rect x="156" y="56" width="9" height="14" rx="3" fill="#0a1016"/>'+
+'<circle cx="148" cy="88" r="4.6" fill="#0a1016"/><rect x="144" y="92" width="9" height="14" rx="3" fill="#0a1016"/>'+
+'<circle cx="172" cy="112" r="4.6" fill="#0a1016"/><rect x="168" y="116" width="9" height="14" rx="3" fill="#0a1016"/>'},
+{t:"Joker",y:2019,d:"Todd Phillips",a:["joker"],s:VB+
+'<rect width="320" height="180" fill="#b9beb6"/>'+
+'<rect x="0" y="0" width="70" height="180" fill="#7a8078"/><rect x="264" y="0" width="56" height="180" fill="#83898a"/>'+
+'<g fill="#9aa098"><polygon points="70,20 264,86 264,180 70,180"/></g>'+
+'<g stroke="#8a9088" stroke-width="3"><line x1="70" y1="34" x2="264" y2="98"/><line x1="70" y1="52" x2="264" y2="112"/><line x1="70" y1="70" x2="264" y2="126"/><line x1="70" y1="88" x2="264" y2="140"/><line x1="70" y1="106" x2="264" y2="154"/><line x1="70" y1="124" x2="264" y2="168"/></g>'+
+'<path d="M70 14l194 64" stroke="#3c7a4a" stroke-width="5" fill="none"/><path d="M70 26l194 66" stroke="#3c7a4a" stroke-width="4" fill="none" opacity=".8"/>'+
+'<circle cx="160" cy="58" r="9" fill="#3c8a3c"/><circle cx="160" cy="62" r="7" fill="#f2ede8"/>'+
+'<rect x="151" y="70" width="18" height="30" rx="6" fill="#b3242c"/><rect x="154" y="72" width="12" height="16" fill="#d8a63a"/>'+
+'<path d="M153 76l-16-18m30 18l16-18" stroke="#b3242c" stroke-width="6" stroke-linecap="round"/>'+
+'<path d="M155 100l-8 26m18-26l8 26" stroke="#b3242c" stroke-width="6.4" stroke-linecap="round"/>'+
+'<path d="M145 130l-6 4m30-6l8 2" stroke="#5a3020" stroke-width="5" stroke-linecap="round"/>'},
+{t:"Dune",y:2021,d:"Denis Villeneuve",a:["dune"],s:VB+
+'<defs><linearGradient id="m51a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2d0a0"/><stop offset="1" stop-color="#d89a5a"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m51a)"/><circle cx="60" cy="34" r="20" fill="#fbe8c8" opacity=".9"/>'+
+'<path d="M0 180v-56q90-30 200-12 70 10 120 32v36z" fill="#c9853f"/>'+
+'<path d="M0 124q90-30 200-12" stroke="#e8b06a" stroke-width="3" fill="none"/>'+
+'<circle cx="212" cy="96" r="46" fill="#4a3020"/>'+
+'<circle cx="212" cy="96" r="46" fill="none" stroke="#8a5c34" stroke-width="7" stroke-dasharray="7 6"/>'+
+'<circle cx="212" cy="96" r="32" fill="none" stroke="#6a4226" stroke-width="6" stroke-dasharray="6 5"/>'+
+'<circle cx="212" cy="96" r="19" fill="#1c0f08"/>'+
+'<path d="M166 66q-16-12-22-28m94 20q14-14 16-30" stroke="#d89a5a" stroke-width="5" fill="none" opacity=".7"/>'+
+'<circle cx="86" cy="118" r="3.6" fill="#2a1a10"/><rect x="83" y="121" width="7" height="12" rx="3" fill="#2a1a10"/>'+
+'<circle cx="102" cy="114" r="3.6" fill="#2a1a10"/><rect x="99" y="117" width="7" height="12" rx="3" fill="#2a1a10"/>'},
+{t:"Everything Everywhere All at Once",y:2022,d:"The Daniels",a:["everything everywhere all at once","eeaao"],s:VB+
+'<rect width="320" height="180" fill="#0c0a12"/>'+
+'<circle cx="110" cy="90" r="46" fill="#fdfbf5"/><circle cx="110" cy="90" r="46" fill="none" stroke="#d8d2c4" stroke-width="3"/>'+
+'<circle cx="122" cy="102" r="20" fill="#14121a"/><circle cx="128" cy="96" r="6" fill="#fdfbf5"/>'+
+'<circle cx="232" cy="86" r="42" fill="none" stroke="#1f1a26" stroke-width="26"/>'+
+'<circle cx="232" cy="86" r="42" fill="none" stroke="#2e2838" stroke-width="26" stroke-dasharray="3 14"/>'+
+'<g fill="#e8e2d2"><ellipse cx="232" cy="44" rx="3" ry="1.6" transform="rotate(20 232 44)"/><ellipse cx="262" cy="56" rx="3" ry="1.6" transform="rotate(60 262 56)"/><ellipse cx="274" cy="86" rx="3" ry="1.6" transform="rotate(100 274 86)"/><ellipse cx="262" cy="116" rx="3" ry="1.6" transform="rotate(140 262 116)"/><ellipse cx="232" cy="128" rx="3" ry="1.6" transform="rotate(180 232 128)"/><ellipse cx="202" cy="116" rx="3" ry="1.6" transform="rotate(220 202 116)"/><ellipse cx="190" cy="86" rx="3" ry="1.6" transform="rotate(260 190 86)"/><ellipse cx="202" cy="56" rx="3" ry="1.6" transform="rotate(300 202 56)"/></g>'+
+'<circle cx="232" cy="86" r="10" fill="#000"/><circle cx="232" cy="86" r="14" fill="none" stroke="#4a4458" stroke-width="1.6"/>'+
+'<g><rect x="36" y="26" width="9" height="9" fill="#ff5d8f" transform="rotate(24 40 30)"/><rect x="286" y="150" width="9" height="9" fill="#5de4a8" transform="rotate(-18 290 154)"/><circle cx="60" cy="156" r="4.6" fill="#ffc960"/><circle cx="290" cy="26" r="4.6" fill="#6db7ff"/><rect x="160" y="150" width="9" height="9" fill="#8a6ae8" transform="rotate(40 164 154)"/><circle cx="20" cy="96" r="3.6" fill="#5de4a8"/><rect x="150" y="16" width="8" height="8" fill="#ffc960" transform="rotate(-24 154 20)"/></g>'},
+{t:"Barbie",y:2023,d:"Greta Gerwig",a:["barbie"],s:VB+
+'<defs><linearGradient id="m53a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3d0"/><stop offset="1" stop-color="#ff8ab8"/></linearGradient></defs>'+
+'<rect width="320" height="180" fill="url(#m53a)"/>'+
+'<circle cx="262" cy="40" r="24" fill="#ffe27a"/><g stroke="#ffe27a" stroke-width="4"><line x1="262" y1="6" x2="262" y2="0"/><line x1="288" y1="14" x2="294" y2="8"/><line x1="296" y1="40" x2="304" y2="40"/><line x1="288" y1="66" x2="294" y2="72"/></g>'+
+'<rect y="150" width="320" height="30" fill="#ff6aa8"/>'+
+'<rect x="46" y="60" width="110" height="90" rx="6" fill="#fdd0e2"/><rect x="46" y="60" width="110" height="12" fill="#e84a90"/><rect x="46" y="104" width="110" height="8" fill="#e84a90"/>'+
+'<circle cx="84" cy="86" r="12" fill="#8adcf0"/><rect x="112" y="76" width="30" height="20" rx="4" fill="#8adcf0"/>'+
+'<rect x="64" y="120" width="24" height="30" fill="#c92e78"/><rect x="104" y="120" width="20" height="14" rx="3" fill="#8adcf0"/>'+
+'<path d="M156 76q44 10 40 62" stroke="#e84a90" stroke-width="10" fill="none"/>'+
+'<ellipse cx="214" cy="150" rx="30" ry="10" fill="#6ac4e8"/>'+
+'<path d="M256 118q10-12 20 0 10-12 20 0-4 16-20 24-16-8-20-24z" fill="#e8388a"/>'+
+'<line x1="34" y1="150" x2="34" y2="96" stroke="#3c9a5a" stroke-width="5"/><path d="M34 96q-16-4-22-16 16-2 22 8 6-10 22-8-6 12-22 16z" fill="#4ab36a"/>'},
+{t:"Oppenheimer",y:2023,d:"Christopher Nolan",a:["oppenheimer"],s:VB+
+'<rect width="320" height="180" fill="#100c12"/>'+
+'<rect y="140" width="320" height="40" fill="#1a1218"/>'+
+'<circle cx="160" cy="52" r="30" fill="#ffdf8a"/><circle cx="146" cy="60" r="24" fill="#ff9a3c"/><circle cx="176" cy="62" r="25" fill="#ff8a2e"/><circle cx="160" cy="42" r="20" fill="#fff3c2"/>'+
+'<circle cx="132" cy="72" r="15" fill="#c94a24"/><circle cx="190" cy="74" r="16" fill="#c94a24"/>'+
+'<rect x="146" y="76" width="28" height="66" fill="#ff8a2e"/><path d="M146 76q-10 34 0 66m28-66q10 34 0 66" stroke="#c94a24" stroke-width="7" fill="none"/>'+
+'<rect x="150" y="84" width="20" height="58" fill="#ffc45e"/>'+
+'<ellipse cx="160" cy="142" rx="66" ry="12" fill="#ff7a2e" opacity=".7"/><ellipse cx="160" cy="142" rx="100" ry="14" fill="#8a3418" opacity=".6"/>'+
+'<circle cx="98" cy="46" r="11" fill="#3a2a30" opacity=".8"/><circle cx="224" cy="40" r="12" fill="#3a2a30" opacity=".8"/>'+
+'<path d="M14 166q16-14 40-12l10 4q4 8-4 10z" fill="#050308"/><ellipse cx="44" cy="150" rx="13" ry="9" fill="#050308"/>'+
+'<rect x="252" y="128" width="34" height="16" fill="#241a20"/><rect x="258" y="134" width="8" height="6" fill="#4a3a2a"/>'}
+];
+
+/* ================= UTILITIES ================= */
+const $ = s => document.querySelector(s);
+const svgWrap = code => (code||"") + "</svg>";   // frame strings open <svg> but leave it unclosed
+const ROUND_MS = 45000, HINT1_MS = 15000, HINT2_MS = 30000, REVEAL_MS = 6500;
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const PEER_PREFIX = "framefight-v1-";
+
+function makeCode(){ let c=""; for(let i=0;i<4;i++) c += CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; return c; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+function normalize(s){
+  return s.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/&/g," and ")
+    .replace(/[^a-z0-9 ]/g," ")
+    .replace(/\s+/g," ").trim()
+    .replace(/^(the|a|an) /,"");
+}
+function lev(a,b){
+  if(Math.abs(a.length-b.length)>3) return 99;
+  const m=a.length,n=b.length; let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i];
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  } return prev[n];
+}
+function isCorrect(guess, movie){
+  const g = normalize(guess); if(!g) return false;
+  return movie.a.some(alias=>{
+    const a = normalize(alias);
+    if(g===a) return true;
+    if(a.length>=8 && lev(g,a)<=2) return true;
+    if(a.length>=5 && a.length<8 && lev(g,a)<=1) return true;
+    return false;
+  });
+}
+
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); $(id).classList.add("on"); }
+let toastT=null;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toastT); toastT=setTimeout(()=>t.style.display="none",3200); }
+
+/* ================= NETWORKING ================= */
+let peer=null, isHost=false, hostConn=null;
+let conns=new Map();           // host: peerId -> DataConnection
+let myId="local", myName="";
+let G=null;                    // host-side authoritative game state
+let lastView=null;             // last rendered client view
+
+function cleanupPeer(){
+  if(G){ clearTimeout(G.timer); clearTimeout(G.revealTimer); clearTimeout(G.hint1Timer); clearTimeout(G.hint2Timer); }
+  conns.forEach(c=>{ try{c.close();}catch(e){} }); conns.clear();
+  if(hostConn){ try{hostConn.close();}catch(e){} hostConn=null; }
+  if(peer){ try{peer.destroy();}catch(e){} peer=null; }
+  G=null; isHost=false; stopTimerLoop();
+}
+function exitToHome(msg){ cleanupPeer(); show("#s-home"); if(msg) toast(msg); }
+
+function hostGame(name){
+  const code = makeCode();
+  peer = new Peer(PEER_PREFIX + code.toLowerCase());
+  $("#home-err").textContent = "Creating room…";
+  peer.on("open", ()=>{
+    isHost = true; myId = "host"; myName = name;
+    G = { phase:"lobby", code, players:[{id:"host", name, score:0, connected:true}],
+          order:[], roundIdx:-1, total:10, endsAt:0, winnerId:null, timer:null, revealTimer:null };
+    $("#home-err").textContent = "";
+    broadcast();
+  });
+  peer.on("connection", c=>{
+    c.on("open", ()=>{ conns.set(c.peer, c); });
+    c.on("data", d=>hostOnData(c, d));
+    c.on("close", ()=>{ hostDropPlayer(c.peer); });
+    c.on("error", ()=>{ hostDropPlayer(c.peer); });
+  });
+  peer.on("error", e=>{
+    if(e.type==="unavailable-id"){ cleanupPeer(); hostGame(name); }   // code collision — reroll
+    else { exitToHome("Connection error: "+e.type+". Try again."); }
+  });
+  peer.on("disconnected", ()=>{ try{peer.reconnect();}catch(e){} });
+}
+
+function joinGame(name, code){
+  peer = new Peer();
+  $("#home-err").textContent = "Connecting…";
+  let joined=false;
+  peer.on("open", ()=>{
+    myName = name;
+    hostConn = peer.connect(PEER_PREFIX + code.toLowerCase(), {reliable:true});
+    const failT = setTimeout(()=>{ if(!joined) exitToHome("Could not find room "+code+"."); }, 9000);
+    hostConn.on("open", ()=>{ hostConn.send({t:"hello", name}); });
+    hostConn.on("data", d=>{
+      if(d.t==="joined"){ joined=true; clearTimeout(failT); myId=d.you; $("#home-err").textContent=""; render(d.state); }
+      else if(d.t==="state"){ render(d.state); }
+      else if(d.t==="feed"){ addFeed(d.item); }
+      else if(d.t==="deny"){ clearTimeout(failT); exitToHome(d.msg); }
+    });
+    hostConn.on("close", ()=>{ if(joined) exitToHome("Host disconnected."); });
+    hostConn.on("error", ()=>{ exitToHome("Connection to host failed."); });
+  });
+  peer.on("error", e=>{
+    if(e.type==="peer-unavailable") exitToHome("Room "+code+" not found.");
+    else exitToHome("Connection error: "+e.type+".");
+  });
+}
+
+/* ================= HOST GAME LOGIC ================= */
+function hostOnData(conn, d){
+  if(!G) return;
+  if(d.t==="hello"){
+    if(G.phase!=="lobby"){ conn.send({t:"deny", msg:"That game already started — ask the host to finish the round."}); return; }
+    if(G.players.length>=12){ conn.send({t:"deny", msg:"Room is full (12 players max)."}); return; }
+    let name = String(d.name||"Player").slice(0,14).trim() || "Player";
+    while(G.players.some(p=>p.name.toLowerCase()===name.toLowerCase())) name = name.slice(0,12)+"·"+Math.floor(Math.random()*90+10);
+    G.players.push({id:conn.peer, name, score:0, connected:true});
+    conn.send({t:"joined", you:conn.peer, state:snapshot()});
+    broadcast();
+  }
+  else if(d.t==="guess"){ handleGuess(conn.peer, String(d.text||"")); }
+}
+function hostDropPlayer(pid){
+  if(!G) return;
+  const p = G.players.find(p=>p.id===pid); if(!p) return;
+  conns.delete(pid);
+  if(G.phase==="lobby") G.players = G.players.filter(x=>x.id!==pid);
+  else p.connected = false;
+  broadcast();
+}
+function startGame(){
+  G.total = parseInt($("#rounds-sel").value,10);
+  G.order = shuffle(MOVIES.map((_,i)=>i)).slice(0, Math.min(G.total, MOVIES.length));
+  G.total = G.order.length;
+  G.players.forEach(p=>p.score=0);
+  G.roundIdx = -1;
+  nextRound();
+}
+function nextRound(){
+  clearTimeout(G.timer); clearTimeout(G.revealTimer); clearTimeout(G.hint1Timer); clearTimeout(G.hint2Timer);
+  G.roundIdx++;
+  if(G.roundIdx >= G.total){ G.phase="end"; broadcast(); return; }
+  G.phase = "round"; G.winnerId = null; G.hintLevel = 0; G.skipped = false;
+  G.endsAt = Date.now() + ROUND_MS;
+  G.hint1Timer = setTimeout(()=>{ if(G && G.phase==="round"){ G.hintLevel = Math.max(G.hintLevel,1); broadcast(); } }, HINT1_MS);
+  G.hint2Timer = setTimeout(()=>{ if(G && G.phase==="round"){ G.hintLevel = Math.max(G.hintLevel,2); broadcast(); } }, HINT2_MS);
+  G.timer = setTimeout(()=>{ if(G && G.phase==="round") doReveal(null); }, ROUND_MS);
+  broadcast();
+}
+function doReveal(winnerId){
+  clearTimeout(G.timer); clearTimeout(G.hint1Timer); clearTimeout(G.hint2Timer);
+  G.phase = "reveal"; G.winnerId = winnerId;
+  if(winnerId){ const p=G.players.find(p=>p.id===winnerId); if(p) p.score++; }
+  G.revealTimer = setTimeout(()=>{ if(G) nextRound(); }, REVEAL_MS);
+  broadcast();
+}
+function skipRound(){
+  if(!G || G.phase!=="round") return;
+  G.skipped = true;
+  doReveal(null);   // no winner, no point awarded; reveal card shows the answer
+}
+function handleGuess(pid, text){
+  if(!G || G.phase!=="round") return;
+  text = text.slice(0,60).trim(); if(!text) return;
+  const p = G.players.find(p=>p.id===pid); if(!p) return;
+  const movie = MOVIES[G.order[G.roundIdx]];
+  if(isCorrect(text, movie)){
+    sendFeed({name:p.name, text:"", hit:true});
+    doReveal(pid);
+  } else {
+    sendFeed({name:p.name, text, hit:false});
+  }
+}
+function snapshot(){
+  const s = {
+    phase:G.phase, code:G.code,
+    players:G.players.map(p=>({id:p.id, name:p.name, score:p.score, connected:p.connected})),
+    round:G.roundIdx+1, total:G.total
+  };
+  if(G.phase==="round"){
+    const m = MOVIES[G.order[G.roundIdx]];
+    s.svg = m.s;
+    s.endsAt = G.endsAt;
+    s.hintYear = G.hintLevel >= 1 ? m.y : null;
+    s.hintDirector = G.hintLevel >= 2 ? m.d : null;
+  }
+  if(G.phase==="reveal"){
+    const m = MOVIES[G.order[G.roundIdx]];
+    s.svg=m.s; s.title=m.t; s.year=m.y;
+    const w = G.players.find(p=>p.id===G.winnerId);
+    s.winner = w ? w.name : null;
+    s.skipped = G.skipped || false;
+    s.isLast = (G.roundIdx+1 >= G.total);
+  }
+  return s;
+}
+function broadcast(){
+  const s = snapshot();
+  conns.forEach(c=>{ try{ c.send({t:"state", state:s}); }catch(e){} });
+  render(s);
+}
+function sendFeed(item){
+  conns.forEach(c=>{ try{ c.send({t:"feed", item}); }catch(e){} });
+  addFeed(item);
+}
+
+/* ================= RENDERING ================= */
+let timerRAF=null;
+function stopTimerLoop(){ if(timerRAF) cancelAnimationFrame(timerRAF); timerRAF=null; }
+function startTimerLoop(endsAt){
+  stopTimerLoop();
+  const bar=$("#timerbar"), fill=$("#timerfill");
+  const tick=()=>{
+    const left = Math.max(0, endsAt - Date.now());
+    fill.style.width = (left/ROUND_MS*100)+"%";
+    bar.classList.toggle("low", left < 10000);
+    if(left>0) timerRAF=requestAnimationFrame(tick);
+  };
+  tick();
+}
+function addFeed(item){
+  const f=$("#feed"); const div=document.createElement("div");
+  if(item.hit){ div.className="hit"; div.innerHTML="★ <b>"+esc(item.name)+"</b> guessed it!"; }
+  else div.innerHTML="<b>"+esc(item.name)+":</b> "+esc(item.text);
+  f.prepend(div);
+  while(f.children.length>40) f.lastChild.remove();
+}
+function renderScores(players){
+  $("#scores").innerHTML = players.slice().sort((a,b)=>b.score-a.score).map(p=>
+    '<div class="score-row'+(p.id===myId?" me":"")+(p.connected?"":" off")+'">'+
+    '<span class="name">'+esc(p.name)+(p.id===myId?" (you)":"")+'</span><span class="pts">'+p.score+'</span></div>'
+  ).join("");
+}
+function render(s){
+  lastView = s;
+  $("#reveal").classList.remove("on");
+  if(s.phase==="lobby"){
+    stopTimerLoop();
+    show("#s-lobby");
+    $("#lobby-code").textContent = s.code;
+    $("#lobby-players").innerHTML = s.players.map((p,i)=>
+      '<span class="ticket'+(i===0?" host":"")+'">'+esc(p.name)+(p.id===myId?" (you)":"")+(i===0?" ♦":"")+'</span>').join("");
+    $("#lobby-host-controls").style.display = isHost ? "flex" : "none";
+    $("#lobby-wait").style.display = isHost ? "none" : "block";
+    $("#btn-start").disabled = false;
+    $("#feed").innerHTML = "";
+  }
+  else if(s.phase==="round"){
+    show("#s-game");
+    $("#round-n").textContent = s.round; $("#round-total").textContent = s.total;
+    $("#game-art").innerHTML = svgWrap(s.svg);
+    renderScores(s.players);
+    startTimerLoop(s.endsAt);
+    const yh=$("#yearhint");
+    if(s.hintYear){ $("#yearhint-val").textContent = s.hintYear; yh.hidden = false; }
+    else yh.hidden = true;
+    const dh=$("#dirhint");
+    if(s.hintDirector){ $("#dirhint-val").textContent = s.hintDirector; dh.hidden = false; }
+    else dh.hidden = true;
+    const hs=$("#host-skip"); hs.hidden = !isHost; $("#btn-skip").disabled = false;
+    const gi=$("#guess-in"); gi.disabled=false; $("#btn-guess").disabled=false;
+    if(document.activeElement!==gi) gi.focus();
+  }
+  else if(s.phase==="reveal"){
+    show("#s-game");
+    stopTimerLoop(); $("#timerfill").style.width="0%";
+    $("#yearhint").hidden = true; $("#dirhint").hidden = true; $("#host-skip").hidden = true;
+    $("#guess-in").disabled=true; $("#btn-guess").disabled=true;
+    renderScores(s.players);
+    $("#reveal-who").className = "who"+(s.winner?"":" nobody");
+    $("#reveal-who").textContent = s.winner ? "★ "+s.winner+" got it!" : (s.skipped ? "Round skipped" : "Nobody got it…");
+    $("#reveal-title").textContent = s.title;
+    $("#reveal-yr").textContent = s.year;
+    $("#reveal-art").innerHTML = svgWrap(s.svg);
+    $("#reveal-next").textContent = s.isLast ? "Final results coming up…" : "Next frame in a few seconds…";
+    $("#reveal").classList.add("on");
+  }
+  else if(s.phase==="end"){
+    stopTimerLoop();
+    show("#s-end");
+    const sorted = s.players.slice().sort((a,b)=>b.score-a.score);
+    const top = sorted[0];
+    const tied = sorted.filter(p=>p.score===top.score);
+    $("#winner-name").textContent = tied.length>1 ? tied.map(p=>p.name).join(" & ") : top.name;
+    $("#podium").innerHTML = sorted.map((p,i)=>
+      '<div class="score-row"><span class="name">'+(i===0?"🏆 ":"")+esc(p.name)+'</span><span class="pts">'+p.score+' pt'+(p.score===1?"":"s")+'</span></div>').join("");
+    $("#btn-again").style.display = isHost ? "block" : "none";
+    $("#end-wait").style.display = isHost ? "none" : "block";
+  }
+}
+
+/* ================= WIRING ================= */
+function getName(){
+  const n = $("#name-in").value.trim();
+  if(!n){ $("#home-err").textContent = "Enter a name first."; $("#name-in").focus(); return null; }
+  return n.slice(0,14);
+}
+$("#btn-host").addEventListener("click", ()=>{
+  const n=getName(); if(!n) return;
+  if(typeof Peer==="undefined"){ $("#home-err").textContent="Peer library failed to load — check your connection."; return; }
+  cleanupPeer(); hostGame(n);
+});
+$("#btn-join").addEventListener("click", ()=>{
+  const n=getName(); if(!n) return;
+  const code = $("#code-in").value.trim().toUpperCase();
+  if(code.length!==4){ $("#home-err").textContent="Room codes are 4 letters."; $("#code-in").focus(); return; }
+  if(typeof Peer==="undefined"){ $("#home-err").textContent="Peer library failed to load — check your connection."; return; }
+  cleanupPeer(); joinGame(n, code);
+});
+$("#code-in").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#btn-join").click(); });
+$("#name-in").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#btn-host").click(); });
+
+$("#btn-start").addEventListener("click", ()=>{ if(isHost && G){ $("#btn-start").disabled=true; startGame(); } });
+$("#btn-leave").addEventListener("click", ()=>exitToHome());
+$("#btn-exit").addEventListener("click", ()=>exitToHome());
+$("#btn-again").addEventListener("click", ()=>{
+  if(isHost && G){ G.phase="lobby"; G.players.forEach(p=>p.score=0); G.players=G.players.filter(p=>p.connected); broadcast(); }
+});
+
+let lastGuess="", lastGuessAt=0;
+function submitGuess(){
+  const gi=$("#guess-in"); const text=gi.value.trim();
+  if(!text) return;
+  const now=Date.now();
+  if(text.toLowerCase()===lastGuess && now-lastGuessAt<1200) return;   // soft anti-spam
+  lastGuess=text.toLowerCase(); lastGuessAt=now;
+  gi.value="";
+  if(isHost) handleGuess("host", text);
+  else if(hostConn) hostConn.send({t:"guess", text});
+}
+$("#btn-guess").addEventListener("click", submitGuess);
+$("#guess-in").addEventListener("keydown", e=>{ if(e.key==="Enter") submitGuess(); });
+
+$("#btn-skip").addEventListener("click", ()=>{
+  if(isHost && G && G.phase==="round"){ $("#btn-skip").disabled = true; skipRound(); }
+});
+
+window.addEventListener("beforeunload", ()=>{ try{ if(peer) peer.destroy(); }catch(e){} });
+
+/* rotating hero art on the home screen */
+(function(){
+  const picks = shuffle(MOVIES.map((_,i)=>i)).slice(0,6); let i=0;
+  const el=$("#hero-art");
+  const swap=()=>{ el.innerHTML = svgWrap(MOVIES[picks[i%picks.length]].s); i++; };
+  swap();
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(swap, 4000);
+})();
+</script>
+</body>
+</html>
