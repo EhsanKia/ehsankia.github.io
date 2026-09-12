@@ -293,9 +293,6 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 }
 .tile span{pointer-events:none;display:block;transform:translateY(calc(var(--td) * -.34))}
 .tile .qu{font-size:.72em}
-.tile::after{content:"";position:absolute;left:18%;right:18%;bottom:11%;height:3px;border-radius:2px;
-  background:currentColor;opacity:0;transition:opacity .15s}
-.tile.rot::after{opacity:.32}
 .tile.sel{
   background:linear-gradient(168deg,#c2a4ff,var(--grape) 48%,var(--grape-lo));
   color:#fff;
@@ -338,6 +335,11 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #found{flex:0 0 auto;padding-top:8px}
 #found .hdr{display:flex;justify-content:space-between;align-items:baseline;padding:0 3px 6px;font-size:11px;
   letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:900}
+/* The round's minimum word length, parked next to "Your words" so nobody has
+   to remember what the host picked. */
+#minBadge{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:999px;font-style:normal;
+  font-size:10px;letter-spacing:.1em;color:var(--ink-dim);background:rgba(255,255,255,.08);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
 #fchips{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px 3px 8px;scrollbar-width:none;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
 #fchips::-webkit-scrollbar{display:none}
@@ -351,6 +353,12 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 
 /* countdown */
 #cd{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(10,5,26,.86)}
+#cd .box{display:flex;flex-direction:column;align-items:center;gap:18px}
+#cd .set{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;animation:cdSet .5s var(--ease-out) both}
+#cd .set span{padding:7px 13px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.1em;
+  text-transform:uppercase;color:#fff;background:rgba(255,255,255,.1);
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14)}
+@keyframes cdSet{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #cd b{font-size:min(38vw,220px);font-weight:900;line-height:1;
   background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 8px 26px rgba(255,190,60,.6));animation:cdPop .92s var(--ease-out)}
@@ -626,7 +634,10 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
       <div id="board"><svg id="trail"></svg><div id="bubble"><span id="bubbleW"></span><span class="pts" id="bubbleP"></span></div></div>
     </div>
     <div id="found">
-      <div class="hdr"><span id="foundLbl">Your words</span><span id="foundCt" style="color:var(--gold)"></span></div>
+      <div class="hdr">
+        <span><span id="foundLbl">Your words</span><i id="minBadge"></i></span>
+        <span id="foundCt" style="color:var(--gold)"></span>
+      </div>
       <div id="fchips"></div>
     </div>
   </section>
@@ -1692,6 +1703,12 @@ function buildSettingsUI() {
 
 const canControl = () => G.mode !== 'guest';
 
+/** The display label for one settings value, e.g. optLabel('minLen', 3) -> '3+'. */
+function optLabel(key, v) {
+  const o = (OPTS[key] || []).find(x => x.v === v);
+  return o ? o.l : String(v);
+}
+
 function renderSettings() {
   $$('#setWrap .opt').forEach(box => {
     const key = box.dataset.k;
@@ -1793,6 +1810,11 @@ function beginRound(p, spectate) {
   $('#foundCt').textContent = '';
   $('#scoreNum').textContent = '0';
   $('#foundLbl').textContent = spectate ? 'Round in progress' : 'Your words';
+  $('#minBadge').textContent = optLabel('minLen', p.minLen) + ' letters';
+  // Seed the ring with this round's length. runTimer only starts after the
+  // countdown, so without this the ring shows a stale number next to the
+  // countdown's own "90s" chip.
+  $('#ringNum').textContent = p.dur;
   $('#scoreLbl').textContent = spectate ? 'spectating' : 'points';
   renderPips();
 
@@ -1804,16 +1826,22 @@ function beginRound(p, spectate) {
     return;
   }
   Board.lock(true);
-  countdownThen(() => {
+  countdownThen(p, () => {
     Board.lock(false);
     G.round.endAt = performance.now() + p.dur * 1000;
     runTimer();
   });
 }
 
-function countdownThen(fn) {
+function countdownThen(p, fn) {
   const ov = el('div'); ov.id = 'cd';
-  const b = el('b'); ov.appendChild(b);
+  const box = el('div', 'box');
+  const b = el('b');
+  const set = el('div', 'set');
+  [optLabel('size', p.size), optLabel('dur', p.dur),
+   optLabel('minLen', p.minLen) + ' letters'].forEach(t => set.appendChild(el('span', null, t)));
+  box.appendChild(b); box.appendChild(set);
+  ov.appendChild(box);
   document.body.appendChild(ov);
   let n = 3;
   const step = () => {
@@ -2206,8 +2234,6 @@ const Board = (() => {
   let typed = '';
   let line = null, headDot = null;
 
-  const UNDERLINE = { M: 1, W: 1, N: 1, Z: 1 };
-
   /* ------------------------------ layout ------------------------------ */
   function layout() {
     if (!size) return;
@@ -2255,7 +2281,7 @@ const Board = (() => {
 
     const stagger = Math.min(26, 420 / (size * size));
     board.forEach((face, i) => {
-      const t = el('div', 'tile deal' + (UNDERLINE[face] ? ' rot' : ''));
+      const t = el('div', 'tile deal');
       const sp = el('span');
       if (face === 'QU') { sp.innerHTML = 'Q<span class="qu">u</span>'; }
       else sp.textContent = face;
