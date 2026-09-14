@@ -308,6 +308,9 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.07),0 24px 60px -24px rgba(0,0,0,.95);
 }
 #board.locked{pointer-events:none;filter:saturate(.45) brightness(.72)}
+/* `visibility`, not `display`: the board still lays out (so Board.mount can
+   measure it) while the countdown covers the screen. */
+#boardwrap.veil{visibility:hidden}
 .tile{
   position:relative;display:grid;place-items:center;border-radius:var(--tr);
   font-size:var(--tf);font-weight:900;color:var(--tile-ink);letter-spacing:-.02em;
@@ -531,6 +534,10 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 .iconbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;flex:0 0 auto;
   background:var(--glass);box-shadow:inset 0 0 0 1.5px var(--glass-line);font-size:18px;transition:transform .12s}
 .iconbtn:active{transform:scale(.9)}
+/* Arrow glyphs are thin, sized differently by every platform font, and sit on
+   the text baseline rather than in the middle of the button. Draw one instead. */
+.iconbtn .ico{width:20px;height:20px;display:block;fill:none;stroke:currentColor;
+  stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .iconbtn.off{opacity:.45}
 
 .spinner{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.16);border-top-color:var(--gold);
@@ -593,17 +600,18 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
             <label class="field" style="flex:1"><input id="nameIn" maxlength="14" placeholder="Your name" autocomplete="nickname" spellcheck="false"></label>
           </div>
           <button class="btn primary" id="btnSolo"><span class="shine"></span>▶ Play solo</button>
+          <div class="hr"><span>or</span></div>
           <button class="btn grape" id="btnHost">✨ Create a lobby</button>
           <div class="row" style="gap:8px">
             <label class="field" style="flex:1"><input id="codeIn" class="code" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false" inputmode="text"></label>
             <button class="btn ghost sm" id="btnJoin" style="height:58px;padding-inline:20px">Join</button>
           </div>
           <p class="muted hide" id="netnote" style="color:var(--tang);margin-top:2px">Offline — solo play works, but lobbies need a connection.</p>
+          <p class="muted">Up to 8 players · peer-to-peer · no accounts</p>
           <div class="hr"><span>or</span></div>
           <button class="btn ghost" id="btnLan">📷 Play over LAN · no servers</button>
         </div>
-        <p class="muted" style="margin-top:22px">Up to 8 players · peer-to-peer · no accounts</p>
-        <div class="row" style="margin-top:16px;gap:8px">
+        <div class="row" style="margin-top:22px;gap:8px">
           <button class="iconbtn" id="btnSound" title="Sound">🔊</button>
           <button class="iconbtn" id="btnHelp" title="How to play">?</button>
         </div>
@@ -614,7 +622,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   <!-- ============ LOBBY ============ -->
   <section id="scr-lobby" class="screen">
     <div class="row" style="flex:0 0 auto;padding-bottom:10px">
-      <button class="iconbtn" id="btnLeave">←</button>
+      <button class="iconbtn" id="btnLeave" aria-label="Back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
       <div style="flex:1"><div style="font-size:19px;font-weight:900">Lobby</div>
         <div id="lobbyState" class="pill live" style="margin-top:3px">Connected</div></div>
       <button class="iconbtn" id="btnSound2" title="Sound">🔊</button>
@@ -654,7 +662,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   <!-- ============ LAN (serverless) ============ -->
   <section id="scr-lan" class="screen">
     <div class="row" style="flex:0 0 auto;padding-bottom:10px">
-      <button class="iconbtn" id="lanBack">←</button>
+      <button class="iconbtn" id="lanBack" aria-label="Back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
       <div style="flex:1"><div style="font-size:19px;font-weight:900">Play over LAN</div>
         <div class="pill" id="lanStep" style="margin-top:3px">No servers</div></div>
     </div>
@@ -750,6 +758,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div id="rrows" class="scrolly"></div>
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
       <button class="btn primary" id="btnAgain"><span class="shine"></span>Play again</button>
+      <button class="btn ghost hide" id="btnBack" style="margin-top:10px">Back</button>
       <p class="muted" id="againMsg" style="margin-top:10px"></p>
     </div>
   </section>
@@ -2584,15 +2593,22 @@ function beginRound(p, spectate) {
   $('#scoreLbl').textContent = spectate ? 'spectating' : 'points';
   renderPips();
 
+  const wrap = $('#boardwrap');
   if (spectate) {
+    wrap.classList.remove('veil');
     Board.lock(true);
     G.round.endAt = performance.now() + (p.remain || p.dur * 1000);
     runTimer();
     toast('Round already started — you\'re in next one!', null, 3200);
     return;
   }
+  // Peeking at the letters through the countdown overlay is a real advantage,
+  // so keep the board out of sight and deal it in on "GO!".
+  wrap.classList.add('veil');
   Board.lock(true);
   countdownThen(p, () => {
+    wrap.classList.remove('veil');
+    Board.mount(p.board, p.size);          // replays the deal animation
     Board.lock(false);
     G.round.endAt = performance.now() + p.dur * 1000;
     runTimer();
@@ -3745,13 +3761,19 @@ const Results = (() => {
     tab = 'rank';
     renderTab();
     const solo = G.mode === 'solo';
-    const btn = $('#btnAgain'), msg = $('#againMsg');
+    const btn = $('#btnAgain'), back = $('#btnBack'), msg = $('#againMsg');
     btn.classList.remove('hide');
+    back.classList.remove('hide');
     if (canControl()) {
       btn.innerHTML = '<span class="shine"></span>' + (solo ? 'New board' : 'Next round');
-      msg.textContent = solo ? '' : 'Everyone stays in the lobby between rounds.';
+      // "New board" reuses the current settings, so there has to be a way back
+      // to the screen where those settings live.
+      back.textContent = solo ? 'Main menu' : 'Back to lobby';
+      msg.textContent = solo ? ''
+        : 'Everyone stays in the lobby between rounds — go back there to change the settings.';
     } else {
       btn.innerHTML = 'Back to lobby';
+      back.classList.add('hide');
       msg.textContent = 'The host can start the next round whenever.';
     }
   }
@@ -3768,6 +3790,7 @@ const Results = (() => {
     $('#rspeed').classList.remove('hide');
     $('#btnSkip').classList.remove('hide');
     $('#btnAgain').classList.add('hide');
+    $('#btnBack').classList.add('hide');
     $('#againMsg').textContent = '';
     const mine = p.players.find(x => x.id === G.me.id);
     $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters'
@@ -4177,6 +4200,13 @@ $('#btnLeave').onclick = () => {
 $('#btnAgain').onclick = () => {
   if (canControl()) hostStartRound();
   else { Results.stop(); show('lobby'); renderLobby(); }
+};
+
+$('#btnBack').onclick = () => {
+  Sound.back();
+  Results.stop();
+  if (G.mode === 'solo') { show('home'); return; }
+  show('lobby'); renderLobby();
 };
 
 $('#btnShare').onclick = async () => {
