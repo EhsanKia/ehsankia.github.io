@@ -6,7 +6,7 @@
  * HTML by build.py, so every deploy lands in a fresh cache and the old one is
  * dropped on activate.
  */
-const CACHE = 'boggle-79f2f7563efa';
+const CACHE = 'boggle-e19c53cf13f9';
 const ASSETS = [
   './',
   './index.html',

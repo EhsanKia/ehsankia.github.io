@@ -109,6 +109,8 @@ input{-webkit-user-select:text;user-select:text}
 .reticle{position:absolute;inset:12%;border-radius:14px;pointer-events:none;
   box-shadow:0 0 0 3px rgba(255,210,63,.9),0 0 0 2000px rgba(8,4,20,.45)}
 
+.addr{font-size:11px;letter-spacing:.02em;opacity:.8;margin-top:-4px}
+.addr.warn{color:var(--tang);opacity:1}
 .lancode{background:var(--glass);border-radius:var(--r-s);
   box-shadow:inset 0 0 0 1.5px var(--glass-line);padding:10px 12px}
 .lancode summary{cursor:pointer;font-size:13px;color:var(--ink-dim);font-weight:800}
@@ -672,6 +674,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 
         <div class="stack" id="lanPick">
           <p class="muted" style="margin-bottom:4px">Two players, same Wi-Fi. The devices hand each other a code by camera; nothing is sent to the internet, not even a handshake.</p>
+          <p class="muted" style="margin-bottom:4px">Allow camera access when asked — it reads the codes, and it is also what lets the browser put this device's real address in them.</p>
           <button class="btn grape" id="lanBeHost">Host — show an invite</button>
           <button class="btn ghost" id="lanBeGuest">Join — scan an invite</button>
           <p class="muted" id="lanCamNote" style="color:var(--tang)"></p>
@@ -680,6 +683,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
         <div class="stack hide" id="lanShow">
           <div class="qrwrap"><canvas id="lanQr" width="1" height="1"></canvas></div>
           <p class="muted" id="lanShowMsg"></p>
+          <p class="muted addr" id="lanAddr"></p>
           <details class="lancode">
             <summary>No camera on the other device?</summary>
             <textarea id="lanOut" readonly rows="3" spellcheck="false"></textarea>
@@ -2113,16 +2117,30 @@ const Direct = (() => {
   const UUID_RE = /^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})\.local$/i;
   const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
-  /** Keep only what can travel: udp host candidates, real IPs ahead of mDNS. */
+  /** RFC1918 / RFC3927 — the ranges a phone actually gets from a home router. */
+  function isPrivate(ip) {
+    const p = ip.split('.').map(Number);
+    return p[0] === 10 || p[0] === 127 ||
+           (p[0] === 192 && p[1] === 168) ||
+           (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+           (p[0] === 169 && p[1] === 254);
+  }
+
+  /** Keep only what can travel: udp host candidates, best-first.
+
+      Order matters twice over. A LAN game is on a private subnet, so a
+      private IPv4 is the candidate most likely to work and belongs first.
+      An mDNS `.local` name goes last because it only resolves if the router
+      passes multicast, which plenty of them do not. */
   function usable(cands) {
     const out = [];
     for (const c of cands) {
       if (c.proto !== 'udp' || c.typ !== 'host' || c.comp !== 1) continue;
-      if (IPV4_RE.test(c.ip)) out.push({ kind: 0, ip: c.ip, port: c.port });
-      else if (UUID_RE.test(c.ip)) out.push({ kind: 1, ip: c.ip, port: c.port });
+      if (IPV4_RE.test(c.ip)) out.push({ kind: 0, ip: c.ip, port: c.port, rank: isPrivate(c.ip) ? 0 : 1 });
+      else if (UUID_RE.test(c.ip)) out.push({ kind: 1, ip: c.ip, port: c.port, rank: 2 });
     }
-    out.sort((a, b) => a.kind - b.kind);
-    return out.slice(0, 4);
+    out.sort((a, b) => a.rank - b.rank);
+    return out.slice(0, 3);
   }
 
   function pack(sdp, kind, slot) {
@@ -2227,7 +2245,10 @@ const Direct = (() => {
   function opened(dc, ms) {
     return new Promise((res, rej) => {
       if (dc.readyState === 'open') return res();
-      const t = setTimeout(() => rej(new Error('The other device never came online.')), ms || 20000);
+      const t = setTimeout(() => rej(new Error(
+        'The two devices could not reach each other. They must be on the same ' +
+        'Wi-Fi, with client isolation off — and both should allow camera access ' +
+        'before making a code, so the browser shares a real address.')), ms || 20000);
       dc.onopen = () => { clearTimeout(t); res(); };
       dc.onerror = () => { clearTimeout(t); rej(new Error('The connection failed.')); };
     });
@@ -2267,7 +2288,11 @@ const Direct = (() => {
     await pc.setLocalDescription(await pc.createOffer());
     await gathered(pc);
     pending.set(slot, { pc, dc, id });
-    return { slot, token: pack(pc.localDescription.sdp, KIND_OFFER, slot) };
+    return {
+      slot,
+      token: pack(pc.localDescription.sdp, KIND_OFFER, slot),
+      addrs: usable(parseSdp(pc.localDescription.sdp).cands),
+    };
   }
 
   /** Host: take the guest's reply and finish the connection. */
@@ -2277,7 +2302,9 @@ const Direct = (() => {
     const p = pending.get(t.slot);
     if (!p) throw new Error('That reply is for an invite that is no longer open.');
     await p.pc.setRemoteDescription({ type: 'answer', sdp: rebuild(t, 'answer') });
-    await opened(p.dc);
+    // ICE against a `.local` name has to wait on multicast resolution, which
+    // is slow where it works at all, so be generous before giving up.
+    await opened(p.dc, 40000);
     pending.delete(t.slot);
     peers.set(p.id, p);
     H.peerOpen(p.id);
@@ -2309,7 +2336,11 @@ const Direct = (() => {
     await pc.setLocalDescription(await pc.createAnswer());
     await gathered(pc);
     hostPeer = { pc, dc: null };
-    return { token: pack(pc.localDescription.sdp, KIND_ANSWER, t.slot), ready };
+    return {
+      token: pack(pc.localDescription.sdp, KIND_ANSWER, t.slot),
+      addrs: usable(parseSdp(pc.localDescription.sdp).cands),
+      ready,
+    };
   }
 
   /* ------------------------------- api -------------------------------- */
@@ -3859,11 +3890,21 @@ const Results = (() => {
    and macOS but not on Linux. Every step therefore has a text fallback
    carrying exactly the same base32 payload, which also makes the whole
    flow testable without a camera.
+
+   The camera is opened *before* either side creates a peer connection, and
+   that ordering is load-bearing. Chrome hides the device's real local IP
+   behind a random `<uuid>.local` mDNS name unless the origin holds a media
+   permission, and resolving that name needs multicast, which plenty of
+   routers drop. With the permission already granted at gathering time the
+   candidates are plain `192.168.x.y` addresses and nothing has to resolve
+   anything. Verified: permission `prompt` yields `.local`, permission
+   `granted` yields the real address.
    ===================================================================== */
 
 const Lan = (() => {
   const PANELS = ['lanPick', 'lanShow', 'lanScan', 'lanBusy'];
   let stream = null, detector = null, scanning = false, timer = 0;
+  let warmed = false;
 
   const canScan = () => typeof BarcodeDetector !== 'undefined' &&
                         !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
@@ -3889,12 +3930,38 @@ const Lan = (() => {
   }
 
   /* ----------------------------- camera ------------------------------- */
+  /** Take the preview off screen but keep the camera (and so the permission)
+      alive for the rest of the handshake. */
   function stopCam() {
     scanning = false;
     clearTimeout(timer); timer = 0;
-    if (stream) { stream.getTracks().forEach(t => { try { t.stop(); } catch (e) { } }); stream = null; }
     const v = $('#lanVid');
     if (v) v.srcObject = null;
+  }
+
+  /** Really let go of the camera. Only on the way out of LAN mode. */
+  function release() {
+    stopCam();
+    if (stream) { stream.getTracks().forEach(t => { try { t.stop(); } catch (e) { } }); stream = null; }
+    warmed = false;
+  }
+
+  /** Open the camera *before* any peer connection exists.
+
+      This is what gets a real IP into the code instead of a `.local` name;
+      see the note at the top of the file. Holding the stream open for the
+      whole flow also keeps a one-time permission grant alive and makes the
+      scan step instant. Failure is not fatal — the handshake still works
+      over mDNS where the network cooperates, and by pasting where it does
+      not — so this only ever downgrades. */
+  async function warm() {
+    if (warmed || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return;
+    warmed = true;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false,
+      });
+    } catch (e) { stream = null; }
   }
 
   async function startCam(onCode) {
@@ -3911,9 +3978,8 @@ const Lan = (() => {
     cam.classList.remove('hide');
     try {
       detector = detector || new BarcodeDetector({ formats: ['qr_code'] });
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false,
-      });
+      await warm();
+      if (!stream) throw new Error('no camera');
       const v = $('#lanVid');
       v.srcObject = stream;
       await v.play();
@@ -3937,6 +4003,23 @@ const Lan = (() => {
   /* ------------------------------ flow -------------------------------- */
   function step(label) { $('#lanStep').textContent = label; }
 
+  /** Say which address this code actually carries. When it is a masked
+      `.local` name the handshake depends on multicast working, which is the
+      one thing most likely to be broken, so it is worth saying out loud. */
+  function showAddr(addrs) {
+    const node = $('#lanAddr');
+    const real = (addrs || []).filter(a => a.kind === 0);
+    if (real.length) {
+      node.classList.remove('warn');
+      node.textContent = 'This code points at ' + real.map(a => a.ip).join(' / ');
+    } else {
+      node.classList.add('warn');
+      node.textContent = 'Your address is masked as a .local name — that needs ' +
+        'multicast, which many routers block. Allow camera access, then come ' +
+        'back and make a new code to share a direct address.';
+    }
+  }
+
   function fail(e) {
     stopCam();
     panel('lanPick');
@@ -3946,8 +4029,12 @@ const Lan = (() => {
   }
 
   /** Host, from the main menu: open a LAN lobby and mint the first invite. */
-  function beginHost() {
+  async function beginHost() {
     readProfile();
+    show('lan');
+    panel('lanBusy');
+    $('#lanBusyMsg').textContent = 'Getting the camera ready…';
+    await warm();                       // must precede the peer connection
     Net.use('direct');
     Direct.start();
     G.mode = 'host';
@@ -3956,7 +4043,6 @@ const Lan = (() => {
     G.players.set(G.me.id, {
       id: G.me.id, name: G.me.name, color: G.me.color, av: G.me.av, host: true, found: 0,
     });
-    show('lan');
     return invite();
   }
 
@@ -3966,8 +4052,10 @@ const Lan = (() => {
     panel('lanBusy');
     $('#lanBusyMsg').textContent = 'Finding this device on the network…';
     try {
-      const { token } = await Direct.invite();
+      await warm();                     // no-op if beginHost already did it
+      const { token, addrs } = await Direct.invite();
       paintQR(token);
+      showAddr(addrs);
       $('#lanOut').value = token;
       $('#lanShowMsg').textContent =
         'Have the joining player scan this. When they show you their reply, tap below.';
@@ -3981,10 +4069,13 @@ const Lan = (() => {
   }
 
   /** Guest, from the main menu. */
-  function beginGuest() {
+  async function beginGuest() {
     readProfile();
     Net.use('direct');
     show('lan');
+    panel('lanBusy');
+    $('#lanBusyMsg').textContent = 'Getting the camera ready…';
+    await warm();                       // must precede the peer connection
     scan('offer');
   }
 
@@ -4007,6 +4098,7 @@ const Lan = (() => {
       if (expect === 'answer') {
         $('#lanBusyMsg').textContent = 'Connecting…';
         await Direct.accept(code);
+        release();
         Sound.join();
         show('lobby'); renderLobby();
         toast('Player connected', 'good');
@@ -4014,8 +4106,9 @@ const Lan = (() => {
       }
 
       $('#lanBusyMsg').textContent = 'Writing your reply…';
-      const { token, ready } = await Direct.answer(code);
+      const { token, addrs, ready } = await Direct.answer(code);
       paintQR(token);
+      showAddr(addrs);
       $('#lanOut').value = token;
       $('#lanShowMsg').textContent =
         'Now hold this up for the host to scan. You will drop into the lobby automatically.';
@@ -4024,6 +4117,7 @@ const Lan = (() => {
       panel('lanShow');
 
       await ready;
+      release();
       G.mode = 'guest';
       G.me.id = Direct.me;
       G.players.clear();
@@ -4034,7 +4128,7 @@ const Lan = (() => {
   }
 
   function back() {
-    stopCam();
+    release();
     // `activeCount()` counts the host itself, so it is not the question here:
     // a host with someone already connected is only cancelling this one
     // invite, while a host who never connected to anyone is leaving.
@@ -4045,7 +4139,7 @@ const Lan = (() => {
     show('home');
   }
 
-  return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, canScan };
+  return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, release, canScan };
 })();
 
 /* ==== 60_boot.js ==== */
