@@ -9,6 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Swipe Boggle</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23241350'/%3E%3Crect x='8' y='8' width='22' height='22' rx='6' fill='%23f6efdd'/%3E%3Crect x='34' y='8' width='22' height='22' rx='6' fill='%23ffd23f'/%3E%3Crect x='8' y='34' width='22' height='22' rx='6' fill='%23ffd23f'/%3E%3Crect x='34' y='34' width='22' height='22' rx='6' fill='%23f6efdd'/%3E%3C/svg%3E">
 <style>
 /* ============================ TOKENS ============================ */
@@ -571,6 +573,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
             <label class="field" style="flex:1"><input id="codeIn" class="code" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false" inputmode="text"></label>
             <button class="btn ghost sm" id="btnJoin" style="height:58px;padding-inline:20px">Join</button>
           </div>
+          <p class="muted hide" id="netnote" style="color:var(--tang);margin-top:2px">Offline — solo play works, but lobbies need a connection.</p>
         </div>
         <p class="muted" style="margin-top:22px">Up to 8 players · peer-to-peer · no accounts</p>
         <div class="row" style="margin-top:16px;gap:8px">
@@ -3247,6 +3250,68 @@ Net.handlers.statusChange = s => {
 addEventListener('pagehide', () => { try { Net.destroy(); } catch (e) { } });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) Sound.init(); });
 
+/* --------------------------- install / offline ------------------------ */
+(function pwa() {
+  /* Lobbies need the PeerJS signalling server; solo play is entirely local,
+     so offline we disable the two networked entry points rather than let
+     them spin until they time out. */
+  const note = $('#netnote'), code = $('#codeIn');
+  const gated = [$('#btnHost'), $('#btnJoin')];
+  function paintNet() {
+    const off = navigator.onLine === false;
+    gated.forEach(b => { b.disabled = off; });
+    code.disabled = off;
+    note.classList.toggle('hide', !off);
+  }
+  addEventListener('online', paintNet);
+  addEventListener('offline', paintNet);
+  paintNet();
+
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+
+  /* A first-ever install claims the page and fires controllerchange; only a
+     genuine swap should reload. */
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+
+  let offered = false;
+  function offer(reg) {
+    if (offered || !reg.waiting) return;
+    // Never yank the page out from under a round in progress.
+    if (G.screen !== 'home' && G.screen !== 'lobby') return;
+    offered = true;
+    modal('Update ready',
+      'A newer version of the game is downloaded and waiting. Refreshing takes a moment.',
+      [{ label: 'Later' },
+       { label: 'Refresh', cls: 'primary',
+         fn: () => reg.waiting && reg.waiting.postMessage('skip-waiting') }]);
+  }
+  function watch(reg) {
+    offer(reg);
+    if (offered) return;
+    const t = setInterval(() => { offer(reg); if (offered) clearInterval(t); }, 2000);
+  }
+
+  // updateViaCache:'none' keeps the worker script out of the HTTP cache, so an
+  // update is never hidden behind GitHub Pages' max-age.
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    if (reg.waiting) watch(reg);
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) watch(reg);
+      });
+    });
+  }).catch(e => console.warn('sw registration failed', e));
+})();
+
 /* ------------------------------- start ------------------------------- */
 (async function boot() {
   const bar = $('#loadbar'), msg = $('#loadmsg');
@@ -3265,7 +3330,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   const r = new URLSearchParams(location.search).get('r');
   if (r && /^[A-Z0-9]{4}$/i.test(r)) {
     $('#codeIn').value = r.toUpperCase();
-    if (!$('#nameIn').value) { $('#nameIn').focus(); toast('Enter a name, then tap Join'); }
+    if (navigator.onLine === false) toast('Offline — you can still play solo', 'bad');
+    else if (!$('#nameIn').value) { $('#nameIn').focus(); toast('Enter a name, then tap Join'); }
     else toast('Tap Join to enter room ' + r.toUpperCase());
   }
 })();
