@@ -111,6 +111,10 @@ input{-webkit-user-select:text;user-select:text}
 
 .addr{font-size:11px;letter-spacing:.02em;opacity:.8;margin-top:-4px}
 .addr.warn{color:var(--tang);opacity:1}
+.diagbox{margin-top:2px}
+.diagbox pre{margin:0;max-height:34vh;overflow:auto;white-space:pre;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;background:#120a26;border:1px solid #2c2350;border-radius:10px;padding:8px}
+.diagwhy{font-size:12px;line-height:1.5;margin:8px 0 6px;color:var(--tang)}
+.pairline{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;word-break:break-all;margin:2px 0 0;text-align:center}
 .lancode{background:var(--glass);border-radius:var(--r-s);
   box-shadow:inset 0 0 0 1.5px var(--glass-line);padding:10px 12px}
 .lancode summary{cursor:pointer;font-size:13px;color:var(--ink-dim);font-weight:800}
@@ -705,6 +709,19 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
         <div class="stack hide" id="lanBusy">
           <div class="spinner"></div>
           <p class="muted" id="lanBusyMsg">Connecting…</p>
+        <p class="pairline" id="lanPair"></p>
+        </div>
+
+        <div class="stack hide" id="lanDiagWrap">
+          <p class="diagwhy" id="lanWhy"></p>
+          <details class="lancode diagbox" id="lanDiagBox">
+            <summary>Connection log</summary>
+            <pre id="lanDiag"></pre>
+            <div class="row" style="gap:8px;margin-top:8px">
+              <button class="btn ghost sm" id="lanDiagCopy" style="flex:1">Copy log</button>
+              <button class="btn ghost sm hide" id="lanDiagShare" style="flex:1">Share log</button>
+            </div>
+          </details>
         </div>
 
       </div>
@@ -1088,6 +1105,70 @@ const Av = (() => {
     svg(k) {
       return '<svg viewBox="0 0 64 64" aria-hidden="true">' + Av.body(k) + '</svg>';
     },
+  };
+})();
+
+/* ==== 08_diag.js ==== */
+/* =====================================================================
+   DIAG — a log you can read off the phone that failed.
+
+   LAN mode has no server, so when a handshake does not complete there is
+   nowhere to look: no request log, no error page, and on a phone no
+   devtools either. This is a small in-memory ring buffer that the direct
+   transport writes to, surfaced under a "Connection log" disclosure on the
+   LAN screen with a copy/share button.
+
+   The interesting part is not the state transitions -- those only ever say
+   "checking" then "failed" -- but the ICE candidate-pair counters. STUN
+   binding requests over a LAN either arrive or they do not:
+
+     sent>0  got=0  in=0    nothing crosses in either direction; the
+                            network is dropping client-to-client traffic
+                            (AP/client isolation, or different subnets)
+     sent>0  got=0  in>0    their packets reach us, ours do not reach them
+     sent>0  got>0          the path works; a failure after this is DTLS
+
+   That distinction is the whole reason this file exists.
+   ===================================================================== */
+
+const Diag = (() => {
+  const MAX = 500;
+  const t0 = Date.now();
+  const lines = [];
+  const subs = [];
+
+  function log(tag, msg) {
+    const e = { ms: Date.now() - t0, tag: tag, msg: String(msg) };
+    lines.push(e);
+    if (lines.length > MAX) lines.shift();
+    for (const f of subs) { try { f(e); } catch (err) { /* a bad listener must not break logging */ } }
+    return e;
+  }
+
+  const fmt = e => '[' + (e.ms / 1000).toFixed(2).padStart(7) + 's] ' +
+                   (e.tag + '      ').slice(0, 6) + ' ' + e.msg;
+
+  /** Everything someone would otherwise have to be asked for. */
+  function header() {
+    const n = (typeof navigator !== 'undefined' && navigator) || {};
+    return [
+      'Swipe Boggle connection log',
+      new Date().toISOString(),
+      'ua: ' + (n.userAgent || '?'),
+      'online: ' + n.onLine + '  lang: ' + (n.language || '?'),
+      'href: ' + (typeof location !== 'undefined' ? location.href : '?'),
+      '',
+    ].join('\n');
+  }
+
+  return {
+    log: log,
+    on(fn) { subs.push(fn); },
+    off(fn) { const i = subs.indexOf(fn); if (i >= 0) subs.splice(i, 1); },
+    clear() { lines.length = 0; },
+    fmt: fmt,
+    text() { return header() + lines.map(fmt).join('\n') + '\n'; },
+    get entries() { return lines.slice(); },
   };
 })();
 
@@ -2143,6 +2224,10 @@ const Direct = (() => {
     return out.slice(0, 3);
   }
 
+  const describe = addrs => addrs.length
+    ? addrs.map(a => a.ip + ':' + a.port).join(', ')
+    : '(no usable address)';
+
   function pack(sdp, kind, slot) {
     const p = parseSdp(sdp);
     if (!p.fp || !p.ufrag || !p.pwd) throw new Error('This browser produced an SDP I cannot read.');
@@ -2228,7 +2313,72 @@ const Direct = (() => {
   }
 
   /* ---------------------------- connections --------------------------- */
-  const newPc = () => new RTCPeerConnection({ iceServers: [] });
+  /** Every peer connection is wired to `Diag`. There is no server-side log
+      and no devtools on a phone, so this is the only way to find out why a
+      handshake did not complete. */
+  function newPc(who) {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    Diag.log('pc', who + ': created');
+    pc.addEventListener('icegatheringstatechange',
+      () => Diag.log('ice', who + ': gathering ' + pc.iceGatheringState));
+    pc.addEventListener('iceconnectionstatechange',
+      () => Diag.log('ice', who + ': ' + pc.iceConnectionState));
+    pc.addEventListener('connectionstatechange',
+      () => Diag.log('pc', who + ': ' + pc.connectionState));
+    pc.addEventListener('icecandidate', e => Diag.log('cand',
+      who + ' local: ' + (e.candidate ? e.candidate.candidate : '(end of candidates)')));
+    pc.addEventListener('icecandidateerror', e => Diag.log('cand',
+      who + ' error ' + e.errorCode + ' ' + (e.errorText || '') + ' ' + (e.url || '')));
+    return pc;
+  }
+
+  /** Poll the ICE candidate pairs once a second and log every change.
+
+      `requestsSent` vs `responsesReceived` vs `requestsReceived` is the
+      diagnosis: all three at zero-but-sent means the network is dropping
+      client-to-client traffic, which on a home router is almost always AP
+      isolation or two different subnets. */
+  function probe(pc, who) {
+    let last = '', stamped = 0;
+    const iv = setInterval(() => {
+      if (!pc || pc.signalingState === 'closed') { clearInterval(iv); return; }
+      pc.getStats().then(s => {
+        const cand = new Map();
+        s.forEach(r => { if (r.type === 'local-candidate' || r.type === 'remote-candidate') cand.set(r.id, r); });
+        const addr = c => c ? ((c.address || c.ip || '?') + ':' + (c.port == null ? '?' : c.port)) : '?';
+        const rows = [];
+        s.forEach(r => {
+          if (r.type !== 'candidate-pair') return;
+          rows.push(addr(cand.get(r.localCandidateId)) + ' -> ' + addr(cand.get(r.remoteCandidateId)) +
+            '  ' + r.state +
+            ' sent=' + (r.requestsSent || 0) +
+            ' got=' + (r.responsesReceived || 0) +
+            ' in=' + (r.requestsReceived || 0) +
+            ' out=' + (r.responsesSent || 0) +
+            (r.nominated ? ' NOMINATED' : ''));
+        });
+        rows.sort();
+        if (!rows.length) return;
+        if (onPairs) onPairs(rows);
+        // The counters tick every second. Logging all of them would push
+        // everything else out of the buffer, so only a change of state is
+        // always interesting; the running totals are sampled.
+        const key = rows.join('\n').replace(/\d+/g, '');
+        const now = Date.now();
+        if (key !== last || now - stamped > 5000) {
+          last = key; stamped = now;
+          rows.forEach(r => Diag.log('pair', r));
+        }
+      }, () => { });
+    }, 1000);
+    probes.push(iv);
+    return iv;
+  }
+
+  /** The LAN screen renders the newest pair line live while it waits. */
+  let onPairs = null;
+  const probes = [];
+  const stopProbes = () => { probes.splice(0).forEach(clearInterval); };
 
   /** No trickle channel exists, so wait for the full candidate set (or give
       up and ship what we have -- one host candidate is usually enough). */
@@ -2242,9 +2392,19 @@ const Direct = (() => {
     });
   }
 
-  function opened(dc, ms) {
+  function opened(dc, ms, pc) {
     return new Promise((res, rej) => {
       if (dc.readyState === 'open') return res();
+      // ICE usually concedes well before the deadline; there is nothing to be
+      // gained by making someone watch a spinner for the remaining 20 seconds.
+      if (pc) pc.addEventListener('connectionstatechange', () => {
+        if (pc.connectionState === 'failed') {
+          clearTimeout(t);
+          rej(new Error('The two devices could not reach each other. Open the ' +
+            'connection log below: if it shows packets going out and none coming ' +
+            'back, the network is blocking device-to-device traffic.'));
+        }
+      });
       const t = setTimeout(() => rej(new Error(
         'The two devices could not reach each other. They must be on the same ' +
         'Wi-Fi, with client isolation off — and both should allow camera access ' +
@@ -2277,7 +2437,7 @@ const Direct = (() => {
   async function invite() {
     const slot = nextSlot();
     if (slot < 0) throw new Error('The lobby is full.');
-    const pc = newPc();
+    const pc = newPc('host->' + ('d' + slot));
     const id = 'd' + slot;
     const dc = pc.createDataChannel('g', { ordered: true });
     dc.onmessage = onData(d => H.msg(id, d));
@@ -2288,11 +2448,9 @@ const Direct = (() => {
     await pc.setLocalDescription(await pc.createOffer());
     await gathered(pc);
     pending.set(slot, { pc, dc, id });
-    return {
-      slot,
-      token: pack(pc.localDescription.sdp, KIND_OFFER, slot),
-      addrs: usable(parseSdp(pc.localDescription.sdp).cands),
-    };
+    const addrs = usable(parseSdp(pc.localDescription.sdp).cands);
+    Diag.log('code', 'invite for ' + id + ' carries ' + describe(addrs));
+    return { slot, token: pack(pc.localDescription.sdp, KIND_OFFER, slot), addrs };
   }
 
   /** Host: take the guest's reply and finish the connection. */
@@ -2301,10 +2459,20 @@ const Direct = (() => {
     if (t.kind !== KIND_ANSWER) throw new Error('That is an invite code, not a reply code.');
     const p = pending.get(t.slot);
     if (!p) throw new Error('That reply is for an invite that is no longer open.');
+    Diag.log('code', 'their reply points at ' + t.cands.map(c => c.ip + ':' + c.port).join(', '));
     await p.pc.setRemoteDescription({ type: 'answer', sdp: rebuild(t, 'answer') });
+    probe(p.pc, 'host');
     // ICE against a `.local` name has to wait on multicast resolution, which
     // is slow where it works at all, so be generous before giving up.
-    await opened(p.dc, 40000);
+    try {
+      await opened(p.dc, 40000, p.pc);
+    } catch (e) {
+      Diag.log('fail', 'host: ' + e.message);
+      throw e;
+    } finally {
+      stopProbes();
+    }
+    Diag.log('pc', 'host: data channel open');
     pending.delete(t.slot);
     peers.set(p.id, p);
     H.peerOpen(p.id);
@@ -2318,7 +2486,7 @@ const Direct = (() => {
     destroy();
     const t = unpack(text);
     if (t.kind !== KIND_OFFER) throw new Error('That is a reply code, not an invite code.');
-    const pc = newPc();
+    const pc = newPc('guest');
     isHost = false; me = 'd' + t.slot;
 
     const ready = new Promise((res, rej) => {
@@ -2328,18 +2496,23 @@ const Direct = (() => {
         hostPeer = { pc, dc };
         dc.onmessage = onData(d => H.msg('host', d));
         dc.onclose = () => { if (open) { open = false; H.hostGone(); } };
-        opened(dc, 90000).then(() => { clearTimeout(timer); open = true; res(); }, rej);
+        opened(dc, 90000, pc).then(() => { clearTimeout(timer); open = true; res(); }, rej);
       };
     });
 
+    Diag.log('code', 'their invite points at ' + t.cands.map(c => c.ip + ':' + c.port).join(', '));
     await pc.setRemoteDescription({ type: 'offer', sdp: rebuild(t, 'offer') });
     await pc.setLocalDescription(await pc.createAnswer());
     await gathered(pc);
     hostPeer = { pc, dc: null };
+    const addrs = usable(parseSdp(pc.localDescription.sdp).cands);
+    Diag.log('code', 'my reply carries ' + describe(addrs));
+    probe(pc, 'guest');
     return {
       token: pack(pc.localDescription.sdp, KIND_ANSWER, t.slot),
-      addrs: usable(parseSdp(pc.localDescription.sdp).cands),
-      ready,
+      addrs,
+      ready: ready.then(r => { stopProbes(); Diag.log('pc', 'guest: data channel open'); return r; },
+                        e => { stopProbes(); Diag.log('fail', 'guest: ' + e.message); throw e; }),
     };
   }
 
@@ -2358,6 +2531,7 @@ const Direct = (() => {
 
   function destroy() {
     clearInterval(hb); hb = 0;
+    stopProbes();
     peers.forEach(p => { try { p.pc.close(); } catch (e) { } });
     pending.forEach(p => { try { p.pc.close(); } catch (e) { } });
     peers.clear(); pending.clear();
@@ -2368,6 +2542,7 @@ const Direct = (() => {
   return {
     start, invite, accept, answer, destroy, sendTo, broadcast, toHost, kick,
     pack, unpack, rebuild, parseSdp,
+    set onPairs(fn) { onPairs = fn; },
     get isHost() { return isHost; },
     get code() { return ''; },
     get me() { return me; },
@@ -4000,6 +4175,89 @@ const Lan = (() => {
     }
   }
 
+  /* --------------------------- diagnostics ---------------------------- */
+  /* There is no server log and no devtools on a phone, so the log has to be
+     in the app itself. It stays hidden until a handshake is actually under
+     way, then stays visible if that handshake fails. */
+
+  let watching = false, lastPairs = [];
+
+  function renderLog() {
+    const pre = $('#lanDiag');
+    if (!pre || !$('#lanDiagBox').open) return;
+    pre.textContent = Diag.entries.map(Diag.fmt).join('\n');
+    pre.scrollTop = pre.scrollHeight;
+  }
+
+  /** Turn the candidate-pair counters into one sentence a person can act on.
+
+      On a LAN these counters are unambiguous. If we send STUN binding
+      requests and nothing at all comes back, and nothing arrives from them
+      either, then the two devices cannot exchange packets -- which on a
+      home router means AP/client isolation or two different subnets, not
+      anything WebRTC can work around. */
+  function verdict(rows) {
+    if (!rows.length) return '';
+    let sent = 0, got = 0, inb = 0;
+    rows.forEach(r => {
+      const n = k => { const m = r.match(new RegExp(k + '=(\\d+)')); return m ? +m[1] : 0; };
+      sent += n('sent'); got += n('got'); inb += n('in');
+    });
+    if (got) return 'Packets are getting through both ways — if this still fails it is not the network.';
+    if (inb) return 'Their packets reach this device but ours do not reach them. Something is filtering ' +
+                    'one direction — check the firewall on the other device.';
+    if (sent) return 'We are sending, and nothing is coming back. The two devices cannot exchange packets: ' +
+                     'check that both are on the same Wi-Fi network (same 192.168.x.* prefix) and that ' +
+                     '"client isolation" / "AP isolation" is off on the router.';
+    return '';
+  }
+
+  /** Start showing the log, and keep the live pair line fresh. */
+  function watch() {
+    $('#lanDiagWrap').classList.remove('hide');
+    if (watching) return;
+    watching = true;
+    Diag.on(renderLog);
+    Direct.onPairs = rows => {
+      lastPairs = rows;
+      $('#lanPair').textContent = rows.length
+        ? rows[0].replace(/\s+/g, ' ')
+        : 'no candidate pairs yet';
+      const why = verdict(rows);
+      if (why) $('#lanWhy').textContent = why;
+    };
+  }
+
+  async function copyLog() {
+    const text = Diag.text();
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('Log copied', 'good');
+    } catch (e) {
+      // Clipboard access needs a secure context and a user gesture; when it
+      // is refused, selecting the text by hand still works.
+      const pre = $('#lanDiag');
+      $('#lanDiagBox').open = true;
+      renderLog();
+      const r = document.createRange();
+      r.selectNodeContents(pre);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      toast('Copy the selected text', 'bad');
+    }
+  }
+
+  function shareLog() {
+    if (!navigator.share) return;
+    navigator.share({ title: 'Boggle connection log', text: Diag.text() }).catch(() => { });
+  }
+
+  function wireDiag() {
+    $('#lanDiagCopy').onclick = copyLog;
+    const sh = $('#lanDiagShare');
+    if (navigator.share) { sh.classList.remove('hide'); sh.onclick = shareLog; }
+    $('#lanDiagBox').addEventListener('toggle', renderLog);
+  }
+
   /* ------------------------------ flow -------------------------------- */
   function step(label) { $('#lanStep').textContent = label; }
 
@@ -4024,6 +4282,10 @@ const Lan = (() => {
     stopCam();
     panel('lanPick');
     step('No servers');
+    Diag.log('fail', (e && e.message) || 'handshake failed');
+    watch();                            // leave the log on screen to be read
+    $('#lanDiagBox').open = true;
+    renderLog();
     modal('That did not work', (e && e.message) || 'The handshake failed.',
       [{ label: 'OK', cls: 'grape' }]);
   }
@@ -4097,6 +4359,8 @@ const Lan = (() => {
     try {
       if (expect === 'answer') {
         $('#lanBusyMsg').textContent = 'Connecting…';
+        $('#lanPair').textContent = '';
+        watch();
         await Direct.accept(code);
         release();
         Sound.join();
@@ -4115,6 +4379,7 @@ const Lan = (() => {
       $('#lanNext').classList.add('hide');
       step('Step 2 of 2 · your reply');
       panel('lanShow');
+      watch();
 
       await ready;
       release();
@@ -4129,6 +4394,9 @@ const Lan = (() => {
 
   function back() {
     release();
+    $('#lanDiagWrap').classList.add('hide');
+    $('#lanDiagBox').open = false;
+    $('#lanWhy').textContent = '';
     // `activeCount()` counts the host itself, so it is not the question here:
     // a host with someone already connected is only cancelling this one
     // invite, while a host who never connected to anyone is leaving.
@@ -4139,7 +4407,8 @@ const Lan = (() => {
     show('home');
   }
 
-  return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, release, canScan };
+  return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, release, canScan,
+           wireDiag, copyLog };
 })();
 
 /* ==== 60_boot.js ==== */
@@ -4278,6 +4547,7 @@ $('#lanBack').onclick = () => { Sound.back(); Lan.back(); };
 $('#lanBeHost').onclick = () => { Sound.init(); Lan.beginHost(); };
 $('#lanBeGuest').onclick = () => { Sound.init(); Lan.beginGuest(); };
 $('#btnInvite').onclick = () => { Sound.init(); Lan.invite(); };
+Lan.wireDiag();
 $('#lanCopy').onclick = async () => {
   try { await navigator.clipboard.writeText($('#lanOut').value); toast('Code copied', 'good'); }
   catch (e) { $('#lanOut').select(); toast('Select and copy the code', 'bad'); }
