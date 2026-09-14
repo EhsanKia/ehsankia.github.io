@@ -92,6 +92,31 @@ input{-webkit-user-select:text;user-select:text}
 .wrap{width:100%;max-width:520px;margin-inline:auto}
 .hide{display:none!important}
 
+/* ---------------------------- LAN / QR ---------------------------- */
+.hr{display:flex;align-items:center;gap:10px;margin:4px 0;color:var(--ink-faint);
+  font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.hr::before,.hr::after{content:"";flex:1;height:1.5px;background:var(--glass-line)}
+
+.qrwrap{background:#fff;border-radius:var(--r-m);padding:14px;align-self:center;
+  box-shadow:var(--shadow);line-height:0}
+/* The canvas is drawn one device pixel per module and scaled up here, so the
+   edges stay hard -- a smoothed QR is a QR a camera has to work harder for. */
+#lanQr{width:min(72vw,300px);height:auto;image-rendering:pixelated}
+
+.scanwrap{position:relative;align-self:center;width:min(78vw,320px);aspect-ratio:1;
+  border-radius:var(--r-m);overflow:hidden;background:#000;box-shadow:var(--shadow)}
+.scanwrap video{width:100%;height:100%;object-fit:cover;display:block}
+.reticle{position:absolute;inset:12%;border-radius:14px;pointer-events:none;
+  box-shadow:0 0 0 3px rgba(255,210,63,.9),0 0 0 2000px rgba(8,4,20,.45)}
+
+.lancode{background:var(--glass);border-radius:var(--r-s);
+  box-shadow:inset 0 0 0 1.5px var(--glass-line);padding:10px 12px}
+.lancode summary{cursor:pointer;font-size:13px;color:var(--ink-dim);font-weight:800}
+.lancode textarea{width:100%;margin-top:9px;background:rgba(0,0,0,.32);color:var(--ink);
+  border:none;border-radius:var(--r-s);padding:9px;font:700 12px/1.45 ui-monospace,monospace;
+  resize:vertical;word-break:break-all}
+
+
 /* ============================ TYPE ============================ */
 .brand{text-align:center;line-height:.88;user-select:none}
 .brand .word{display:flex;justify-content:center;gap:clamp(3px,1.4vw,7px)}
@@ -574,6 +599,8 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
             <button class="btn ghost sm" id="btnJoin" style="height:58px;padding-inline:20px">Join</button>
           </div>
           <p class="muted hide" id="netnote" style="color:var(--tang);margin-top:2px">Offline — solo play works, but lobbies need a connection.</p>
+          <div class="hr"><span>or</span></div>
+          <button class="btn ghost" id="btnLan">📷 Play over LAN · no servers</button>
         </div>
         <p class="muted" style="margin-top:22px">Up to 8 players · peer-to-peer · no accounts</p>
         <div class="row" style="margin-top:16px;gap:8px">
@@ -604,6 +631,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
         <div class="card">
           <h2 class="hd" style="margin-bottom:11px">Players <span id="pcount" style="color:var(--gold)"></span></h2>
           <div id="plist"></div>
+          <button class="btn ghost sm hide" id="btnInvite" style="margin-top:12px;width:100%">📷 Show an invite code</button>
         </div>
 
         <div class="card">
@@ -620,6 +648,54 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
       <button class="btn primary" id="btnStart"><span class="shine"></span>Start game</button>
       <p class="muted" id="waitMsg" style="margin-top:10px"></p>
+    </div>
+  </section>
+
+  <!-- ============ LAN (serverless) ============ -->
+  <section id="scr-lan" class="screen">
+    <div class="row" style="flex:0 0 auto;padding-bottom:10px">
+      <button class="iconbtn" id="lanBack">←</button>
+      <div style="flex:1"><div style="font-size:19px;font-weight:900">Play over LAN</div>
+        <div class="pill" id="lanStep" style="margin-top:3px">No servers</div></div>
+    </div>
+
+    <div class="grow scrolly">
+      <div class="wrap stack">
+
+        <div class="stack" id="lanPick">
+          <p class="muted" style="margin-bottom:4px">Two players, same Wi-Fi. The devices hand each other a code by camera; nothing is sent to the internet, not even a handshake.</p>
+          <button class="btn grape" id="lanBeHost">Host — show an invite</button>
+          <button class="btn ghost" id="lanBeGuest">Join — scan an invite</button>
+          <p class="muted" id="lanCamNote" style="color:var(--tang)"></p>
+        </div>
+
+        <div class="stack hide" id="lanShow">
+          <div class="qrwrap"><canvas id="lanQr" width="1" height="1"></canvas></div>
+          <p class="muted" id="lanShowMsg"></p>
+          <details class="lancode">
+            <summary>No camera on the other device?</summary>
+            <textarea id="lanOut" readonly rows="3" spellcheck="false"></textarea>
+            <button class="btn ghost sm" id="lanCopy" style="width:100%">Copy code</button>
+          </details>
+          <button class="btn primary" id="lanNext"><span class="shine"></span>Next</button>
+        </div>
+
+        <div class="stack hide" id="lanScan">
+          <div class="scanwrap" id="lanCam"><video id="lanVid" playsinline muted></video><div class="reticle"></div></div>
+          <p class="muted" id="lanScanMsg"></p>
+          <details class="lancode" id="lanPasteBox">
+            <summary>Type or paste the code instead</summary>
+            <textarea id="lanIn" rows="3" spellcheck="false" autocapitalize="characters" placeholder="Paste the code here"></textarea>
+            <button class="btn ghost sm" id="lanUse" style="width:100%">Use this code</button>
+          </details>
+        </div>
+
+        <div class="stack hide" id="lanBusy">
+          <div class="spinner"></div>
+          <p class="muted" id="lanBusyMsg">Connecting…</p>
+        </div>
+
+      </div>
     </div>
   </section>
 
@@ -1441,9 +1517,377 @@ function avatar(p, sizePx, extra) {
   return a;
 }
 
+/* ==== 15_qr.js ==== */
+/* =====================================================================
+   QR — a small encoder, and the base32 alphabet the payloads ride in.
+
+   Only what the LAN handshake needs: alphanumeric mode, error correction
+   level M, versions 1-10 (up to 311 characters). Alphanumeric mode packs
+   two characters into 11 bits, which beats byte mode for uppercase
+   payloads -- and BarcodeDetector hands back a string, so a byte-mode
+   payload of raw bytes would be mangled on the way out anyway.
+   ===================================================================== */
+
+const B32 = (() => {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';        // RFC 4648, no padding
+  const R = {};
+  for (let i = 0; i < A.length; i++) R[A[i]] = i;
+
+  function encode(bytes) {
+    let out = '', acc = 0, bits = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      acc = (acc << 8) | bytes[i]; bits += 8;
+      while (bits >= 5) { out += A[(acc >> (bits - 5)) & 31]; bits -= 5; }
+    }
+    if (bits) out += A[(acc << (5 - bits)) & 31];
+    return out;
+  }
+
+  function decode(str) {
+    const s = String(str).toUpperCase().replace(/[^A-Z2-7]/g, '');
+    const out = [];
+    let acc = 0, bits = 0;
+    for (let i = 0; i < s.length; i++) {
+      const v = R[s[i]];
+      if (v === undefined) continue;
+      acc = (acc << 5) | v; bits += 5;
+      if (bits >= 8) { out.push((acc >> (bits - 8)) & 255); bits -= 8; }
+    }
+    return Uint8Array.from(out);
+  }
+
+  return { encode, decode };
+})();
+
+const QR = (() => {
+  const ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+
+  /* version -> [data codewords, ec per block, g1 blocks, g1 size, g2 blocks, g2 size] */
+  const SPEC = {
+    1: [16, 10, 1, 16, 0, 0], 2: [28, 16, 1, 28, 0, 0], 3: [44, 26, 1, 44, 0, 0],
+    4: [64, 18, 2, 32, 0, 0], 5: [86, 24, 2, 43, 0, 0], 6: [108, 16, 4, 27, 0, 0],
+    7: [124, 18, 4, 31, 0, 0], 8: [154, 22, 2, 38, 2, 39], 9: [182, 22, 3, 36, 2, 37],
+    10: [216, 26, 4, 43, 1, 44],
+  };
+  const ALIGN = {
+    1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
+    6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
+  };
+  const VERINFO = { 7: 0x07C94, 8: 0x085BC, 9: 0x09A99, 10: 0x0A4D3 };
+
+  /* ------------------------------ GF(256) ----------------------------- */
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (function tables() {
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      EXP[i] = x; LOG[x] = i;
+      x <<= 1;
+      if (x & 0x100) x ^= 0x11d;
+    }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  const mul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+
+  function genPoly(n) {
+    let g = [1];
+    for (let i = 0; i < n; i++) {
+      const next = new Array(g.length + 1).fill(0);
+      // Multiply by (x + a^i). Index 0 is the highest-degree coefficient, so
+      // the x term shifts left and stays monic; getting these two the wrong
+      // way round silently builds the reversed polynomial.
+      for (let j = 0; j < g.length; j++) {
+        next[j] ^= g[j];
+        next[j + 1] ^= mul(g[j], EXP[i]);
+      }
+      g = next;
+    }
+    return g;
+  }
+
+  function ecBytes(data, n) {
+    const g = genPoly(n);
+    const rem = new Array(n).fill(0);
+    for (let i = 0; i < data.length; i++) {
+      const factor = data[i] ^ rem[0];
+      rem.shift(); rem.push(0);
+      if (factor !== 0) for (let j = 0; j < n; j++) rem[j] ^= mul(g[j + 1], factor);
+    }
+    return rem;
+  }
+
+  /* ------------------------------- bits -------------------------------- */
+  function Bits() { this.buf = []; }
+  Bits.prototype.push = function (val, len) {
+    for (let i = len - 1; i >= 0; i--) this.buf.push((val >> i) & 1);
+  };
+
+  const cciBits = v => (v <= 9 ? 9 : 11);
+
+  /** Largest payload (in characters) that fits a given version. */
+  function capacity(v) {
+    const bits = SPEC[v][0] * 8 - 4 - cciBits(v);
+    const pairs = Math.floor(bits / 11);
+    return (bits - pairs * 11) >= 6 ? pairs * 2 + 1 : pairs * 2;
+  }
+
+  function pickVersion(n) {
+    for (let v = 1; v <= 10; v++) if (capacity(v) >= n) return v;
+    return 0;
+  }
+
+  /* --------------------------- data codewords -------------------------- */
+  function codewords(text, v) {
+    const b = new Bits();
+    b.push(0b0010, 4);
+    b.push(text.length, cciBits(v));
+    for (let i = 0; i < text.length; i += 2) {
+      const a = ALNUM.indexOf(text[i]);
+      if (i + 1 < text.length) b.push(a * 45 + ALNUM.indexOf(text[i + 1]), 11);
+      else b.push(a, 6);
+    }
+    const total = SPEC[v][0] * 8;
+    b.push(0, Math.min(4, total - b.buf.length));
+    while (b.buf.length % 8) b.buf.push(0);
+
+    const out = [];
+    for (let i = 0; i < b.buf.length; i += 8) {
+      let byte = 0;
+      for (let j = 0; j < 8; j++) byte = (byte << 1) | b.buf[i + j];
+      out.push(byte);
+    }
+    const pads = [0xEC, 0x11];
+    for (let i = 0; out.length < SPEC[v][0]; i++) out.push(pads[i % 2]);
+    return out;
+  }
+
+  /** Split into blocks, append EC, then interleave both as the spec requires. */
+  function interleave(data, v) {
+    const [, ecLen, n1, len1, n2, len2] = SPEC[v];
+    const blocks = [], ecs = [];
+    let at = 0;
+    for (let i = 0; i < n1 + n2; i++) {
+      const len = i < n1 ? len1 : len2;
+      const blk = data.slice(at, at + len); at += len;
+      blocks.push(blk); ecs.push(ecBytes(blk, ecLen));
+    }
+    const out = [];
+    const maxLen = Math.max(len1, len2);
+    for (let i = 0; i < maxLen; i++) {
+      for (const blk of blocks) if (i < blk.length) out.push(blk[i]);
+    }
+    for (let i = 0; i < ecLen; i++) for (const e of ecs) out.push(e[i]);
+    return out;
+  }
+
+  /* ------------------------------ matrix ------------------------------- */
+  function build(v) {
+    const size = 17 + 4 * v;
+    const m = [], res = [];
+    for (let i = 0; i < size; i++) {
+      m.push(new Uint8Array(size));
+      res.push(new Uint8Array(size));
+    }
+    const set = (r, c, val) => { m[r][c] = val; res[r][c] = 1; };
+
+    function finder(r0, c0) {
+      for (let r = -1; r <= 7; r++) {
+        for (let c = -1; c <= 7; c++) {
+          const r1 = r0 + r, c1 = c0 + c;
+          if (r1 < 0 || c1 < 0 || r1 >= size || c1 >= size) continue;
+          const on = (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+                     (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+                     (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+          set(r1, c1, on ? 1 : 0);
+        }
+      }
+    }
+    finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+
+    for (let i = 8; i < size - 8; i++) {
+      const on = i % 2 === 0 ? 1 : 0;
+      set(6, i, on); set(i, 6, on);
+    }
+
+    const centres = ALIGN[v];
+    for (const r of centres) {
+      for (const c of centres) {
+        if ((r === 6 && c === 6) || (r === 6 && c === size - 7) || (r === size - 7 && c === 6)) continue;
+        for (let dr = -2; dr <= 2; dr++) {
+          for (let dc = -2; dc <= 2; dc++) {
+            const on = Math.max(Math.abs(dr), Math.abs(dc)) !== 1 ? 1 : 0;
+            set(r + dr, c + dc, on);
+          }
+        }
+      }
+    }
+
+    set(4 * v + 9, 8, 1);                                   // the dark module
+
+    for (let i = 0; i < 9; i++) {                           // format info areas
+      if (!res[8][i]) set(8, i, 0);
+      if (!res[i][8]) set(i, 8, 0);
+    }
+    for (let i = 0; i < 8; i++) {
+      if (!res[8][size - 1 - i]) set(8, size - 1 - i, 0);
+      if (!res[size - 1 - i][8]) set(size - 1 - i, 8, 0);
+    }
+
+    if (v >= 7) {
+      const bits = VERINFO[v];
+      for (let i = 0; i < 18; i++) {
+        const bit = (bits >> i) & 1;
+        set(size - 11 + (i % 3), Math.floor(i / 3), bit);
+        set(Math.floor(i / 3), size - 11 + (i % 3), bit);
+      }
+    }
+    return { m, res, size };
+  }
+
+  function place(grid, bytes) {
+    const { m, res, size } = grid;
+    let idx = 0, up = true;
+    for (let col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      for (let i = 0; i < size; i++) {
+        const row = up ? size - 1 - i : i;
+        for (let k = 0; k < 2; k++) {
+          const c = col - k;
+          if (res[row][c]) continue;
+          const byte = bytes[idx >> 3];
+          m[row][c] = byte === undefined ? 0 : (byte >> (7 - (idx & 7))) & 1;
+          idx++;
+        }
+      }
+      up = !up;
+    }
+  }
+
+  const MASKS = [
+    (r, c) => (r + c) % 2 === 0,
+    (r) => r % 2 === 0,
+    (r, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+    (r, c) => ((((r * c) % 2) + ((r * c) % 3)) % 2) === 0,
+    (r, c) => ((((r + c) % 2) + ((r * c) % 3)) % 2) === 0,
+  ];
+
+  function formatBits(mask) {
+    let v = (0b00 << 3) | mask;                             // 00 = EC level M
+    let d = v << 10;
+    for (let i = 14; i >= 10; i--) if ((d >> i) & 1) d ^= 0x537 << (i - 10);
+    return ((v << 10) | d) ^ 0x5412;
+  }
+
+  /* Bit i of the format value, i=0 being the least significant, snakes down
+     column 8 and then left along row 8; the second copy runs right-to-left
+     along row 8 and then up column 8 from the bottom edge. */
+  function applyFormat(m, size, mask) {
+    const f = formatBits(mask);
+    const bit = i => (f >> i) & 1;
+    for (let i = 0; i <= 5; i++) m[i][8] = bit(i);
+    m[7][8] = bit(6);
+    m[8][8] = bit(7);
+    m[8][7] = bit(8);
+    for (let i = 9; i <= 14; i++) m[8][14 - i] = bit(i);
+    for (let i = 0; i <= 7; i++) m[8][size - 1 - i] = bit(i);
+    for (let i = 8; i <= 14; i++) m[size - 15 + i][8] = bit(i);
+  }
+
+  function penalty(m, size) {
+    let score = 0;
+    const run = line => {
+      let n = 1, s = 0;
+      for (let i = 1; i < size; i++) {
+        if (line[i] === line[i - 1]) n++;
+        else { if (n >= 5) s += 3 + (n - 5); n = 1; }
+      }
+      if (n >= 5) s += 3 + (n - 5);
+      return s;
+    };
+    for (let r = 0; r < size; r++) score += run(m[r]);
+    for (let c = 0; c < size; c++) {
+      const col = [];
+      for (let r = 0; r < size; r++) col.push(m[r][c]);
+      score += run(col);
+    }
+    for (let r = 0; r < size - 1; r++) {
+      for (let c = 0; c < size - 1; c++) {
+        const a = m[r][c];
+        if (a === m[r][c + 1] && a === m[r + 1][c] && a === m[r + 1][c + 1]) score += 3;
+      }
+    }
+    const P1 = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], P2 = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
+    const hits = line => {
+      let s = 0;
+      for (let i = 0; i + 11 <= size; i++) {
+        let a = true, b = true;
+        for (let j = 0; j < 11; j++) {
+          if (line[i + j] !== P1[j]) a = false;
+          if (line[i + j] !== P2[j]) b = false;
+        }
+        if (a) s += 40;
+        if (b) s += 40;
+      }
+      return s;
+    };
+    for (let r = 0; r < size; r++) score += hits(m[r]);
+    for (let c = 0; c < size; c++) {
+      const col = [];
+      for (let r = 0; r < size; r++) col.push(m[r][c]);
+      score += hits(col);
+    }
+    let dark = 0;
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) dark += m[r][c];
+    const pct = (dark * 100) / (size * size);
+    score += Math.floor(Math.abs(pct - 50) / 5) * 10;
+    return score;
+  }
+
+  /** Encode uppercase alphanumeric text. Returns {size, version, at(r,c)}. */
+  function encode(text) {
+    const s = String(text).toUpperCase();
+    for (const ch of s) {
+      if (ALNUM.indexOf(ch) < 0) throw new Error('QR: unsupported character ' + JSON.stringify(ch));
+    }
+    const v = pickVersion(s.length);
+    if (!v) throw new Error('QR: payload too long (' + s.length + ' chars)');
+
+    const bytes = interleave(codewords(s, v), v);
+    let best = null;
+    for (let mask = 0; mask < 8; mask++) {
+      const grid = build(v);
+      place(grid, bytes);
+      const { m, res, size } = grid;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!res[r][c] && MASKS[mask](r, c)) m[r][c] ^= 1;
+        }
+      }
+      applyFormat(m, size, mask);
+      const p = penalty(m, size);
+      if (!best || p < best.p) best = { p, m, size };
+    }
+    return {
+      size: best.size,
+      version: v,
+      at: (r, c) => best.m[r][c],
+      rows: best.m,
+    };
+  }
+
+  return { encode, capacity, ALNUM };
+})();
+
 /* ==== 20_net.js ==== */
 /* =====================================================================
    NETWORKING — star topology over WebRTC (PeerJS)
+
+   This is the *cloud* transport: it needs the PeerJS broker to introduce
+   peers. `Direct` in 25_direct.js is the serverless alternative, and the
+   `Net` facade there picks between them. Nothing outside those two files
+   should reference `Cloud` by name.
    The host is the hub and the single source of truth; guests only ever
    talk to the host. With a cap of 8 players that's 7 connections, which
    is far cheaper than a full mesh and keeps state trivially consistent.
@@ -1453,7 +1897,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no I/O/0/1 lookal
 const ROOM_PREFIX = 'swbgl3-';
 const MAX_PLAYERS = 8;
 
-const Net = (() => {
+const Cloud = (() => {
   let peer = null, isHost = false, code = '', me = '', open = false;
   const conns = new Map();          // host: playerId -> DataConnection
   let hostConn = null;              // guest: connection to host
@@ -1608,6 +2052,316 @@ const Net = (() => {
   };
 })();
 
+/* ==== 25_direct.js ==== */
+/* =====================================================================
+   DIRECT — the same star topology, with no broker at all.
+
+   WebRTC only needs a one-time exchange of an SDP offer and answer. The
+   cloud transport pays a server to carry that; here the players carry it
+   themselves, as a QR code on one screen and a camera on the other.
+
+   A browser's SDP is ~590 bytes of mostly boilerplate. Everything that is
+   actually negotiated fits in about 85: a 32-byte DTLS fingerprint, the
+   ICE username fragment and password, and a host candidate or two. We
+   ship those and rebuild a canonical SDP on the far side, which is small
+   enough for a QR code a phone can read off another phone's screen.
+
+   Because the fingerprint authenticates the DTLS handshake, a code you
+   scanned off a screen in front of you is a genuinely authenticated
+   channel -- there is no server in the middle to trust.
+   ===================================================================== */
+
+// Two devices, deliberately. Every extra player is another complete two-code
+// dance, so a big group is far better served by the online lobby.
+const MAX_DIRECT_PLAYERS = 2;
+
+const Direct = (() => {
+  const H = Cloud.handlers;          // one handler table, whichever transport is live
+  const KIND_OFFER = 0, KIND_ANSWER = 1;
+  const MAGIC = 0xB0;
+  const GATHER_MS = 2500;
+
+  let isHost = false, me = '', open = false;
+  const peers = new Map();           // host: id -> {pc, dc}
+  const pending = new Map();         // host: slot -> {pc, dc, id}
+  let hostPeer = null;               // guest: {pc, dc}
+  let hb = 0;
+
+  /* --------------------------- sdp plumbing --------------------------- */
+  function parseSdp(sdp) {
+    const one = re => { const m = sdp.match(re); return m ? m[1] : null; };
+    const cands = [];
+    sdp.split(/\r?\n/).forEach(l => {
+      const m = l.match(/^a=candidate:\S+ (\d+) (udp|tcp) \d+ (\S+) (\d+) typ (\w+)/i);
+      if (m) cands.push({ comp: +m[1], proto: m[2].toLowerCase(), ip: m[3], port: +m[4], typ: m[5] });
+    });
+    return {
+      ufrag: one(/a=ice-ufrag:(\S+)/), pwd: one(/a=ice-pwd:(\S+)/),
+      fp: one(/a=fingerprint:sha-256 (\S+)/i), cands,
+    };
+  }
+
+  const UUID_RE = /^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})\.local$/i;
+  const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+
+  /** Keep only what can travel: udp host candidates, real IPs ahead of mDNS. */
+  function usable(cands) {
+    const out = [];
+    for (const c of cands) {
+      if (c.proto !== 'udp' || c.typ !== 'host' || c.comp !== 1) continue;
+      if (IPV4_RE.test(c.ip)) out.push({ kind: 0, ip: c.ip, port: c.port });
+      else if (UUID_RE.test(c.ip)) out.push({ kind: 1, ip: c.ip, port: c.port });
+    }
+    out.sort((a, b) => a.kind - b.kind);
+    return out.slice(0, 4);
+  }
+
+  function pack(sdp, kind, slot) {
+    const p = parseSdp(sdp);
+    if (!p.fp || !p.ufrag || !p.pwd) throw new Error('This browser produced an SDP I cannot read.');
+    const b = [MAGIC | kind, slot & 255];
+
+    const fp = p.fp.split(':').map(h => parseInt(h, 16));
+    if (fp.length !== 32 || fp.some(isNaN)) throw new Error('Unexpected DTLS fingerprint.');
+    b.push.apply(b, fp);
+
+    for (const s of [p.ufrag, p.pwd]) {
+      b.push(s.length);
+      for (let i = 0; i < s.length; i++) b.push(s.charCodeAt(i) & 255);
+    }
+
+    const cands = usable(p.cands);
+    if (!cands.length) throw new Error('No usable local network address was found.');
+    b.push(cands.length);
+    for (const c of cands) {
+      b.push(c.kind);
+      if (c.kind === 0) IPV4_RE.exec(c.ip).slice(1).forEach(n => b.push(+n & 255));
+      else {
+        const hex = c.ip.replace(/\.local$/i, '').replace(/-/g, '');
+        for (let i = 0; i < 32; i += 2) b.push(parseInt(hex.substr(i, 2), 16));
+      }
+      b.push((c.port >> 8) & 255, c.port & 255);
+    }
+    return B32.encode(Uint8Array.from(b));
+  }
+
+  function unpack(text) {
+    const b = B32.decode(text);
+    if (b.length < 40 || (b[0] & 0xf0) !== MAGIC) throw new Error('That does not look like a Boggle code.');
+    let i = 0;
+    const kind = b[i++] & 0x0f;
+    const slot = b[i++];
+    const hex = [];
+    for (let k = 0; k < 32; k++) hex.push(b[i++].toString(16).padStart(2, '0'));
+    const fp = hex.join(':').toUpperCase();
+
+    const str = () => {
+      const n = b[i++];
+      let s = '';
+      for (let k = 0; k < n; k++) s += String.fromCharCode(b[i++]);
+      return s;
+    };
+    const ufrag = str(), pwd = str();
+
+    const n = b[i++], cands = [];
+    for (let k = 0; k < n; k++) {
+      const kd = b[i++];
+      let ip;
+      if (kd === 0) ip = [b[i++], b[i++], b[i++], b[i++]].join('.');
+      else {
+        const h = [];
+        for (let j = 0; j < 16; j++) h.push(b[i++].toString(16).padStart(2, '0'));
+        const s = h.join('');
+        ip = s.slice(0, 8) + '-' + s.slice(8, 12) + '-' + s.slice(12, 16) + '-' +
+             s.slice(16, 20) + '-' + s.slice(20) + '.local';
+      }
+      cands.push({ ip, port: (b[i++] << 8) | b[i++] });
+    }
+    if (!ufrag || !pwd || !cands.length) throw new Error('That code is incomplete.');
+    return { kind, slot, fp, ufrag, pwd, cands };
+  }
+
+  /** Canonical datachannel-only SDP. Everything here is fixed except the five
+      negotiated values; Chrome fills the rest in from its own defaults. */
+  function rebuild(t, type) {
+    const lines = [
+      'v=0', 'o=- 0 0 IN IP4 127.0.0.1', 's=-', 't=0 0',
+      'a=group:BUNDLE 0', 'a=msid-semantic: WMS',
+      'm=application 9 UDP/DTLS/SCTP webrtc-datachannel',
+      'c=IN IP4 0.0.0.0',
+      'a=ice-ufrag:' + t.ufrag, 'a=ice-pwd:' + t.pwd,
+      'a=fingerprint:sha-256 ' + t.fp,
+      'a=setup:' + (type === 'offer' ? 'actpass' : 'active'),
+      'a=mid:0', 'a=sctp-port:5000', 'a=max-message-size:262144',
+    ];
+    t.cands.forEach((c, i) => lines.push(
+      'a=candidate:' + (i + 1) + ' 1 udp ' + (2130706431 - i) + ' ' + c.ip + ' ' + c.port + ' typ host'));
+    lines.push('a=end-of-candidates');
+    return lines.join('\r\n') + '\r\n';
+  }
+
+  /* ---------------------------- connections --------------------------- */
+  const newPc = () => new RTCPeerConnection({ iceServers: [] });
+
+  /** No trickle channel exists, so wait for the full candidate set (or give
+      up and ship what we have -- one host candidate is usually enough). */
+  function gathered(pc) {
+    return new Promise(res => {
+      if (pc.iceGatheringState === 'complete') return res();
+      const done = () => { clearTimeout(t); pc.removeEventListener('icegatheringstatechange', tick); res(); };
+      const tick = () => { if (pc.iceGatheringState === 'complete') done(); };
+      const t = setTimeout(done, GATHER_MS);
+      pc.addEventListener('icegatheringstatechange', tick);
+    });
+  }
+
+  function opened(dc, ms) {
+    return new Promise((res, rej) => {
+      if (dc.readyState === 'open') return res();
+      const t = setTimeout(() => rej(new Error('The other device never came online.')), ms || 20000);
+      dc.onopen = () => { clearTimeout(t); res(); };
+      dc.onerror = () => { clearTimeout(t); rej(new Error('The connection failed.')); };
+    });
+  }
+
+  const send = (dc, msg) => {
+    if (dc && dc.readyState === 'open') { try { dc.send(JSON.stringify(msg)); } catch (e) { } }
+  };
+  const onData = fn => e => { let d; try { d = JSON.parse(e.data); } catch (err) { return; } fn(d); };
+
+  /* ------------------------------- host ------------------------------- */
+  function start() {
+    destroy();
+    isHost = true; me = 'd0'; open = true;
+    hb = setInterval(() => broadcast({ t: 'hb' }), 5000);
+  }
+
+  function nextSlot() {
+    for (let s = 1; s < MAX_DIRECT_PLAYERS; s++) {
+      if (!peers.has('d' + s) && !pending.has(s)) return s;
+    }
+    return -1;
+  }
+
+  /** Host: mint an invitation for the next free seat. */
+  async function invite() {
+    const slot = nextSlot();
+    if (slot < 0) throw new Error('The lobby is full.');
+    const pc = newPc();
+    const id = 'd' + slot;
+    const dc = pc.createDataChannel('g', { ordered: true });
+    dc.onmessage = onData(d => H.msg(id, d));
+    dc.onclose = () => { if (peers.delete(id)) H.peerClose(id); };
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'failed' && peers.delete(id)) H.peerClose(id);
+    };
+    await pc.setLocalDescription(await pc.createOffer());
+    await gathered(pc);
+    pending.set(slot, { pc, dc, id });
+    return { slot, token: pack(pc.localDescription.sdp, KIND_OFFER, slot) };
+  }
+
+  /** Host: take the guest's reply and finish the connection. */
+  async function accept(text) {
+    const t = unpack(text);
+    if (t.kind !== KIND_ANSWER) throw new Error('That is an invite code, not a reply code.');
+    const p = pending.get(t.slot);
+    if (!p) throw new Error('That reply is for an invite that is no longer open.');
+    await p.pc.setRemoteDescription({ type: 'answer', sdp: rebuild(t, 'answer') });
+    await opened(p.dc);
+    pending.delete(t.slot);
+    peers.set(p.id, p);
+    H.peerOpen(p.id);
+    return p.id;
+  }
+
+  /* ------------------------------ guest ------------------------------- */
+  /** Guest: answer an invite. Returns the reply code plus a promise that
+      settles once the host has scanned it back. */
+  async function answer(text) {
+    destroy();
+    const t = unpack(text);
+    if (t.kind !== KIND_OFFER) throw new Error('That is a reply code, not an invite code.');
+    const pc = newPc();
+    isHost = false; me = 'd' + t.slot;
+
+    const ready = new Promise((res, rej) => {
+      const timer = setTimeout(() => rej(new Error('The host never scanned your reply.')), 90000);
+      pc.ondatachannel = e => {
+        const dc = e.channel;
+        hostPeer = { pc, dc };
+        dc.onmessage = onData(d => H.msg('host', d));
+        dc.onclose = () => { if (open) { open = false; H.hostGone(); } };
+        opened(dc, 90000).then(() => { clearTimeout(timer); open = true; res(); }, rej);
+      };
+    });
+
+    await pc.setRemoteDescription({ type: 'offer', sdp: rebuild(t, 'offer') });
+    await pc.setLocalDescription(await pc.createAnswer());
+    await gathered(pc);
+    hostPeer = { pc, dc: null };
+    return { token: pack(pc.localDescription.sdp, KIND_ANSWER, t.slot), ready };
+  }
+
+  /* ------------------------------- api -------------------------------- */
+  function sendTo(id, msg) { const p = peers.get(id); if (p) send(p.dc, msg); }
+  function broadcast(msg, exceptId) {
+    peers.forEach((p, id) => { if (id !== exceptId) send(p.dc, msg); });
+  }
+  function toHost(msg) { if (hostPeer) send(hostPeer.dc, msg); }
+  function kick(id) {
+    const p = peers.get(id);
+    if (!p) return;
+    send(p.dc, { t: 'kick' });
+    setTimeout(() => { try { p.pc.close(); } catch (e) { } }, 300);
+  }
+
+  function destroy() {
+    clearInterval(hb); hb = 0;
+    peers.forEach(p => { try { p.pc.close(); } catch (e) { } });
+    pending.forEach(p => { try { p.pc.close(); } catch (e) { } });
+    peers.clear(); pending.clear();
+    if (hostPeer) { try { hostPeer.pc.close(); } catch (e) { } }
+    hostPeer = null; isHost = false; open = false; me = '';
+  }
+
+  return {
+    start, invite, accept, answer, destroy, sendTo, broadcast, toHost, kick,
+    pack, unpack, rebuild, parseSdp,
+    get isHost() { return isHost; },
+    get code() { return ''; },
+    get me() { return me; },
+    get online() { return open; },
+    get peerIds() { return Array.from(peers.keys()); },
+    get count() { return peers.size; },
+    get seats() { return MAX_DIRECT_PLAYERS - 1 - peers.size; },
+  };
+})();
+
+/* The rest of the game talks to `Net` and never needs to know which of the
+   two transports is carrying its messages. */
+const Net = (() => {
+  let active = Cloud;
+  return {
+    use(which) { active = which === 'direct' ? Direct : Cloud; },
+    get isDirect() { return active === Direct; },
+    host: (...a) => { active = Cloud; return Cloud.host(...a); },
+    join: (...a) => { active = Cloud; return Cloud.join(...a); },
+    destroy() { Cloud.destroy(); Direct.destroy(); active = Cloud; },
+    sendTo: (...a) => active.sendTo(...a),
+    broadcast: (...a) => active.broadcast(...a),
+    toHost: (...a) => active.toHost(...a),
+    kick: (...a) => active.kick(...a),
+    get handlers() { return Cloud.handlers; },
+    get isHost() { return active.isHost; },
+    get code() { return active.code; },
+    get me() { return active.me; },
+    get online() { return active.online; },
+    get peerIds() { return active.peerIds; },
+    get count() { return active.count; },
+  };
+})();
+
 /* ==== 30_game.js ==== */
 /* =====================================================================
    GAME CONTROLLER — state, screens, lobby, protocol, round lifecycle
@@ -1727,10 +2481,11 @@ function rosterWire() {
 
 function renderLobby() {
   const solo = G.mode === 'solo';
-  $('#codebox').classList.toggle('hide', solo);
-  $('#lobbyState').classList.toggle('hide', solo);
+  const lan = Net.isDirect;                     // no room code exists over LAN
+  $('#codebox').classList.toggle('hide', solo || lan);
+  $('#lobbyState').classList.toggle('hide', solo || lan);
 
-  if (!solo) {
+  if (!solo && !lan) {
     const cv = $('#codeVal');
     if (cv.dataset.code !== Net.code) {
       cv.dataset.code = Net.code; cv.innerHTML = '';
@@ -1756,14 +2511,22 @@ function renderLobby() {
     }
     list.appendChild(row);
   });
-  $('#pcount').textContent = solo ? '' : activeCount() + '/' + MAX_PLAYERS;
+  const cap = lan ? MAX_DIRECT_PLAYERS : MAX_PLAYERS;
+  $('#pcount').textContent = solo ? '' : activeCount() + '/' + cap;
+  // Over LAN this is the only way back to the invite screen, so it has to
+  // reappear if the other player drops out.
+  $('#btnInvite').classList.toggle('hide',
+    !(lan && G.mode === 'host' && activeCount() < cap));
 
   const start = $('#btnStart'), wait = $('#waitMsg');
   if (canControl()) {
     start.classList.remove('hide');
     start.disabled = false;
     start.innerHTML = '<span class="shine"></span>' + (solo ? 'Start round' : 'Start game · ' + activeCount() + (activeCount() === 1 ? ' player' : ' players'));
-    wait.textContent = solo ? '' : activeCount() < 2 ? 'Share the code — or start solo, others can drop in later.' : 'Everyone in? Hit start.';
+    wait.textContent = solo ? ''
+      : activeCount() < 2 ? (lan ? 'Invite someone with a QR code — or start solo.'
+                                 : 'Share the code — or start solo, others can drop in later.')
+      : 'Everyone in? Hit start.';
   } else {
     start.classList.add('hide');
     wait.textContent = 'Waiting for the host to start the round…';
@@ -3060,6 +3823,208 @@ const Results = (() => {
   return { play, stop, skip, setPace, paintSpeed };
 })();
 
+/* ==== 55_lan.js ==== */
+/* =====================================================================
+   LAN — the serverless handshake, on screen.
+
+   Two codes, always: the host's invite and the guest's reply. WebRTC
+   cannot do better than that, because each side has to learn the other's
+   DTLS fingerprint before either can speak, and neither exists until the
+   peer connection is created.
+
+   Scanning uses BarcodeDetector, which Chrome ships on Android, ChromeOS
+   and macOS but not on Linux. Every step therefore has a text fallback
+   carrying exactly the same base32 payload, which also makes the whole
+   flow testable without a camera.
+   ===================================================================== */
+
+const Lan = (() => {
+  const PANELS = ['lanPick', 'lanShow', 'lanScan', 'lanBusy'];
+  let stream = null, detector = null, scanning = false, timer = 0;
+
+  const canScan = () => typeof BarcodeDetector !== 'undefined' &&
+                        !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+  function panel(which) {
+    PANELS.forEach(id => $('#' + id).classList.toggle('hide', id !== which));
+    if (which !== 'lanScan') stopCam();
+  }
+
+  /* ------------------------------- QR --------------------------------- */
+  function paintQR(text) {
+    const q = QR.encode(text);
+    const quiet = 4, n = q.size + quiet * 2;
+    const cv = $('#lanQr');
+    cv.width = n; cv.height = n;                  // one canvas pixel per module
+    const g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, n, n);
+    g.fillStyle = '#0b0620';
+    for (let r = 0; r < q.size; r++) {
+      for (let c = 0; c < q.size; c++) if (q.at(r, c)) g.fillRect(c + quiet, r + quiet, 1, 1);
+    }
+    return q;
+  }
+
+  /* ----------------------------- camera ------------------------------- */
+  function stopCam() {
+    scanning = false;
+    clearTimeout(timer); timer = 0;
+    if (stream) { stream.getTracks().forEach(t => { try { t.stop(); } catch (e) { } }); stream = null; }
+    const v = $('#lanVid');
+    if (v) v.srcObject = null;
+  }
+
+  async function startCam(onCode) {
+    const box = $('#lanPasteBox'), cam = $('#lanCam');
+    if (!canScan()) {
+      // An empty black viewport with a reticle over it reads as a broken
+      // camera, so take it off screen entirely and lead with the code box.
+      cam.classList.add('hide');
+      $('#lanScanMsg').textContent =
+        'This browser has no QR scanner, so use the code box below — it carries exactly the same thing.';
+      box.open = true;
+      return;
+    }
+    cam.classList.remove('hide');
+    try {
+      detector = detector || new BarcodeDetector({ formats: ['qr_code'] });
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false,
+      });
+      const v = $('#lanVid');
+      v.srcObject = stream;
+      await v.play();
+      scanning = true;
+      const tick = async () => {
+        if (!scanning) return;
+        try {
+          const hits = await detector.detect(v);
+          if (hits.length && hits[0].rawValue) { stopCam(); onCode(hits[0].rawValue.trim()); return; }
+        } catch (e) { /* a dropped frame is not an error worth reporting */ }
+        if (scanning) timer = setTimeout(tick, 120);
+      };
+      tick();
+    } catch (e) {
+      cam.classList.add('hide');
+      $('#lanScanMsg').textContent = 'No camera available — use the code box below instead.';
+      box.open = true;
+    }
+  }
+
+  /* ------------------------------ flow -------------------------------- */
+  function step(label) { $('#lanStep').textContent = label; }
+
+  function fail(e) {
+    stopCam();
+    panel('lanPick');
+    step('No servers');
+    modal('That did not work', (e && e.message) || 'The handshake failed.',
+      [{ label: 'OK', cls: 'grape' }]);
+  }
+
+  /** Host, from the main menu: open a LAN lobby and mint the first invite. */
+  function beginHost() {
+    readProfile();
+    Net.use('direct');
+    Direct.start();
+    G.mode = 'host';
+    G.me.id = Direct.me;
+    G.players.clear();
+    G.players.set(G.me.id, {
+      id: G.me.id, name: G.me.name, color: G.me.color, av: G.me.av, host: true, found: 0,
+    });
+    show('lan');
+    return invite();
+  }
+
+  /** Host: mint an invite. Also reachable from the lobby for players 3..8. */
+  async function invite() {
+    show('lan');
+    panel('lanBusy');
+    $('#lanBusyMsg').textContent = 'Finding this device on the network…';
+    try {
+      const { token } = await Direct.invite();
+      paintQR(token);
+      $('#lanOut').value = token;
+      $('#lanShowMsg').textContent =
+        'Have the joining player scan this. When they show you their reply, tap below.';
+      const next = $('#lanNext');
+      next.classList.remove('hide');
+      next.innerHTML = '<span class="shine"></span>Scan their reply';
+      next.onclick = () => scan('answer');
+      step('Step 1 of 2 · your invite');
+      panel('lanShow');
+    } catch (e) { fail(e); }
+  }
+
+  /** Guest, from the main menu. */
+  function beginGuest() {
+    readProfile();
+    Net.use('direct');
+    show('lan');
+    scan('offer');
+  }
+
+  function scan(expect) {
+    panel('lanScan');
+    step(expect === 'answer' ? 'Step 2 of 2 · their reply' : 'Step 1 of 2 · their invite');
+    $('#lanScanMsg').textContent = expect === 'answer'
+      ? "Point the camera at the other player's reply code."
+      : "Point the camera at the host's invite code.";
+    $('#lanIn').value = '';
+    $('#lanUse').onclick = () => consume(expect, $('#lanIn').value.trim());
+    startCam(code => consume(expect, code));
+  }
+
+  async function consume(expect, code) {
+    if (!code) { toast('Nothing to read yet', 'bad'); return; }
+    stopCam();
+    panel('lanBusy');
+    try {
+      if (expect === 'answer') {
+        $('#lanBusyMsg').textContent = 'Connecting…';
+        await Direct.accept(code);
+        Sound.join();
+        show('lobby'); renderLobby();
+        toast('Player connected', 'good');
+        return;
+      }
+
+      $('#lanBusyMsg').textContent = 'Writing your reply…';
+      const { token, ready } = await Direct.answer(code);
+      paintQR(token);
+      $('#lanOut').value = token;
+      $('#lanShowMsg').textContent =
+        'Now hold this up for the host to scan. You will drop into the lobby automatically.';
+      $('#lanNext').classList.add('hide');
+      step('Step 2 of 2 · your reply');
+      panel('lanShow');
+
+      await ready;
+      G.mode = 'guest';
+      G.me.id = Direct.me;
+      G.players.clear();
+      Net.toHost({ t: 'hello', name: G.me.name, color: G.me.color, av: G.me.av });
+      Sound.join();
+      show('lobby'); renderLobby();
+    } catch (e) { fail(e); }
+  }
+
+  function back() {
+    stopCam();
+    // `activeCount()` counts the host itself, so it is not the question here:
+    // a host with someone already connected is only cancelling this one
+    // invite, while a host who never connected to anyone is leaving.
+    if (G.mode === 'host' && Net.isDirect && Net.count > 0) { show('lobby'); renderLobby(); return; }
+    Net.destroy();
+    G.mode = 'solo';
+    G.players.clear();
+    show('home');
+  }
+
+  return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, canScan };
+})();
+
 /* ==== 60_boot.js ==== */
 /* =====================================================================
    BOOT — wiring, dictionary load, url handling
@@ -3184,6 +4149,23 @@ $('#btnHost').onclick = () => { Sound.init(); createRoom(); };
 $('#btnJoin').onclick = () => { Sound.init(); joinRoom($('#codeIn').value); };
 $('#btnStart').onclick = hostStartRound;
 
+/* ------------------------------- LAN -------------------------------- */
+$('#btnLan').onclick = () => {
+  Sound.init(); Sound.whoosh();
+  $('#lanCamNote').textContent = Lan.canScan() ? ''
+    : 'This browser has no QR scanner, so you will be swapping codes as text.';
+  Lan.panel('lanPick');
+  show('lan');
+};
+$('#lanBack').onclick = () => { Sound.back(); Lan.back(); };
+$('#lanBeHost').onclick = () => { Sound.init(); Lan.beginHost(); };
+$('#lanBeGuest').onclick = () => { Sound.init(); Lan.beginGuest(); };
+$('#btnInvite').onclick = () => { Sound.init(); Lan.invite(); };
+$('#lanCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#lanOut').value); toast('Code copied', 'good'); }
+  catch (e) { $('#lanOut').select(); toast('Select and copy the code', 'bad'); }
+};
+
 $('#btnLeave').onclick = () => {
   if (G.mode === 'solo') { show('home'); return; }
   modal('Leave the lobby?', G.mode === 'host'
@@ -3262,6 +4244,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
     gated.forEach(b => { b.disabled = off; });
     code.disabled = off;
     note.classList.toggle('hide', !off);
+    note.textContent = 'Offline — solo and LAN play still work, but online lobbies need a connection.';
   }
   addEventListener('online', paintNet);
   addEventListener('offline', paintNet);
