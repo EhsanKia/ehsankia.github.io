@@ -685,14 +685,14 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div class="row" style="flex:0 0 auto;padding-bottom:10px">
       <button class="iconbtn" id="lanBack" aria-label="Back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
       <div style="flex:1"><div style="font-size:19px;font-weight:900">Play over LAN</div>
-        <div class="pill" id="lanStep" style="margin-top:3px">No lobby, no relay</div></div>
+        <div class="pill" id="lanStep" style="margin-top:3px">No lobby, no accounts</div></div>
     </div>
 
     <div class="grow scrolly">
       <div class="wrap stack">
 
         <div class="stack" id="lanPick">
-          <p class="muted" style="margin-bottom:4px">Two players, one code each, passed by camera. There is no lobby and no relay — the game itself never goes through a server.</p>
+          <p class="muted" style="margin-bottom:4px">Two players, one code each, passed by camera. No lobby, no accounts, and no server in the middle unless the network leaves no other way.</p>
           <p class="muted" style="margin-bottom:4px">Allow camera access when asked — it reads the codes, and it is also what lets the browser put this device's real address in them.</p>
           <p class="muted" id="lanNetNote" style="margin-bottom:4px"></p>
           <button class="btn grape" id="lanBeHost">Host — show an invite</button>
@@ -2467,6 +2467,54 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no I/O/0/1 lookal
 const ROOM_PREFIX = 'swbgl3-';
 const MAX_PLAYERS = 8;
 
+/* ---------------------------------------------------------------------
+   ICE servers, shared by both transports.
+
+   Some networks -- hotel, conference, in-flight -- carry traffic to the
+   internet perfectly well but drop everything between their own clients,
+   and when both devices sit behind one address that the router will not
+   hairpin, there is no candidate either peer can gather that reaches the
+   other. A relay is the only remaining move: both ends dial *out* to it.
+
+   ICE treats a relay as a genuine last resort -- any direct path outranks
+   it -- so this costs nothing whenever the network is sane.
+
+   The credential is visible in the page, which is unavoidable for a static
+   site; the relay is quota'd server-side instead. Set `sb.relay` in
+   localStorage to a JSON RTCIceServer to point somewhere else, or to the
+   string "off" to insist on a direct connection.
+   ------------------------------------------------------------------- */
+const STUN_SERVERS = [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+];
+
+const RELAY_DEFAULT = {
+  urls: [
+    'turn:turn.ehsankia.com:3478?transport=udp',
+    'turn:turn.ehsankia.com:3478?transport=tcp',
+    'turns:turn.ehsankia.com:5349?transport=tcp',
+  ],
+  username: 'boggle',
+  credential: 'd3e281c4c39805c4f91438ca553ba33f097068355bfd276e',
+};
+
+function relayServer() {
+  try {
+    const raw = localStorage.getItem('sb.relay');
+    if (raw === 'off') return null;
+    if (raw) { const o = JSON.parse(raw); if (o && o.urls) return o; }
+  } catch (e) { }
+  return RELAY_DEFAULT;
+}
+
+/** Offline there is nothing to ask and asking only burns the gather window
+    on timeouts, so hand back an empty list and use local addresses. */
+function iceServers() {
+  if (!navigator.onLine) return [];
+  const r = relayServer();
+  return r ? STUN_SERVERS.concat([r]) : STUN_SERVERS.slice();
+}
+
 const Cloud = (() => {
   let peer = null, isHost = false, code = '', me = '', open = false;
   const conns = new Map();          // host: playerId -> DataConnection
@@ -2481,16 +2529,7 @@ const Cloud = (() => {
   const newCode = () => Array.from({ length: 4 }, () => pick(CODE_ALPHABET.split(''))).join('');
 
   function makePeer(id) {
-    return new Peer(id, {
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-        ],
-      },
-    });
+    return new Peer(id, { debug: 0, config: { iceServers: iceServers() } });
   }
 
   function destroy() {
@@ -2658,18 +2697,16 @@ const Direct = (() => {
   // does not know, so one unusable candidate cannot desync a whole code.
   const FAM_V4 = 0, FAM_MDNS = 1, FAM_V6 = 2;
 
-  // LAN mode has no broker, but a public address is not a broker. When there
-  // is internet we let the browser ask a STUN server what it looks like from
-  // outside: that is the only way two devices meet on a network that isolates
-  // its clients but hairpins NAT, and the only way they meet at all when they
-  // are on different networks. Nothing is stored and no session goes through
-  // it -- it answers one question and is never contacted again.
-  const STUN = ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'];
-  const iceServers = () => (navigator.onLine ? [{ urls: STUN }] : []);
+  // LAN mode has no broker, and a public address is not a broker either: when
+  // there is internet we let the browser ask STUN what this device looks like
+  // from outside, and allocate a relay to fall back on. Both come from
+  // `iceServers()` in 20_net.js, shared with the cloud transport.
 
-  // A reflexive candidate needs a round trip to the internet, so allow more
-  // time for it -- but never block on a STUN server that is not answering.
-  const gatherMs = () => (navigator.onLine ? 4000 : 2000);
+  // Reflexive needs one internet round trip; a relay allocation needs a
+  // couple. Allow for that, but never block on a server that is not
+  // answering -- one host candidate is usually enough.
+  const gatherMs = () =>
+    (!navigator.onLine ? 2000 : relayServer() ? 6000 : 4000);
 
   // A 49x49 QR (version 8 at EC level M) is about as much as one phone camera
   // will reliably read off another phone's screen at arm's length.
@@ -2708,11 +2745,12 @@ const Direct = (() => {
       different NATs. An mDNS `.local` name goes last because it only resolves
       if multicast crosses the network, which plenty of routers refuse. */
   const R_V4_PRIVATE = 0, R_V4_PUBLIC = 1, R_V6 = 2, R_SRFLX = 3,
-        R_V4_LINKLOCAL = 4, R_MDNS = 5, R_DROP = -1;
+        R_V4_LINKLOCAL = 4, R_MDNS = 5, R_RELAY = 6, R_DROP = -1;
 
   function v4Rank(ip, typ) {
     const p = ip.split('.').map(Number);
     if (p[0] === 127) return R_DROP;      // loopback reaches nobody but us
+    if (typ === 'relay') return R_RELAY;
     if (typ === 'srflx') return R_SRFLX;
     if (p[0] === 169 && p[1] === 254) return R_V4_LINKLOCAL;
     if (p[0] === 10 || (p[0] === 192 && p[1] === 168) ||
@@ -2778,7 +2816,7 @@ const Direct = (() => {
     const seen = new Set(), best = new Map();
     for (const c of cands) {
       if (c.proto !== 'udp' || c.comp !== 1) continue;
-      if (c.typ !== 'host' && c.typ !== 'srflx') continue;
+      if (c.typ !== 'host' && c.typ !== 'srflx' && c.typ !== 'relay') continue;
 
       let e = null;
       if (IPV4_RE.test(c.ip)) {
@@ -2787,7 +2825,8 @@ const Direct = (() => {
       } else if (UUID_RE.test(c.ip)) {
         if (c.typ === 'host') e = { kind: FAM_MDNS, rank: R_MDNS, typ: 'mdns' };
       } else if (isGlobalV6(c.ip) && v6Bytes(c.ip)) {
-        e = { kind: FAM_V6, rank: c.typ === 'srflx' ? R_SRFLX : R_V6, typ: c.typ };
+        e = { kind: FAM_V6, typ: c.typ,
+              rank: c.typ === 'relay' ? R_RELAY : c.typ === 'srflx' ? R_SRFLX : R_V6 };
       }
       if (!e) continue;
 
@@ -2797,8 +2836,14 @@ const Direct = (() => {
       e.ip = c.ip; e.port = c.port;
       if (!best.has(e.rank)) best.set(e.rank, e);
     }
-    return Array.from(best.keys()).sort((a, b) => a - b)
-      .map(r => best.get(r)).slice(0, 3);
+    const ranked = Array.from(best.keys()).sort((a, b) => a - b).map(r => best.get(r));
+    // The relay is the one candidate that still works on the networks this
+    // mode keeps failing on, so it never loses its seat to a direct address.
+    // It stays last in the list, and `rebuild` gives later candidates lower
+    // priority, so a direct path is still preferred wherever one exists.
+    const relay = ranked.filter(e => e.rank === R_RELAY);
+    const direct = ranked.filter(e => e.rank !== R_RELAY);
+    return direct.slice(0, relay.length ? 2 : 3).concat(relay);
   }
 
   const showIp = a => (a.kind === FAM_V6 ? '[' + a.ip + ']' : a.ip) + ':' + a.port +
@@ -2806,6 +2851,16 @@ const Direct = (() => {
   const describe = addrs => addrs.length
     ? addrs.map(showIp).join(', ')
     : '(no usable address)';
+
+  /** A relay that was asked for and never arrived is the single most useful
+      thing to know from the log: wrong credentials look exactly like a
+      network problem otherwise, because ICE just quietly does without it. */
+  function noteRelay(addrs) {
+    if (!relayServer()) return;
+    if (addrs.some(a => a.typ === 'relay')) return;
+    Diag.log('relay', 'no relay candidate was allocated — the TURN server is ' +
+      'unreachable or the credentials are wrong');
+  }
 
   function pack(sdp, kind, slot) {
     const p = parseSdp(sdp);
@@ -3045,6 +3100,7 @@ const Direct = (() => {
     pending.set(slot, { pc, dc, id });
     const addrs = usable(parseSdp(pc.localDescription.sdp).cands);
     Diag.log('code', 'invite for ' + id + ' carries ' + describe(addrs));
+    noteRelay(addrs);
     return { slot, token: pack(pc.localDescription.sdp, KIND_OFFER, slot), addrs };
   }
 
@@ -3102,6 +3158,7 @@ const Direct = (() => {
     hostPeer = { pc, dc: null };
     const addrs = usable(parseSdp(pc.localDescription.sdp).cands);
     Diag.log('code', 'my reply carries ' + describe(addrs));
+    noteRelay(addrs);
     probe(pc, 'guest');
     return {
       token: pack(pc.localDescription.sdp, KIND_ANSWER, t.slot),
@@ -4846,7 +4903,8 @@ const Lan = (() => {
                      'check that both are on the same Wi-Fi network (same 192.168.x.* prefix) and that ' +
                      '"client isolation" / "AP isolation" is off on the router. If this is a phone ' +
                      'hotspot, stop here — hotspots always isolate their clients and there is no ' +
-                     'setting to turn it off.';
+                     'setting to turn it off. The relay should take over shortly; if it does not, ' +
+                     'this network is blocking that too.';
     return '';
   }
 
@@ -4909,7 +4967,8 @@ const Lan = (() => {
     const real = (addrs || []).filter(a => a.kind !== 1);
     if (real.length) {
       node.classList.remove('warn');
-      const label = a => (a.typ === 'srflx' ? 'your public address' : a.ip);
+      const label = a => a.typ === 'relay' ? 'a relay'
+        : a.typ === 'srflx' ? 'your public address' : a.ip;
       node.textContent = 'This code points at ' + real.map(label).join(' / ');
     } else {
       node.classList.add('warn');
@@ -4922,7 +4981,7 @@ const Lan = (() => {
   function fail(e) {
     stopCam();
     panel('lanPick');
-    step('No lobby, no relay');
+    step('No lobby, no accounts');
     Diag.log('fail', (e && e.message) || 'handshake failed');
     watch();                            // leave the log on screen to be read
     $('#lanDiagBox').open = true;
@@ -5183,9 +5242,10 @@ $('#btnLan').onclick = () => {
     : 'This browser has no QR scanner, so you will be swapping codes as text.';
   // Be straight about the one thing that does leave the device when online.
   $('#lanNetNote').textContent = navigator.onLine
-    ? 'Online, so the codes also carry this device’s public address — one question to a '
-      + 'STUN server, nothing else. That is what saves you when the Wi-Fi keeps its clients apart.'
-    : 'Offline — the codes will carry local addresses only.';
+    ? 'Online, so the codes also carry this device’s public address and a relay to fall back on. '
+      + 'Those only get used if the two of you cannot reach each other directly — which is what '
+      + 'happens on Wi-Fi that keeps its clients apart.'
+    : 'Offline — the codes will carry local addresses only, so you must be on the same network.';
   Lan.panel('lanPick');
   show('lan');
 };
