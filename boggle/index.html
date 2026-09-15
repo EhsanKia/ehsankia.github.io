@@ -101,7 +101,7 @@ input{-webkit-user-select:text;user-select:text}
   box-shadow:var(--shadow);line-height:0}
 /* The canvas is drawn one device pixel per module and scaled up here, so the
    edges stay hard -- a smoothed QR is a QR a camera has to work harder for. */
-#lanQr{width:min(72vw,300px);height:auto;image-rendering:pixelated}
+#lanQr,#chalQr{width:min(72vw,300px);height:auto;image-rendering:pixelated}
 
 .scanwrap{position:relative;align-self:center;width:min(78vw,320px);aspect-ratio:1;
   border-radius:var(--r-m);overflow:hidden;background:#000;box-shadow:var(--shadow)}
@@ -115,6 +115,18 @@ input{-webkit-user-select:text;user-select:text}
 .diagbox pre{margin:0;max-height:34vh;overflow:auto;white-space:pre;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;background:#120a26;border:1px solid #2c2350;border-radius:10px;padding:8px}
 .diagwhy{font-size:12px;line-height:1.5;margin:8px 0 6px;color:var(--tang)}
 .pairline{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;word-break:break-all;margin:2px 0 0;text-align:center}
+.chalbar{margin:0 0 10px;padding:11px 14px;border-radius:var(--r-s);text-align:center;
+  background:var(--glass);box-shadow:inset 0 0 0 1.5px var(--glass-line)}
+.chalbar b{display:block;font-size:15px;font-weight:900;letter-spacing:.2px}
+.chalbar .nums{display:flex;justify-content:center;gap:16px;margin-top:5px;
+  font:800 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-dim)}
+.chalbar .nums .me{color:var(--ink)}
+.chalbar.win{box-shadow:inset 0 0 0 1.5px var(--mint)}
+.chalbar.win b{color:var(--mint)}
+.chalbar.lose b{color:var(--tang)}
+.chalbar.tie b{color:var(--gold)}
+.chalscore{font-size:38px;font-weight:900;color:var(--gold);line-height:1.1;margin:4px 0 6px}
+.chalsettings{font-size:17px;font-weight:900;color:var(--gold);margin:6px 0}
 .lancode{background:var(--glass);border-radius:var(--r-s);
   box-shadow:inset 0 0 0 1.5px var(--glass-line);padding:10px 12px}
 .lancode summary{cursor:pointer;font-size:13px;color:var(--ink-dim);font-weight:800}
@@ -606,6 +618,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
             <label class="field" style="flex:1"><input id="nameIn" maxlength="14" placeholder="Your name" autocomplete="nickname" spellcheck="false"></label>
           </div>
           <button class="btn primary" id="btnSolo"><span class="shine"></span>▶ Play solo</button>
+          <button class="btn ghost sm" id="btnChal">🎯 Play a challenge</button>
           <div class="hr"><span>or</span></div>
           <button class="btn grape" id="btnHost">✨ Create a lobby</button>
           <div class="row" style="gap:8px">
@@ -660,8 +673,10 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     </div>
 
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
+      <button class="btn ghost sm hide" id="btnChalLobby" style="width:100%;margin-bottom:10px">🎯 Challenge a friend</button>
       <button class="btn primary" id="btnStart"><span class="shine"></span>Start game</button>
       <p class="muted" id="waitMsg" style="margin-top:10px"></p>
+      <p class="muted hide" id="chalNote" style="margin-top:6px;color:var(--mint)">Board shared — start whenever you are both ready.</p>
     </div>
   </section>
 
@@ -670,15 +685,16 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div class="row" style="flex:0 0 auto;padding-bottom:10px">
       <button class="iconbtn" id="lanBack" aria-label="Back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
       <div style="flex:1"><div style="font-size:19px;font-weight:900">Play over LAN</div>
-        <div class="pill" id="lanStep" style="margin-top:3px">No servers</div></div>
+        <div class="pill" id="lanStep" style="margin-top:3px">No lobby, no relay</div></div>
     </div>
 
     <div class="grow scrolly">
       <div class="wrap stack">
 
         <div class="stack" id="lanPick">
-          <p class="muted" style="margin-bottom:4px">Two players, same Wi-Fi. The devices hand each other a code by camera; nothing is sent to the internet, not even a handshake.</p>
+          <p class="muted" style="margin-bottom:4px">Two players, one code each, passed by camera. There is no lobby and no relay — the game itself never goes through a server.</p>
           <p class="muted" style="margin-bottom:4px">Allow camera access when asked — it reads the codes, and it is also what lets the browser put this device's real address in them.</p>
+          <p class="muted" id="lanNetNote" style="margin-bottom:4px"></p>
           <button class="btn grape" id="lanBeHost">Host — show an invite</button>
           <button class="btn ghost" id="lanBeGuest">Join — scan an invite</button>
           <p class="muted" id="lanCamNote" style="color:var(--tang)"></p>
@@ -722,6 +738,48 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
               <button class="btn ghost sm hide" id="lanDiagShare" style="flex:1">Share log</button>
             </div>
           </details>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CHALLENGE ============ -->
+  <section id="scr-chal" class="screen">
+    <div class="row" style="flex:0 0 auto;padding-bottom:10px">
+      <button class="iconbtn" id="chalBack" aria-label="Back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+      <div style="flex:1"><div style="font-size:19px;font-weight:900">Challenge</div>
+        <div class="pill" id="chalStep" style="margin-top:3px">Same board, same clock</div></div>
+    </div>
+
+    <div class="grow scrolly">
+      <div class="wrap stack">
+
+        <div class="stack hide" id="chalShow">
+          <div class="qrwrap"><canvas id="chalQr" width="1" height="1"></canvas></div>
+          <p class="muted" id="chalShowMsg"></p>
+          <button class="btn primary hide" id="chalStart"><span class="shine"></span>▶ Start my round</button>
+          <button class="btn primary" id="chalShare"><span class="shine"></span>🔗 Share the link</button>
+          <details class="lancode">
+            <summary>Or hand over the link as text</summary>
+            <textarea id="chalOut" readonly rows="3" spellcheck="false"></textarea>
+            <button class="btn ghost sm" id="chalCopy" style="width:100%">Copy link</button>
+          </details>
+        </div>
+
+        <div class="stack hide" id="chalScan">
+          <div class="scanwrap" id="chalCam"><video id="chalVid" playsinline muted></video><div class="reticle"></div></div>
+          <p class="muted" id="chalScanMsg"></p>
+          <details class="lancode" id="chalPasteBox">
+            <summary>Type or paste the code instead</summary>
+            <textarea id="chalIn" rows="3" spellcheck="false" placeholder="Paste the challenge link or code here"></textarea>
+            <button class="btn ghost sm" id="chalUse" style="width:100%">Use this code</button>
+          </details>
+        </div>
+
+        <div class="stack hide" id="chalPreview">
+          <div class="card" id="chalCard"></div>
+          <button class="btn primary" id="chalGo"><span class="shine"></span>▶ Play this board</button>
         </div>
 
       </div>
@@ -778,7 +836,9 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     </div>
     <div id="rrows" class="scrolly"></div>
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
+      <div id="chalBar" class="chalbar hide"></div>
       <button class="btn primary" id="btnAgain"><span class="shine"></span>Play again</button>
+      <button class="btn ghost sm hide" id="btnChalShare" style="margin-top:10px;width:100%">🎯 Challenge a friend</button>
       <button class="btn ghost hide" id="btnBack" style="margin-top:10px">Back</button>
       <p class="muted" id="againMsg" style="margin-top:10px"></p>
     </div>
@@ -1974,6 +2034,422 @@ const QR = (() => {
   return { encode, capacity, ALNUM };
 })();
 
+/* ==== 18_chal.js ==== */
+/* =====================================================================
+   CHALLENGE — two people, one board, no connection between them.
+
+   A solo score is only worth comparing if both players had the *same*
+   letters and the same clock, so the code carries the board itself
+   rather than a seed. A seed would be a third of the size, but it would
+   also mean the two devices must agree on the dice tables, the
+   dictionary and the board-picking heuristic forever; any of those
+   changing silently hands the two players different boards, which is the
+   one failure this feature cannot tolerate. Thirty-odd letters is cheap.
+
+   There are two moments worth sharing from, and the code says which:
+
+     kind 0  from the lobby, before anyone has played. Both players go in
+             cold. The score field is present but meaningless.
+     kind 1  from the results screen, with the sender's score attached --
+             either an opening challenge or a reply to a kind 0 board.
+
+   A kind 1 code for a board you have *already* played is a reply, so it
+   is shown as a head-to-head rather than an invitation to replay.
+
+   Unique-word doubling never applies here, and that falls out for free:
+   `finaliseResults` only doubles when more than one player scored, and
+   both sides play alone.
+
+   Payload, base32 (same alphabet as the LAN tokens, and for the same
+   reason -- it sits inside the QR alphanumeric set):
+
+     byte 0        0xC0 | kind
+     byte 1        sizeIdx<<6 | durIdx<<3 | minIdx
+     bytes 2..4    sender's score, 24-bit big-endian
+     byte 5        how many words they found
+     byte 6        name length n
+     bytes 7..     n bytes of name
+     then          size*size letters, 5 bits each (26 = "QU")
+
+   38 bytes for a 6x6 with an 8-character name = 56 base32 characters,
+   which is a 29x29 QR -- comfortably smaller than the LAN handshake.
+   ===================================================================== */
+
+const Chal = (() => {
+  const MAGIC = 0xC0;
+  const FRESH = 0, PLAYED = 1;
+  const SIZES = [4, 5, 6], DURS = [30, 60, 90, 120, 180], MINS = [3, 4, 5];
+  const MAX_SCORE = 0xffffff;
+
+  let pending = null;      // a decoded challenge waiting to be accepted
+  let lastCode = '';       // the code currently on screen
+  let from = 'home';       // where the back button should return to
+  let mode = 'offer';      // offer | compare — what #chalGo means right now
+
+  /* ------------------------------ codec ------------------------------- */
+  function packBoard(board, out) {
+    let acc = 0, bits = 0;
+    for (let i = 0; i < board.length; i++) {
+      const f = board[i];
+      const v = f === 'QU' ? 26 : f.charCodeAt(0) - 65;
+      acc = (acc << 5) | (v & 31); bits += 5;
+      while (bits >= 8) { out.push((acc >> (bits - 8)) & 255); bits -= 8; }
+    }
+    if (bits) out.push((acc << (8 - bits)) & 255);
+  }
+
+  function unpackBoard(b, i, n) {
+    const out = [];
+    let acc = 0, bits = 0;
+    while (out.length < n) {
+      if (i >= b.length) throw new Error('That challenge code is incomplete.');
+      acc = (acc << 8) | b[i++]; bits += 8;
+      while (bits >= 5 && out.length < n) {
+        const v = (acc >> (bits - 5)) & 31; bits -= 5;
+        if (v > 26) throw new Error('That challenge code is damaged.');
+        out.push(v === 26 ? 'QU' : String.fromCharCode(65 + v));
+      }
+    }
+    return out;
+  }
+
+  function pack(t) {
+    const si = SIZES.indexOf(t.size), di = DURS.indexOf(t.dur), mi = MINS.indexOf(t.minLen);
+    if (si < 0 || di < 0 || mi < 0) throw new Error('Those settings cannot be shared.');
+    const b = [MAGIC | ((t.kind || 0) & 15), (si << 6) | (di << 3) | mi];
+    const sc = Math.max(0, Math.min(MAX_SCORE, t.score | 0));
+    b.push((sc >> 16) & 255, (sc >> 8) & 255, sc & 255);
+    b.push(Math.min(255, Math.max(0, t.found | 0)));
+    // ASCII only: a name is one byte per character and is not worth
+    // spending a variable-width encoding on.
+    const name = String(t.name || '').replace(/[^\x20-\x7e]/g, '').trim().slice(0, 12);
+    b.push(name.length);
+    for (let i = 0; i < name.length; i++) b.push(name.charCodeAt(i));
+    packBoard(t.board, b);
+    return B32.encode(Uint8Array.from(b));
+  }
+
+  function unpack(text) {
+    const b = B32.decode(text);
+    if (b.length < 8 || (b[0] & 0xf0) !== MAGIC) throw new Error('That does not look like a challenge code.');
+    const kind = b[0] & 15;
+    if (kind > PLAYED) throw new Error('That code came from a newer version of the game.');
+    let i = 1;
+    const s = b[i++];
+    const size = SIZES[(s >> 6) & 3], dur = DURS[(s >> 3) & 7], minLen = MINS[s & 7];
+    if (!size || !dur || !minLen) throw new Error('That code came from a newer version of the game.');
+    const score = (b[i] << 16) | (b[i + 1] << 8) | b[i + 2]; i += 3;
+    const found = b[i++];
+    const n = b[i++];
+    let name = '';
+    for (let k = 0; k < n; k++) name += String.fromCharCode(b[i++] || 32);
+    name = name.trim();
+    return { kind, size, dur, minLen, score, found, name: name || 'Your friend',
+             board: unpackBoard(b, i, size * size) };
+  }
+
+  /** Accept a bare code, a pasted link, or anything with one inside it. */
+  function clean(s) {
+    s = String(s || '').trim();
+    const m = s.match(/[?&#]c=([A-Za-z2-7]+)/);
+    return (m ? m[1] : s).toUpperCase().replace(/[^A-Z2-7]/g, '');
+  }
+
+  const link = code => location.origin + location.pathname + '?c=' + code;
+  const shortName = n => (n.length > 10 ? n.slice(0, 9) + '…' : n);
+
+  /* ------------------------------ screen ------------------------------ */
+  const PANELS = ['chalShow', 'chalScan', 'chalPreview'];
+
+  function panel(which) {
+    PANELS.forEach(id => $('#' + id).classList.toggle('hide', id !== which));
+    if (which !== 'chalScan') Lan.stopCam();
+  }
+
+  const step = t => { $('#chalStep').textContent = t; };
+
+  /** Paint the share panel. `startable` adds the button that begins the
+      sharer's own round, which only makes sense before they have played. */
+  function present(code, msg, startable) {
+    lastCode = code;
+    Lan.paintQR(code, '#chalQr');
+    $('#chalOut').value = link(code);
+    $('#chalShowMsg').textContent = msg;
+    const start = $('#chalStart'), share = $('#chalShare');
+    start.classList.toggle('hide', !startable);
+    // Whichever of the two is the obvious next tap gets to be the primary.
+    share.className = 'btn ' + (startable ? 'ghost' : 'primary');
+    panel('chalShow');
+    show('chal');
+  }
+
+  /* ---------------------- sharing before anyone plays ------------------ */
+  /** Roll the board now, hand it over, and keep it for this player's own
+      round so both of them really do get the same letters. */
+  function shareFresh() {
+    const s = G.settings;
+    const btn = $('#btnChalLobby');
+    btn.disabled = true;
+    btn.textContent = 'Shaking the box…';
+    Sound.whoosh();
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '🎯 Challenge a friend';
+      let code;
+      try {
+        const rolled = makeBoard(s.size, s.minLen);
+        G.sharedBoard = { board: rolled.board, words: rolled.words,
+                          size: s.size, minLen: s.minLen, dur: s.dur };
+        code = pack({ kind: FRESH, size: s.size, dur: s.dur, minLen: s.minLen,
+                      board: rolled.board, name: G.me.name, score: 0, found: 0 });
+      } catch (e) { toast(e.message, 'bad'); return; }
+      from = 'lobby';
+      step('Nobody has played this yet');
+      present(code,
+        'Your friend scans this and gets these exact letters and the same clock. ' +
+        'Neither of you has seen the board — start when you are both ready.', true);
+      renderLobby();
+    }, 30);
+  }
+
+  /** Leave the share screen and play the board that was just handed over. */
+  function startShared() {
+    show('lobby');
+    hostStartRound();
+  }
+
+  /* ---------------------- sharing after playing ------------------------ */
+  function shareCurrent() {
+    const R = G.round;
+    if (!R || !R.board) { toast('Nothing to share yet', 'bad'); return; }
+    const mine = G.results && G.results.players.find(p => p.id === G.me.id);
+    const score = mine ? mine.score : 0;
+    let code;
+    try {
+      code = pack({
+        kind: PLAYED, size: R.size, dur: R.dur, minLen: R.minLen, board: R.board,
+        name: G.me.name, score, found: mine ? mine.words.length : 0,
+      });
+    } catch (e) { toast(e.message, 'bad'); return; }
+
+    from = 'results';
+    // Either someone challenged us, or we handed this board out from the
+    // lobby -- both mean the code we are about to make is a reply.
+    const reply = !!G.challenge || !!G.sharedOut;
+    step(reply ? 'Your reply' : 'Your board · ' + R.size + '×' + R.size);
+    present(code, G.challenge
+      ? 'This carries the same board and your ' + score.toLocaleString() +
+        '. When ' + G.challenge.name + ' scans it they will see how you both did.'
+      : G.sharedOut
+      ? 'This is the board you shared, now with your ' + score.toLocaleString() +
+        '. Whoever you sent it to scans this to see how you both did.'
+      : 'They get these exact letters and the same clock, with your ' +
+        score.toLocaleString() + ' to beat. Scores are compared automatically.', false);
+  }
+
+  async function shareLink() {
+    if (!lastCode) return;
+    const url = link(lastCode);
+    const text = 'Same Boggle board, same clock — see if you can beat me.';
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Swipe Boggle challenge', text, url }); return; }
+      await navigator.clipboard.writeText(url);
+      toast('Challenge link copied', 'good');
+    } catch (e) {
+      $('#chalOut').select();
+      toast('Select and copy the link', 'bad');
+    }
+  }
+
+  /* ----------------------------- receiving ---------------------------- */
+  function openScan() {
+    from = 'home';
+    show('chal');
+    step('Scan a challenge');
+    $('#chalScanMsg').textContent = "Point the camera at your friend's challenge code.";
+    $('#chalIn').value = '';
+    $('#chalUse').onclick = () => consume($('#chalIn').value);
+    panel('chalScan');
+    Lan.scanInto({ cam: '#chalCam', vid: '#chalVid', msg: '#chalScanMsg', paste: '#chalPasteBox' },
+                 consume);
+  }
+
+  function consume(raw) {
+    const code = clean(raw);
+    if (!code) { toast('Nothing to read yet', 'bad'); return; }
+    Lan.stopCam();
+    let t;
+    try { t = unpack(code); } catch (e) { toast(e.message, 'bad'); openScan(); return; }
+    preview(t);
+  }
+
+  /** True when this code is a reply to the board sitting on our own results
+      screen, rather than an invitation to play something new. */
+  function isReplyToMine(t) {
+    return t.kind === PLAYED && !!G.results && !!G.round && !!G.round.board &&
+           G.round.board.join('|') === t.board.join('|');
+  }
+
+  const settingsLine = t => t.size + '×' + t.size + ' · ' + t.dur + 's · ' + t.minLen + '+ letters';
+
+  /** Show what is on offer before committing the player to a timed round. */
+  function preview(t) {
+    pending = t;
+    const card = $('#chalCard');
+    card.innerHTML = '';
+    const go = $('#chalGo');
+    go.disabled = false;
+
+    if (isReplyToMine(t)) {
+      mode = 'compare';
+      const mine = G.results.players.find(p => p.id === G.me.id);
+      const you = mine ? mine.score : 0;
+      const d = you - t.score;
+      card.appendChild(el('h2', 'hd', t.name + ' played your board'));
+      card.appendChild(el('div', 'chalscore mono', t.score.toLocaleString()));
+      card.appendChild(el('p', 'muted', t.found + (t.found === 1 ? ' word' : ' words') +
+        ' · you scored ' + you.toLocaleString()));
+      card.appendChild(el('p', 'muted', d > 0 ? 'You win by ' + d.toLocaleString() + '.'
+        : d < 0 ? 'They beat you by ' + (-d).toLocaleString() + '.' : 'A dead heat.'));
+      step('The reply');
+      go.innerHTML = '<span class="shine"></span>See the full comparison';
+    } else {
+      mode = 'offer';
+      if (t.kind === FRESH) {
+        card.appendChild(el('h2', 'hd', t.name + ' sent you a board'));
+        card.appendChild(el('div', 'chalsettings', settingsLine(t)));
+        card.appendChild(el('p', 'muted',
+          'Neither of you has seen the letters yet. You both get the same board ' +
+          'and the same clock — compare scores when you are done.'));
+      } else {
+        card.appendChild(el('h2', 'hd', t.name + ' played this board'));
+        card.appendChild(el('div', 'chalscore mono', t.score.toLocaleString()));
+        card.appendChild(el('p', 'muted', t.found + (t.found === 1 ? ' word' : ' words') +
+          ' found · ' + settingsLine(t)));
+        card.appendChild(el('p', 'muted',
+          'You get the exact same letters and the same clock. No unique-word bonus — ' +
+          'it is a straight score against theirs.'));
+      }
+      step(t.kind === FRESH ? 'A board for both of you' : 'A challenge for you');
+      go.innerHTML = '<span class="shine"></span>▶ Play this board';
+    }
+    panel('chalPreview');
+    show('chal');
+  }
+
+  /** Called from the URL (?c=CODE) at boot. */
+  function fromUrl(raw) {
+    const code = clean(raw);
+    if (!code) return false;
+    from = 'home';
+    try { preview(unpack(code)); return true; } catch (e) { return false; }
+  }
+
+  /** The one button under the preview card: play it, or read the reply. */
+  function accept() {
+    const t = pending;
+    if (!t) { show('home'); return; }
+
+    if (mode === 'compare') {
+      G.challenge = { name: t.name, score: t.score, found: t.found, kind: PLAYED };
+      pending = null;
+      show('results');
+      paintOutcome();
+      return;
+    }
+
+    Lan.release();
+    readProfile();
+    G.mode = 'solo';
+    G.me.id = 'me';
+    G.players.clear();
+    G.players.set('me', { id: 'me', name: G.me.name, color: G.me.color, av: G.me.av, host: true, found: 0 });
+    G.settings.size = t.size; G.settings.dur = t.dur; G.settings.minLen = t.minLen;
+    G.sharedBoard = null;
+    G.sharedOut = false;
+    renderSettings();
+
+    const go = $('#chalGo');
+    go.disabled = true;
+    go.textContent = 'Shaking the box…';
+    Sound.whoosh();
+    // Solving a 6x6 blocks for a moment; let the button state paint first.
+    setTimeout(() => {
+      const words = solveBoard(t.board, t.size, t.minLen);
+      G.hostBoardWords = words;
+      pending = null;
+      // beginRound would clear this, so set it after the settings are in place
+      // but keep it out of hostStartRound's path entirely.
+      G.challenge = { name: t.name, score: t.score, found: t.found, kind: t.kind };
+      beginRound({ rid: Date.now(), board: t.board, size: t.size, minLen: t.minLen,
+                   dur: t.dur, total: words.length }, false);
+    }, 30);
+  }
+
+  /* ------------------------------ outcome ----------------------------- */
+  /** The head-to-head line on the results screen, and whether the share
+      button belongs there at all. */
+  function paintOutcome() {
+    const bar = $('#chalBar'), btn = $('#btnChalShare');
+    const solo = G.mode === 'solo' && !!(G.round && G.round.board);
+    const c = G.challenge;
+    // We shared these letters from the lobby, so we know a second score is
+    // coming even though we do not yet know whose or what it is.
+    const sentOut = !c && !!G.sharedOut;
+    btn.classList.toggle('hide', !solo);
+    btn.textContent = c ? '🎯 Send your score to ' + shortName(c.name)
+      : sentOut ? '🎯 Send them your score'
+      : '🎯 Challenge a friend';
+
+    // An open loop -- our score is owed to someone -- makes sending it the
+    // obvious next tap, ahead of rolling a new board.
+    if (solo) {
+      const owed = sentOut || (!!c && c.kind === FRESH);
+      btn.className = 'btn sm ' + (owed ? 'primary' : 'ghost');
+      $('#btnAgain').className = 'btn ' + (owed ? 'ghost' : 'primary');
+    }
+
+    if (!solo || (!c && !sentOut)) { bar.classList.add('hide'); return; }
+    const mine = G.results && G.results.players.find(p => p.id === G.me.id);
+    const you = mine ? mine.score : 0;
+    bar.innerHTML = '';
+
+    if (sentOut) {
+      bar.className = 'chalbar tie';
+      bar.appendChild(el('b', null, 'Now send them your score'));
+      bar.appendChild(el('div', 'nums', 'You scored ' + you.toLocaleString()));
+    } else if (c.kind === FRESH) {
+      // They have the same board but have not told us their score, so there
+      // is nothing to compare yet -- only something to send.
+      bar.className = 'chalbar tie';
+      bar.appendChild(el('b', null, 'Now send ' + c.name + ' your score'));
+      bar.appendChild(el('div', 'nums', 'You scored ' + you.toLocaleString()));
+    } else {
+      const d = you - c.score;
+      bar.className = 'chalbar ' + (d > 0 ? 'win' : d < 0 ? 'lose' : 'tie');
+      bar.appendChild(el('b', null,
+        d > 0 ? 'You beat ' + c.name + ' by ' + d.toLocaleString() + '!'
+          : d < 0 ? c.name + ' is ahead by ' + (-d).toLocaleString()
+            : 'Dead heat with ' + c.name + '!'));
+      const row = el('div', 'nums');
+      row.appendChild(el('span', 'me', 'You ' + you.toLocaleString()));
+      row.appendChild(el('span', null, c.name + ' ' + c.score.toLocaleString()));
+      bar.appendChild(row);
+    }
+    bar.classList.remove('hide');
+  }
+
+  function back() {
+    Lan.stopCam();
+    pending = null;
+    show(from);
+    if (from === 'lobby') renderLobby();
+  }
+
+  return { pack, unpack, clean, link, shareFresh, shareCurrent, shareLink, startShared,
+           openScan, consume, fromUrl, accept, paintOutcome, panel, back };
+})();
+
 /* ==== 20_net.js ==== */
 /* =====================================================================
    NETWORKING — star topology over WebRTC (PeerJS)
@@ -2173,7 +2649,31 @@ const Direct = (() => {
   const H = Cloud.handlers;          // one handler table, whichever transport is live
   const KIND_OFFER = 0, KIND_ANSWER = 1;
   const MAGIC = 0xB0;
-  const GATHER_MS = 2500;
+
+  // Candidate families, as they travel in the token. Only the shape of the
+  // address is carried; the rebuilt SDP calls everything `typ host`, which
+  // costs nothing because ICE probes every candidate it is handed and uses
+  // the type only to order the pairs. Keeping the families append-only means
+  // an older build still reads the right *number* of bytes for a family it
+  // does not know, so one unusable candidate cannot desync a whole code.
+  const FAM_V4 = 0, FAM_MDNS = 1, FAM_V6 = 2;
+
+  // LAN mode has no broker, but a public address is not a broker. When there
+  // is internet we let the browser ask a STUN server what it looks like from
+  // outside: that is the only way two devices meet on a network that isolates
+  // its clients but hairpins NAT, and the only way they meet at all when they
+  // are on different networks. Nothing is stored and no session goes through
+  // it -- it answers one question and is never contacted again.
+  const STUN = ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'];
+  const iceServers = () => (navigator.onLine ? [{ urls: STUN }] : []);
+
+  // A reflexive candidate needs a round trip to the internet, so allow more
+  // time for it -- but never block on a STUN server that is not answering.
+  const gatherMs = () => (navigator.onLine ? 4000 : 2000);
+
+  // A 49x49 QR (version 8 at EC level M) is about as much as one phone camera
+  // will reliably read off another phone's screen at arm's length.
+  const MAX_CODE = 220;
 
   let isHost = false, me = '', open = false;
   const peers = new Map();           // host: id -> {pc, dc}
@@ -2198,34 +2698,113 @@ const Direct = (() => {
   const UUID_RE = /^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})\.local$/i;
   const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
-  /** RFC1918 / RFC3927 — the ranges a phone actually gets from a home router. */
-  function isPrivate(ip) {
+  /** Candidate priority classes, best first. Lower is tried sooner.
+
+      A LAN game is usually on a private subnet, so a private IPv4 is the
+      likeliest path and leads. Global IPv6 comes next: phones on mobile data
+      have one, there is no NAT in front of it, and it is the only address two
+      devices on *different* networks share a chance at. A reflexive address
+      follows -- it needs the router to hairpin, or the two peers to be behind
+      different NATs. An mDNS `.local` name goes last because it only resolves
+      if multicast crosses the network, which plenty of routers refuse. */
+  const R_V4_PRIVATE = 0, R_V4_PUBLIC = 1, R_V6 = 2, R_SRFLX = 3,
+        R_V4_LINKLOCAL = 4, R_MDNS = 5, R_DROP = -1;
+
+  function v4Rank(ip, typ) {
     const p = ip.split('.').map(Number);
-    return p[0] === 10 || p[0] === 127 ||
-           (p[0] === 192 && p[1] === 168) ||
-           (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
-           (p[0] === 169 && p[1] === 254);
+    if (p[0] === 127) return R_DROP;      // loopback reaches nobody but us
+    if (typ === 'srflx') return R_SRFLX;
+    if (p[0] === 169 && p[1] === 254) return R_V4_LINKLOCAL;
+    if (p[0] === 10 || (p[0] === 192 && p[1] === 168) ||
+        (p[0] === 172 && p[1] >= 16 && p[1] <= 31)) return R_V4_PRIVATE;
+    return R_V4_PUBLIC;
   }
 
-  /** Keep only what can travel: udp host candidates, best-first.
+  /** Global unicast only. A link-local v6 address is meaningless without the
+      scope id we cannot carry, and a unique-local one is no more routable
+      between two networks than a private v4 already is. */
+  function isGlobalV6(ip) {
+    const h = ip.toLowerCase();
+    if (h === '::1' || h === '::') return false;
+    if (/^fe[89ab]/.test(h)) return false;             // fe80::/10 link-local
+    if (/^f[cd]/.test(h)) return false;                // fc00::/7  unique-local
+    return true;
+  }
 
-      Order matters twice over. A LAN game is on a private subnet, so a
-      private IPv4 is the candidate most likely to work and belongs first.
-      An mDNS `.local` name goes last because it only resolves if the router
-      passes multicast, which plenty of them do not. */
-  function usable(cands) {
+  /** Expand any legal textual v6 address to exactly 16 bytes, or null. */
+  function v6Bytes(ip) {
+    if (ip.indexOf(':') < 0 || /[^0-9a-f:]/i.test(ip)) return null;
+    const halves = ip.split('::');
+    if (halves.length > 2) return null;
+    const head = halves[0] ? halves[0].split(':') : [];
+    const tail = halves.length === 2 ? (halves[1] ? halves[1].split(':') : []) : [];
+    if (halves.length === 1 ? head.length !== 8 : head.length + tail.length > 7) return null;
+    const groups = halves.length === 2
+      ? head.concat(new Array(8 - head.length - tail.length).fill('0'), tail)
+      : head;
     const out = [];
-    for (const c of cands) {
-      if (c.proto !== 'udp' || c.typ !== 'host' || c.comp !== 1) continue;
-      if (IPV4_RE.test(c.ip)) out.push({ kind: 0, ip: c.ip, port: c.port, rank: isPrivate(c.ip) ? 0 : 1 });
-      else if (UUID_RE.test(c.ip)) out.push({ kind: 1, ip: c.ip, port: c.port, rank: 2 });
+    for (const g of groups) {
+      if (!g.length || g.length > 4) return null;
+      const v = parseInt(g, 16);
+      if (isNaN(v)) return null;
+      out.push((v >> 8) & 255, v & 255);
     }
-    out.sort((a, b) => a.rank - b.rank);
-    return out.slice(0, 3);
+    return out.length === 16 ? out : null;
   }
 
+  /** 16 bytes back to text, collapsing the longest zero run as the spec asks. */
+  function v6Text(b, at) {
+    const g = [];
+    for (let i = 0; i < 16; i += 2) g.push((((b[at + i] << 8) | b[at + i + 1]) >>> 0).toString(16));
+    let bi = -1, bl = 0, i = 0;
+    while (i < 8) {
+      if (g[i] !== '0') { i++; continue; }
+      let j = i;
+      while (j < 8 && g[j] === '0') j++;
+      if (j - i > bl) { bl = j - i; bi = i; }
+      i = j;
+    }
+    if (bl < 2) return g.join(':');
+    return g.slice(0, bi).join(':') + '::' + g.slice(bi + bl).join(':');
+  }
+
+  /** Keep only what can travel, best first, at most one of each class.
+
+      One per class is deliberate. A second address of the same shape almost
+      never opens a path the first did not, and every candidate costs QR
+      modules -- which is the one budget that decides whether a phone camera
+      can read this off another phone's screen. */
+  function usable(cands) {
+    const seen = new Set(), best = new Map();
+    for (const c of cands) {
+      if (c.proto !== 'udp' || c.comp !== 1) continue;
+      if (c.typ !== 'host' && c.typ !== 'srflx') continue;
+
+      let e = null;
+      if (IPV4_RE.test(c.ip)) {
+        const rank = v4Rank(c.ip, c.typ);
+        if (rank !== R_DROP) e = { kind: FAM_V4, rank, typ: c.typ };
+      } else if (UUID_RE.test(c.ip)) {
+        if (c.typ === 'host') e = { kind: FAM_MDNS, rank: R_MDNS, typ: 'mdns' };
+      } else if (isGlobalV6(c.ip) && v6Bytes(c.ip)) {
+        e = { kind: FAM_V6, rank: c.typ === 'srflx' ? R_SRFLX : R_V6, typ: c.typ };
+      }
+      if (!e) continue;
+
+      const key = c.ip + ':' + c.port;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      e.ip = c.ip; e.port = c.port;
+      if (!best.has(e.rank)) best.set(e.rank, e);
+    }
+    return Array.from(best.keys()).sort((a, b) => a - b)
+      .map(r => best.get(r)).slice(0, 3);
+  }
+
+  const showIp = a => (a.kind === FAM_V6 ? '[' + a.ip + ']' : a.ip) + ':' + a.port +
+                      (a.typ && a.typ !== 'host' ? ' (' + a.typ + ')' : '');
   const describe = addrs => addrs.length
-    ? addrs.map(a => a.ip + ':' + a.port).join(', ')
+    ? addrs.map(showIp).join(', ')
     : '(no usable address)';
 
   function pack(sdp, kind, slot) {
@@ -2242,19 +2821,30 @@ const Direct = (() => {
       for (let i = 0; i < s.length; i++) b.push(s.charCodeAt(i) & 255);
     }
 
-    const cands = usable(p.cands);
+    let cands = usable(p.cands);
     if (!cands.length) throw new Error('No usable local network address was found.');
-    b.push(cands.length);
-    for (const c of cands) {
-      b.push(c.kind);
-      if (c.kind === 0) IPV4_RE.exec(c.ip).slice(1).forEach(n => b.push(+n & 255));
-      else {
-        const hex = c.ip.replace(/\.local$/i, '').replace(/-/g, '');
-        for (let i = 0; i < 32; i += 2) b.push(parseInt(hex.substr(i, 2), 16));
+
+    // A QR code a phone can read off another phone's screen is the hard
+    // constraint here, so drop the least promising candidate rather than
+    // grow past a version this encoder (and that camera) can handle.
+    let body;
+    for (;;) {
+      body = [];
+      body.push(cands.length);
+      for (const c of cands) {
+        body.push(c.kind);
+        if (c.kind === FAM_V4) IPV4_RE.exec(c.ip).slice(1).forEach(n => body.push(+n & 255));
+        else if (c.kind === FAM_V6) v6Bytes(c.ip).forEach(n => body.push(n));
+        else {
+          const hex = c.ip.replace(/\.local$/i, '').replace(/-/g, '');
+          for (let i = 0; i < 32; i += 2) body.push(parseInt(hex.substr(i, 2), 16));
+        }
+        body.push((c.port >> 8) & 255, c.port & 255);
       }
-      b.push((c.port >> 8) & 255, c.port & 255);
+      if (cands.length < 2 || Math.ceil((b.length + body.length) * 8 / 5) <= MAX_CODE) break;
+      cands = cands.slice(0, cands.length - 1);
     }
-    return B32.encode(Uint8Array.from(b));
+    return B32.encode(Uint8Array.from(b.concat(body)));
   }
 
   function unpack(text) {
@@ -2279,7 +2869,8 @@ const Direct = (() => {
     for (let k = 0; k < n; k++) {
       const kd = b[i++];
       let ip;
-      if (kd === 0) ip = [b[i++], b[i++], b[i++], b[i++]].join('.');
+      if (kd === FAM_V4) ip = [b[i++], b[i++], b[i++], b[i++]].join('.');
+      else if (kd === FAM_V6) { ip = v6Text(b, i); i += 16; }
       else {
         const h = [];
         for (let j = 0; j < 16; j++) h.push(b[i++].toString(16).padStart(2, '0'));
@@ -2287,7 +2878,7 @@ const Direct = (() => {
         ip = s.slice(0, 8) + '-' + s.slice(8, 12) + '-' + s.slice(12, 16) + '-' +
              s.slice(16, 20) + '-' + s.slice(20) + '.local';
       }
-      cands.push({ ip, port: (b[i++] << 8) | b[i++] });
+      cands.push({ kind: kd, ip, port: (b[i++] << 8) | b[i++] });
     }
     if (!ufrag || !pwd || !cands.length) throw new Error('That code is incomplete.');
     return { kind, slot, fp, ufrag, pwd, cands };
@@ -2317,8 +2908,9 @@ const Direct = (() => {
       and no devtools on a phone, so this is the only way to find out why a
       handshake did not complete. */
   function newPc(who) {
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    Diag.log('pc', who + ': created');
+    const servers = iceServers();
+    const pc = new RTCPeerConnection({ iceServers: servers });
+    Diag.log('pc', who + ': created' + (servers.length ? ' (asking STUN for a public address)' : ' (offline, local addresses only)'));
     pc.addEventListener('icegatheringstatechange',
       () => Diag.log('ice', who + ': gathering ' + pc.iceGatheringState));
     pc.addEventListener('iceconnectionstatechange',
@@ -2387,7 +2979,7 @@ const Direct = (() => {
       if (pc.iceGatheringState === 'complete') return res();
       const done = () => { clearTimeout(t); pc.removeEventListener('icegatheringstatechange', tick); res(); };
       const tick = () => { if (pc.iceGatheringState === 'complete') done(); };
-      const t = setTimeout(done, GATHER_MS);
+      const t = setTimeout(done, gatherMs());
       pc.addEventListener('icegatheringstatechange', tick);
     });
   }
@@ -2402,13 +2994,16 @@ const Direct = (() => {
           clearTimeout(t);
           rej(new Error('The two devices could not reach each other. Open the ' +
             'connection log below: if it shows packets going out and none coming ' +
-            'back, the network is blocking device-to-device traffic.'));
+            'back, the network is blocking device-to-device traffic. A phone ' +
+            'hotspot always does this and cannot be told not to.'));
         }
       });
       const t = setTimeout(() => rej(new Error(
         'The two devices could not reach each other. They must be on the same ' +
         'Wi-Fi, with client isolation off — and both should allow camera access ' +
-        'before making a code, so the browser shares a real address.')), ms || 20000);
+        'before making a code, so the browser shares a real address. A phone ' +
+        'hotspot isolates its clients and cannot be told not to, so it will ' +
+        'never work.')), ms || 20000);
       dc.onopen = () => { clearTimeout(t); res(); };
       dc.onerror = () => { clearTimeout(t); rej(new Error('The connection failed.')); };
     });
@@ -2608,6 +3203,9 @@ const G = {
   settings: { size: 4, dur: 60, minLen: 3, pace: 1 },
   round: null,
   results: null,
+  challenge: null,                    // solo: the score a shared board arrived with
+  sharedBoard: null,                  // solo: a board rolled early so a friend can have it too
+  sharedOut: false,                   // solo: this round's board was handed to a friend
   screen: '',
   pendingDone: null,                  // host: ids we're still waiting on
 };
@@ -2663,6 +3261,13 @@ function buildSettingsUI() {
         if (!canControl()) return;
         if (G.settings[key] === o.v) return;
         G.settings[key] = o.v;
+        // The friend already has the old letters and the old clock; silently
+        // playing something else would make the two scores meaningless.
+        if (G.sharedBoard) {
+          G.sharedBoard = null;
+          $('#chalNote').classList.add('hide');
+          toast('Settings changed \u2014 share a new challenge code', 'bad');
+        }
         Sound.tick(3); buzz(6);
         renderSettings();
         if (G.mode === 'host') Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
@@ -2733,6 +3338,11 @@ function renderLobby() {
   $('#btnInvite').classList.toggle('hide',
     !(lan && G.mode === 'host' && activeCount() < cap));
 
+  // Sharing a board up front is a solo-only idea: everyone else in a lobby
+  // is already getting the same letters over the wire.
+  $('#btnChalLobby').classList.toggle('hide', !solo);
+  $('#chalNote').classList.toggle('hide', !(solo && G.sharedBoard));
+
   const start = $('#btnStart'), wait = $('#waitMsg');
   if (canControl()) {
     start.classList.remove('hide');
@@ -2755,6 +3365,8 @@ function renderLobby() {
 function hostStartRound() {
   if (!canControl()) return;
   const s = G.settings;
+  // A fresh roll is nobody's challenge, so the head-to-head line must go.
+  G.challenge = null;
   Sound.whoosh();
   $('#btnStart').disabled = true;
   $('#btnAgain').disabled = true;
@@ -2762,7 +3374,15 @@ function hostStartRound() {
 
   // Yield first so the button state paints before the (blocking) solve.
   setTimeout(() => {
-    const { board, words } = makeBoard(s.size, s.minLen);
+    // If a board was rolled early and handed to a friend, play that one --
+    // but only while the settings still match what they were given.
+    const pre = G.sharedBoard;
+    G.sharedBoard = null;
+    const fits = pre && pre.size === s.size && pre.minLen === s.minLen && pre.dur === s.dur;
+    const { board, words } = fits ? pre : makeBoard(s.size, s.minLen);
+    // Someone out there is playing these same letters, so the results screen
+    // should offer to send them a score rather than a fresh challenge.
+    G.sharedOut = !!fits;
     const rid = Date.now();
     const payload = { t: 'start', rid, board, size: s.size, minLen: s.minLen, dur: s.dur, total: words.length };
     if (G.mode === 'host') Net.broadcast(payload);
@@ -3152,6 +3772,9 @@ function readProfile() {
 function startSolo() {
   readProfile();
   G.mode = 'solo';
+  G.challenge = null;
+  G.sharedBoard = null;
+  G.sharedOut = false;
   G.me.id = 'me';
   G.players.clear();
   G.players.set('me', { id: 'me', name: G.me.name, color: G.me.color, av: G.me.av, host: true, found: 0 });
@@ -3966,6 +4589,7 @@ const Results = (() => {
     $('#btnSkip').classList.add('hide');
     tab = 'rank';
     renderTab();
+    Chal.paintOutcome();
     const solo = G.mode === 'solo';
     const btn = $('#btnAgain'), back = $('#btnBack'), msg = $('#againMsg');
     btn.classList.remove('hide');
@@ -3997,6 +4621,8 @@ const Results = (() => {
     $('#btnSkip').classList.remove('hide');
     $('#btnAgain').classList.add('hide');
     $('#btnBack').classList.add('hide');
+    $('#btnChalShare').classList.add('hide');
+    $('#chalBar').classList.add('hide');
     $('#againMsg').textContent = '';
     const mine = p.players.find(x => x.id === G.me.id);
     $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters'
@@ -4080,6 +4706,9 @@ const Lan = (() => {
   const PANELS = ['lanPick', 'lanShow', 'lanScan', 'lanBusy'];
   let stream = null, detector = null, scanning = false, timer = 0;
   let warmed = false;
+  // Which <video> the running scan is painting into. The challenge screen
+  // borrows this same camera, so stopCam has to know what to detach.
+  let curVid = '#lanVid';
 
   const canScan = () => typeof BarcodeDetector !== 'undefined' &&
                         !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
@@ -4090,10 +4719,10 @@ const Lan = (() => {
   }
 
   /* ------------------------------- QR --------------------------------- */
-  function paintQR(text) {
+  function paintQR(text, sel) {
     const q = QR.encode(text);
     const quiet = 4, n = q.size + quiet * 2;
-    const cv = $('#lanQr');
+    const cv = $(sel || '#lanQr');
     cv.width = n; cv.height = n;                  // one canvas pixel per module
     const g = cv.getContext('2d');
     g.fillStyle = '#ffffff'; g.fillRect(0, 0, n, n);
@@ -4110,7 +4739,7 @@ const Lan = (() => {
   function stopCam() {
     scanning = false;
     clearTimeout(timer); timer = 0;
-    const v = $('#lanVid');
+    const v = $(curVid);
     if (v) v.srcObject = null;
   }
 
@@ -4139,13 +4768,17 @@ const Lan = (() => {
     } catch (e) { stream = null; }
   }
 
-  async function startCam(onCode) {
-    const box = $('#lanPasteBox'), cam = $('#lanCam');
+  /** Generic QR scan loop. The challenge screen has its own viewport but wants
+      the same camera and the same detector, so the element ids are arguments
+      rather than baked in. */
+  async function scanInto(ids, onCode) {
+    const box = $(ids.paste), cam = $(ids.cam);
+    curVid = ids.vid;
     if (!canScan()) {
       // An empty black viewport with a reticle over it reads as a broken
       // camera, so take it off screen entirely and lead with the code box.
       cam.classList.add('hide');
-      $('#lanScanMsg').textContent =
+      $(ids.msg).textContent =
         'This browser has no QR scanner, so use the code box below — it carries exactly the same thing.';
       box.open = true;
       return;
@@ -4155,7 +4788,7 @@ const Lan = (() => {
       detector = detector || new BarcodeDetector({ formats: ['qr_code'] });
       await warm();
       if (!stream) throw new Error('no camera');
-      const v = $('#lanVid');
+      const v = $(ids.vid);
       v.srcObject = stream;
       await v.play();
       scanning = true;
@@ -4170,10 +4803,13 @@ const Lan = (() => {
       tick();
     } catch (e) {
       cam.classList.add('hide');
-      $('#lanScanMsg').textContent = 'No camera available — use the code box below instead.';
+      $(ids.msg).textContent = 'No camera available — use the code box below instead.';
       box.open = true;
     }
   }
+
+  const startCam = onCode => scanInto(
+    { cam: '#lanCam', vid: '#lanVid', msg: '#lanScanMsg', paste: '#lanPasteBox' }, onCode);
 
   /* --------------------------- diagnostics ---------------------------- */
   /* There is no server log and no devtools on a phone, so the log has to be
@@ -4208,7 +4844,9 @@ const Lan = (() => {
                     'one direction — check the firewall on the other device.';
     if (sent) return 'We are sending, and nothing is coming back. The two devices cannot exchange packets: ' +
                      'check that both are on the same Wi-Fi network (same 192.168.x.* prefix) and that ' +
-                     '"client isolation" / "AP isolation" is off on the router.';
+                     '"client isolation" / "AP isolation" is off on the router. If this is a phone ' +
+                     'hotspot, stop here — hotspots always isolate their clients and there is no ' +
+                     'setting to turn it off.';
     return '';
   }
 
@@ -4266,10 +4904,13 @@ const Lan = (() => {
       one thing most likely to be broken, so it is worth saying out loud. */
   function showAddr(addrs) {
     const node = $('#lanAddr');
-    const real = (addrs || []).filter(a => a.kind === 0);
+    // Anything that is not a masked `.local` name is an address the other
+    // device can actually aim at, whichever family it belongs to.
+    const real = (addrs || []).filter(a => a.kind !== 1);
     if (real.length) {
       node.classList.remove('warn');
-      node.textContent = 'This code points at ' + real.map(a => a.ip).join(' / ');
+      const label = a => (a.typ === 'srflx' ? 'your public address' : a.ip);
+      node.textContent = 'This code points at ' + real.map(label).join(' / ');
     } else {
       node.classList.add('warn');
       node.textContent = 'Your address is masked as a .local name — that needs ' +
@@ -4281,7 +4922,7 @@ const Lan = (() => {
   function fail(e) {
     stopCam();
     panel('lanPick');
-    step('No servers');
+    step('No lobby, no relay');
     Diag.log('fail', (e && e.message) || 'handshake failed');
     watch();                            // leave the log on screen to be read
     $('#lanDiagBox').open = true;
@@ -4408,7 +5049,7 @@ const Lan = (() => {
   }
 
   return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, release, canScan,
-           wireDiag, copyLog };
+           scanInto, wireDiag, copyLog };
 })();
 
 /* ==== 60_boot.js ==== */
@@ -4540,6 +5181,11 @@ $('#btnLan').onclick = () => {
   Sound.init(); Sound.whoosh();
   $('#lanCamNote').textContent = Lan.canScan() ? ''
     : 'This browser has no QR scanner, so you will be swapping codes as text.';
+  // Be straight about the one thing that does leave the device when online.
+  $('#lanNetNote').textContent = navigator.onLine
+    ? 'Online, so the codes also carry this device’s public address — one question to a '
+      + 'STUN server, nothing else. That is what saves you when the Wi-Fi keeps its clients apart.'
+    : 'Offline — the codes will carry local addresses only.';
   Lan.panel('lanPick');
   show('lan');
 };
@@ -4551,6 +5197,19 @@ Lan.wireDiag();
 $('#lanCopy').onclick = async () => {
   try { await navigator.clipboard.writeText($('#lanOut').value); toast('Code copied', 'good'); }
   catch (e) { $('#lanOut').select(); toast('Select and copy the code', 'bad'); }
+};
+
+/* ---------------------------- challenge ------------------------------ */
+$('#btnChal').onclick = () => { Sound.init(); Sound.whoosh(); Chal.openScan(); };
+$('#chalBack').onclick = () => { Sound.back(); Chal.back(); };
+$('#chalGo').onclick = () => Chal.accept();
+$('#chalShare').onclick = () => Chal.shareLink();
+$('#chalStart').onclick = () => Chal.startShared();
+$('#btnChalLobby').onclick = () => { Sound.whoosh(); Chal.shareFresh(); };
+$('#btnChalShare').onclick = () => { Sound.whoosh(); Chal.shareCurrent(); };
+$('#chalCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#chalOut').value); toast('Challenge link copied', 'good'); }
+  catch (e) { $('#chalOut').select(); toast('Select and copy the link', 'bad'); }
 };
 
 $('#btnLeave').onclick = () => {
@@ -4704,7 +5363,17 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   await sleep(220);
   show('home');
 
-  const r = new URLSearchParams(location.search).get('r');
+  const params = new URLSearchParams(location.search);
+
+  // A challenge link drops straight into the offer, so the letters stay
+  // hidden until the player actually starts the clock.
+  const c = params.get('c');
+  if (c && Chal.fromUrl(c)) {
+    history.replaceState(null, '', location.pathname);
+    return;
+  }
+
+  const r = params.get('r');
   if (r && /^[A-Z0-9]{4}$/i.test(r)) {
     $('#codeIn').value = r.toUpperCase();
     if (navigator.onLine === false) toast('Offline — you can still play solo', 'bad');
