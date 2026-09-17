@@ -115,6 +115,23 @@ input{-webkit-user-select:text;user-select:text}
 .diagbox pre{margin:0;max-height:34vh;overflow:auto;white-space:pre;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;background:#120a26;border:1px solid #2c2350;border-radius:10px;padding:8px}
 .diagwhy{font-size:12px;line-height:1.5;margin:8px 0 6px;color:var(--tang)}
 .pairline{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;word-break:break-all;margin:2px 0 0;text-align:center}
+
+/* Dev mode: hidden entirely unless <body class="dev">, which ten taps on
+   the sound button toggles. The chip floats over whatever screen is up,
+   because a connection can fail from any of them. */
+.devchip{position:fixed;left:8px;bottom:8px;z-index:70;display:none;align-items:center;justify-content:center;
+  width:36px;height:26px;border-radius:9px;border:1px solid #3a2f66;background:rgba(18,10,38,.78);
+  color:#cfc6ea;font:900 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;opacity:.6}
+.devchip:active{transform:scale(.94)}
+body.dev .devchip{display:flex}
+.devpane{position:fixed;left:8px;right:8px;bottom:8px;z-index:71;max-height:74vh;
+  display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;
+  border:1px solid #2c2350;background:#150c2c;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+.devpane h4{margin:0;flex:1;font-size:13px;font-weight:900;letter-spacing:.04em;color:var(--ink-dim)}
+.devpane pre{margin:0;flex:1;min-height:96px;overflow:auto;white-space:pre;
+  font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfc6ea;
+  background:#120a26;border:1px solid #2c2350;border-radius:10px;padding:8px}
+.devpane .pairline,.devpane .diagwhy{margin:0;text-align:left}
 .chalbar{margin:0 0 10px;padding:11px 14px;border-radius:var(--r-s);text-align:center;
   background:var(--glass);box-shadow:inset 0 0 0 1.5px var(--glass-line)}
 .chalbar b{display:block;font-size:15px;font-weight:900;letter-spacing:.2px}
@@ -628,7 +645,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
           <p class="muted hide" id="netnote" style="color:var(--tang);margin-top:2px">Offline — solo play works, but lobbies need a connection.</p>
           <p class="muted">Up to 8 players · peer-to-peer · no accounts</p>
           <div class="hr"><span>or</span></div>
-          <button class="btn ghost" id="btnLan">📷 Play over LAN · no servers</button>
+          <button class="btn ghost" id="btnLan">📷 Play over LAN · scan a code</button>
         </div>
         <div class="row" style="margin-top:22px;gap:8px">
           <button class="iconbtn" id="btnSound" title="Sound">🔊</button>
@@ -725,19 +742,6 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
         <div class="stack hide" id="lanBusy">
           <div class="spinner"></div>
           <p class="muted" id="lanBusyMsg">Connecting…</p>
-        <p class="pairline" id="lanPair"></p>
-        </div>
-
-        <div class="stack hide" id="lanDiagWrap">
-          <p class="diagwhy" id="lanWhy"></p>
-          <details class="lancode diagbox" id="lanDiagBox">
-            <summary>Connection log</summary>
-            <pre id="lanDiag"></pre>
-            <div class="row" style="gap:8px;margin-top:8px">
-              <button class="btn ghost sm" id="lanDiagCopy" style="flex:1">Copy log</button>
-              <button class="btn ghost sm hide" id="lanDiagShare" style="flex:1">Share log</button>
-            </div>
-          </details>
         </div>
 
       </div>
@@ -856,6 +860,22 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div id="avgrid"></div>
     <div id="avcolors"></div>
     <button class="btn primary" id="avdone">Done</button>
+  </div>
+</div>
+
+<button class="devchip" id="devChip" title="Connection log" aria-label="Connection log">DEV</button>
+<div class="devpane hide" id="devPane" role="dialog" aria-label="Connection log">
+  <div class="row">
+    <h4>CONNECTION LOG</h4>
+    <button class="btn ghost sm" id="devClear">Clear</button>
+    <button class="btn ghost sm" id="devClose">Close</button>
+  </div>
+  <p class="pairline" id="devPair"></p>
+  <p class="diagwhy" id="devWhy"></p>
+  <pre id="devLog"></pre>
+  <div class="row" style="gap:8px">
+    <button class="btn ghost sm" id="devCopy" style="flex:1">Copy log</button>
+    <button class="btn ghost sm hide" id="devShare" style="flex:1">Share log</button>
   </div>
 </div>
 
@@ -1174,17 +1194,17 @@ const Av = (() => {
 
    LAN mode has no server, so when a handshake does not complete there is
    nowhere to look: no request log, no error page, and on a phone no
-   devtools either. This is a small in-memory ring buffer that the direct
-   transport writes to, surfaced under a "Connection log" disclosure on the
-   LAN screen with a copy/share button.
+   devtools either. This is a small in-memory ring buffer that both
+   transports write to, surfaced by the dev pane below.
 
    The interesting part is not the state transitions -- those only ever say
    "checking" then "failed" -- but the ICE candidate-pair counters. STUN
-   binding requests over a LAN either arrive or they do not:
+   binding requests either arrive or they do not:
 
      sent>0  got=0  in=0    nothing crosses in either direction; the
-                            network is dropping client-to-client traffic
-                            (AP/client isolation, or different subnets)
+                            network is dropping this traffic (AP/client
+                            isolation, different subnets, or a NAT that
+                            will not hairpin)
      sent>0  got=0  in>0    their packets reach us, ours do not reach them
      sent>0  got>0          the path works; a failure after this is DTLS
 
@@ -1196,6 +1216,7 @@ const Diag = (() => {
   const t0 = Date.now();
   const lines = [];
   const subs = [];
+  const probes = [];
 
   function log(tag, msg) {
     const e = { ms: Date.now() - t0, tag: tag, msg: String(msg) };
@@ -1221,8 +1242,56 @@ const Diag = (() => {
     ].join('\n');
   }
 
-  return {
+  /** Poll one peer connection's ICE candidate pairs once a second.
+
+      This lives here rather than in either transport because it is the
+      same question for both of them: LAN mode and lobby mode fail on a
+      hostile network for identical reasons, and for a long time only the
+      LAN side could say so. */
+  function watch(pc) {
+    let last = '', stamped = 0;
+    const iv = setInterval(() => {
+      if (!pc || pc.signalingState === 'closed') { clearInterval(iv); return; }
+      pc.getStats().then(s => {
+        const cand = new Map();
+        s.forEach(r => { if (r.type === 'local-candidate' || r.type === 'remote-candidate') cand.set(r.id, r); });
+        const addr = c => c ? ((c.address || c.ip || '?') + ':' + (c.port == null ? '?' : c.port)) : '?';
+        const typ = c => c && c.candidateType ? '/' + c.candidateType : '';
+        const rows = [];
+        s.forEach(r => {
+          if (r.type !== 'candidate-pair') return;
+          const L = cand.get(r.localCandidateId), R = cand.get(r.remoteCandidateId);
+          rows.push(addr(L) + typ(L) + ' -> ' + addr(R) + typ(R) +
+            '  ' + r.state +
+            ' sent=' + (r.requestsSent || 0) +
+            ' got=' + (r.responsesReceived || 0) +
+            ' in=' + (r.requestsReceived || 0) +
+            ' out=' + (r.responsesSent || 0) +
+            (r.nominated ? ' NOMINATED' : ''));
+        });
+        rows.sort();
+        if (!rows.length) return;
+        if (api.onPairs) { try { api.onPairs(rows); } catch (e) { } }
+        // The counters tick every second. Logging all of them would push
+        // everything else out of the buffer, so only a change of state is
+        // always interesting; the running totals are sampled.
+        const key = rows.join('\n').replace(/\d+/g, '');
+        const now = Date.now();
+        if (key !== last || now - stamped > 5000) {
+          last = key; stamped = now;
+          rows.forEach(r => log('pair', r));
+        }
+      }, () => { });
+    }, 1000);
+    probes.push(iv);
+    return iv;
+  }
+
+  const api = {
     log: log,
+    watch: watch,
+    unwatch() { probes.splice(0).forEach(clearInterval); },
+    onPairs: null,
     on(fn) { subs.push(fn); },
     off(fn) { const i = subs.indexOf(fn); if (i >= 0) subs.splice(i, 1); },
     clear() { lines.length = 0; },
@@ -1230,6 +1299,145 @@ const Diag = (() => {
     text() { return header() + lines.map(fmt).join('\n') + '\n'; },
     get entries() { return lines.slice(); },
   };
+  return api;
+})();
+
+/* =====================================================================
+   DEV MODE — the plumbing, on request.
+
+   All of the above is useful exactly twice: while a connection is failing,
+   and while someone is being asked to send a log. The rest of the time it
+   is a wall of ports and hex in the middle of a party game, and it made
+   the LAN screen read like a bug report.
+
+   So it hides behind the gesture Android uses for the same purpose: ten
+   taps on something innocuous. The sound button is a good host for it --
+   it is on every screen, and ten taps leave the sound exactly as they
+   found it, so the cover story holds even if you miscount.
+
+   The flag lives in localStorage, because reproducing a connection failure
+   usually takes several reloads and re-arming the gesture each time would
+   be miserable.
+   ===================================================================== */
+
+const Dev = (() => {
+  const KEY = 'sb.dev';
+  const NEEDED = 10;
+  const GAP = 1500;               // taps further apart than this start over
+  let taps = 0, last = 0, on = false, wired = false;
+
+  try { on = localStorage.getItem(KEY) === '1'; } catch (e) { }
+
+  function set(v) {
+    on = !!v;
+    try { on ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch (e) { }
+    document.body.classList.toggle('dev', on);
+    if (!on) close();
+  }
+
+  /** Count is shared across all three sound buttons on purpose: they are
+      one control drawn on three screens, and nobody should have to notice
+      which one they are looking at. */
+  function tap() {
+    const now = Date.now();
+    taps = (now - last < GAP) ? taps + 1 : 1;
+    last = now;
+    const left = NEEDED - taps;
+    if (left > 0) {
+      // Silence would make this undiscoverable even to someone who knows
+      // it is there; counting out loud from the last three is enough.
+      if (left <= 3) toast(left === 1 ? '1 more tap' : left + ' more taps', null, 1000);
+      return;
+    }
+    taps = 0;
+    set(!on);
+    Diag.log('dev', 'dev mode ' + (on ? 'on' : 'off'));
+    toast(on ? 'Dev mode on' : 'Dev mode off', on ? 'good' : 'bad');
+  }
+
+  /* ------------------------------- pane ------------------------------- */
+  function render() {
+    const pre = $('#devLog');
+    if (!pre || $('#devPane').classList.contains('hide')) return;
+    // Only follow the tail if the reader is already at it -- scrolling back
+    // to something and having it yanked away a second later is infuriating.
+    const stuck = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 24;
+    pre.textContent = Diag.entries.map(Diag.fmt).join('\n');
+    if (stuck) pre.scrollTop = pre.scrollHeight;
+  }
+
+  function open() { const p = $('#devPane'); if (p) { p.classList.remove('hide'); render(); } }
+  function close() { const p = $('#devPane'); if (p) p.classList.add('hide'); }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(Diag.text());
+      toast('Log copied', 'good');
+    } catch (e) {
+      // Clipboard access needs a secure context and a user gesture; when it
+      // is refused, selecting the text by hand still works.
+      open();
+      const r = document.createRange();
+      r.selectNodeContents($('#devLog'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      toast('Copy the selected text', 'bad');
+    }
+  }
+
+  function share() {
+    if (!navigator.share) return;
+    navigator.share({ title: 'Boggle connection log', text: Diag.text() }).catch(() => { });
+  }
+
+  /** Turn the candidate-pair counters into one sentence someone can act on.
+
+      These counters are unambiguous. If we send STUN binding requests and
+      nothing at all comes back, and nothing arrives from them either, the
+      two devices cannot exchange packets on any path they know about --
+      which is not something WebRTC can work around, only a relay can. */
+  function verdict(rows) {
+    if (!rows.length) return '';
+    let sent = 0, got = 0, inb = 0;
+    rows.forEach(r => {
+      const n = k => { const m = r.match(new RegExp(k + '=(\\d+)')); return m ? +m[1] : 0; };
+      sent += n('sent'); got += n('got'); inb += n('in');
+    });
+    if (got) return 'Packets are getting through both ways — if this still fails it is not the network.';
+    if (inb) return 'Their packets reach this device but ours do not reach them. Something is filtering ' +
+                    'one direction — check the firewall on the other device.';
+    if (sent) return 'We are sending and nothing is coming back, on every pair. If one of these lines is ' +
+                     'a relay address the TURN server is unreachable too; if none of them is, no relay ' +
+                     'candidate was gathered and the credentials are the first thing to check.';
+    return '';
+  }
+
+  function pairs(rows) {
+    const p = $('#devPair');
+    if (!p) return;
+    p.textContent = rows.length ? rows[0].replace(/\s+/g, ' ') : 'no candidate pairs yet';
+    const why = verdict(rows);
+    if (why) $('#devWhy').textContent = why;
+  }
+
+  function init() {
+    if (wired) return;
+    wired = true;
+    document.body.classList.toggle('dev', on);
+    $('#devChip').onclick = () => ($('#devPane').classList.contains('hide') ? open() : close());
+    $('#devClose').onclick = close;
+    $('#devCopy').onclick = copy;
+    const sh = $('#devShare');
+    if (navigator.share) { sh.classList.remove('hide'); sh.onclick = share; }
+    $('#devClear').onclick = () => {
+      Diag.clear();
+      $('#devWhy').textContent = ''; $('#devPair').textContent = '';
+      render();
+    };
+    Diag.on(render);
+    Diag.onPairs = pairs;
+  }
+
+  return { init, tap, open, close, verdict, get on() { return on; } };
 })();
 
 /* ==== 10_core.js ==== */
@@ -2529,11 +2737,33 @@ const Cloud = (() => {
   const newCode = () => Array.from({ length: 4 }, () => pick(CODE_ALPHABET.split(''))).join('');
 
   function makePeer(id) {
-    return new Peer(id, { debug: 0, config: { iceServers: iceServers() } });
+    const servers = iceServers();
+    Diag.log('peer', 'new peer, ' + servers.length + ' ice server(s), relay ' +
+      (relayServer() ? 'on' : 'off'));
+    return new Peer(id, { debug: 0, config: { iceServers: servers } });
+  }
+
+  /** PeerJS owns the RTCPeerConnection but does not hide it, and it is the
+      only place the ICE story gets told. Wiring it to the same log as LAN
+      mode is the difference between "online does not work" and knowing
+      which leg of the handshake failed. */
+  function watchConn(conn, who) {
+    const pc = conn && conn.peerConnection;
+    if (!pc) { Diag.log('conn', who + ': no peer connection to watch'); return; }
+    pc.addEventListener('iceconnectionstatechange',
+      () => Diag.log('ice', who + ': ' + pc.iceConnectionState));
+    pc.addEventListener('connectionstatechange',
+      () => Diag.log('pc', who + ': ' + pc.connectionState));
+    pc.addEventListener('icecandidate', e => Diag.log('cand',
+      who + ' local: ' + (e.candidate ? e.candidate.candidate : '(end of candidates)')));
+    pc.addEventListener('icecandidateerror', e => Diag.log('cand',
+      who + ' error ' + e.errorCode + ' ' + (e.errorText || '') + ' ' + (e.url || '')));
+    Diag.watch(pc);
   }
 
   function destroy() {
     clearInterval(hb); hb = 0;
+    Diag.unwatch();
     conns.forEach(c => { try { c.close(); } catch (e) { } });
     conns.clear();
     hostConn = null;
@@ -2547,6 +2777,7 @@ const Cloud = (() => {
     return new Promise((resolve, reject) => {
       if (attempt === 0) destroy();
       const c = newCode();
+      Diag.log('peer', 'host: asking the broker to hold ' + ROOM_PREFIX + c);
       const p = makePeer(ROOM_PREFIX + c);
       let settled = false;
 
@@ -2559,6 +2790,7 @@ const Cloud = (() => {
           return;
         }
         settled = true;
+        Diag.log('fail', 'host: broker ' + ((err && (err.type || err.message)) || 'failed'));
         try { p.destroy(); } catch (e) { }
         reject(err || new Error('Could not reach the matchmaking server.'));
       };
@@ -2569,6 +2801,7 @@ const Cloud = (() => {
         if (settled) return;
         settled = true; clearTimeout(guard);
         peer = p; isHost = true; code = c; me = p.id; open = true;
+        Diag.log('peer', 'host: broker open, lobby code ' + c);
         wireHost();
         resolve(c);
       });
@@ -2582,7 +2815,11 @@ const Cloud = (() => {
         conn.on('open', () => { try { conn.send({ t: 'full' }); } catch (e) { } setTimeout(() => conn.close(), 400); });
         return;
       }
-      conn.on('open', () => { conns.set(conn.peer, conn); H.peerOpen(conn.peer); });
+      watchConn(conn, 'host<-guest');
+      conn.on('open', () => {
+        Diag.log('conn', 'host: guest connected');
+        conns.set(conn.peer, conn); H.peerOpen(conn.peer);
+      });
       conn.on('data', d => H.msg(conn.peer, d));
       conn.on('close', () => { if (conns.delete(conn.peer)) H.peerClose(conn.peer); });
       conn.on('error', () => { if (conns.delete(conn.peer)) H.peerClose(conn.peer); });
@@ -2609,16 +2846,23 @@ const Cloud = (() => {
         try { p.destroy(); } catch (e) { }
         reject(err);
       };
-      const guard = setTimeout(() => fail(new Error("Couldn't reach that room. Check the code?")), 20000);
+      const guard = setTimeout(() => {
+        Diag.log('fail', 'guest: gave up after 20s');
+        fail(new Error("Couldn't reach that room. Check the code?"));
+      }, 20000);
 
       p.on('error', e => {
+        Diag.log('fail', 'guest: broker ' + ((e && (e.type || e.message)) || 'error'));
         if (e && e.type === 'peer-unavailable') return fail(new Error('No lobby with that code is open right now.'));
         fail(e);
       });
 
       p.on('open', () => {
+        Diag.log('peer', 'guest: broker open, dialling ' + target);
         const c = p.connect(target, { reliable: true, metadata: { v: 1 } });
+        watchConn(c, 'guest->host');
         c.on('open', () => {
+          Diag.log('conn', 'guest: data channel open');
           if (settled) return;
           settled = true; clearTimeout(guard);
           peer = p; isHost = false; code = roomCode.toUpperCase(); me = p.id; hostConn = c; open = true;
@@ -2979,53 +3223,10 @@ const Direct = (() => {
     return pc;
   }
 
-  /** Poll the ICE candidate pairs once a second and log every change.
-
-      `requestsSent` vs `responsesReceived` vs `requestsReceived` is the
-      diagnosis: all three at zero-but-sent means the network is dropping
-      client-to-client traffic, which on a home router is almost always AP
-      isolation or two different subnets. */
-  function probe(pc, who) {
-    let last = '', stamped = 0;
-    const iv = setInterval(() => {
-      if (!pc || pc.signalingState === 'closed') { clearInterval(iv); return; }
-      pc.getStats().then(s => {
-        const cand = new Map();
-        s.forEach(r => { if (r.type === 'local-candidate' || r.type === 'remote-candidate') cand.set(r.id, r); });
-        const addr = c => c ? ((c.address || c.ip || '?') + ':' + (c.port == null ? '?' : c.port)) : '?';
-        const rows = [];
-        s.forEach(r => {
-          if (r.type !== 'candidate-pair') return;
-          rows.push(addr(cand.get(r.localCandidateId)) + ' -> ' + addr(cand.get(r.remoteCandidateId)) +
-            '  ' + r.state +
-            ' sent=' + (r.requestsSent || 0) +
-            ' got=' + (r.responsesReceived || 0) +
-            ' in=' + (r.requestsReceived || 0) +
-            ' out=' + (r.responsesSent || 0) +
-            (r.nominated ? ' NOMINATED' : ''));
-        });
-        rows.sort();
-        if (!rows.length) return;
-        if (onPairs) onPairs(rows);
-        // The counters tick every second. Logging all of them would push
-        // everything else out of the buffer, so only a change of state is
-        // always interesting; the running totals are sampled.
-        const key = rows.join('\n').replace(/\d+/g, '');
-        const now = Date.now();
-        if (key !== last || now - stamped > 5000) {
-          last = key; stamped = now;
-          rows.forEach(r => Diag.log('pair', r));
-        }
-      }, () => { });
-    }, 1000);
-    probes.push(iv);
-    return iv;
-  }
-
-  /** The LAN screen renders the newest pair line live while it waits. */
-  let onPairs = null;
-  const probes = [];
-  const stopProbes = () => { probes.splice(0).forEach(clearInterval); };
+  /* The candidate-pair probe lives in `Diag`: the cloud transport needs the
+     same numbers, and the dev pane is the only thing that reads them. */
+  const probe = pc => Diag.watch(pc);
+  const stopProbes = () => Diag.unwatch();
 
   /** No trickle channel exists, so wait for the full candidate set (or give
       up and ship what we have -- one host candidate is usually enough). */
@@ -3047,10 +3248,10 @@ const Direct = (() => {
       if (pc) pc.addEventListener('connectionstatechange', () => {
         if (pc.connectionState === 'failed') {
           clearTimeout(t);
-          rej(new Error('The two devices could not reach each other. Open the ' +
-            'connection log below: if it shows packets going out and none coming ' +
-            'back, the network is blocking device-to-device traffic. A phone ' +
-            'hotspot always does this and cannot be told not to.'));
+          rej(new Error('The two devices could not reach each other, and no ' +
+            'relay could stand in for them. A phone hotspot always blocks this ' +
+            'and cannot be told not to; on anything else, check that both ' +
+            'devices have a working internet connection.'));
         }
       });
       const t = setTimeout(() => rej(new Error(
@@ -3194,7 +3395,6 @@ const Direct = (() => {
   return {
     start, invite, accept, answer, destroy, sendTo, broadcast, toHost, kick,
     pack, unpack, rebuild, parseSdp,
-    set onPairs(fn) { onPairs = fn; },
     get isHost() { return isHost; },
     get code() { return ''; },
     get me() { return me; },
@@ -4868,92 +5068,6 @@ const Lan = (() => {
   const startCam = onCode => scanInto(
     { cam: '#lanCam', vid: '#lanVid', msg: '#lanScanMsg', paste: '#lanPasteBox' }, onCode);
 
-  /* --------------------------- diagnostics ---------------------------- */
-  /* There is no server log and no devtools on a phone, so the log has to be
-     in the app itself. It stays hidden until a handshake is actually under
-     way, then stays visible if that handshake fails. */
-
-  let watching = false, lastPairs = [];
-
-  function renderLog() {
-    const pre = $('#lanDiag');
-    if (!pre || !$('#lanDiagBox').open) return;
-    pre.textContent = Diag.entries.map(Diag.fmt).join('\n');
-    pre.scrollTop = pre.scrollHeight;
-  }
-
-  /** Turn the candidate-pair counters into one sentence a person can act on.
-
-      On a LAN these counters are unambiguous. If we send STUN binding
-      requests and nothing at all comes back, and nothing arrives from them
-      either, then the two devices cannot exchange packets -- which on a
-      home router means AP/client isolation or two different subnets, not
-      anything WebRTC can work around. */
-  function verdict(rows) {
-    if (!rows.length) return '';
-    let sent = 0, got = 0, inb = 0;
-    rows.forEach(r => {
-      const n = k => { const m = r.match(new RegExp(k + '=(\\d+)')); return m ? +m[1] : 0; };
-      sent += n('sent'); got += n('got'); inb += n('in');
-    });
-    if (got) return 'Packets are getting through both ways — if this still fails it is not the network.';
-    if (inb) return 'Their packets reach this device but ours do not reach them. Something is filtering ' +
-                    'one direction — check the firewall on the other device.';
-    if (sent) return 'We are sending, and nothing is coming back. The two devices cannot exchange packets: ' +
-                     'check that both are on the same Wi-Fi network (same 192.168.x.* prefix) and that ' +
-                     '"client isolation" / "AP isolation" is off on the router. If this is a phone ' +
-                     'hotspot, stop here — hotspots always isolate their clients and there is no ' +
-                     'setting to turn it off. The relay should take over shortly; if it does not, ' +
-                     'this network is blocking that too.';
-    return '';
-  }
-
-  /** Start showing the log, and keep the live pair line fresh. */
-  function watch() {
-    $('#lanDiagWrap').classList.remove('hide');
-    if (watching) return;
-    watching = true;
-    Diag.on(renderLog);
-    Direct.onPairs = rows => {
-      lastPairs = rows;
-      $('#lanPair').textContent = rows.length
-        ? rows[0].replace(/\s+/g, ' ')
-        : 'no candidate pairs yet';
-      const why = verdict(rows);
-      if (why) $('#lanWhy').textContent = why;
-    };
-  }
-
-  async function copyLog() {
-    const text = Diag.text();
-    try {
-      await navigator.clipboard.writeText(text);
-      toast('Log copied', 'good');
-    } catch (e) {
-      // Clipboard access needs a secure context and a user gesture; when it
-      // is refused, selecting the text by hand still works.
-      const pre = $('#lanDiag');
-      $('#lanDiagBox').open = true;
-      renderLog();
-      const r = document.createRange();
-      r.selectNodeContents(pre);
-      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      toast('Copy the selected text', 'bad');
-    }
-  }
-
-  function shareLog() {
-    if (!navigator.share) return;
-    navigator.share({ title: 'Boggle connection log', text: Diag.text() }).catch(() => { });
-  }
-
-  function wireDiag() {
-    $('#lanDiagCopy').onclick = copyLog;
-    const sh = $('#lanDiagShare');
-    if (navigator.share) { sh.classList.remove('hide'); sh.onclick = shareLog; }
-    $('#lanDiagBox').addEventListener('toggle', renderLog);
-  }
-
   /* ------------------------------ flow -------------------------------- */
   function step(label) { $('#lanStep').textContent = label; }
 
@@ -4967,9 +5081,12 @@ const Lan = (() => {
     const real = (addrs || []).filter(a => a.kind !== 1);
     if (real.length) {
       node.classList.remove('warn');
+      // Which addresses a code carries is plumbing, and saying it out loud
+      // made this screen read like a bug report. The warning below is not
+      // plumbing -- it is the one case the player can do something about.
       const label = a => a.typ === 'relay' ? 'a relay'
         : a.typ === 'srflx' ? 'your public address' : a.ip;
-      node.textContent = 'This code points at ' + real.map(label).join(' / ');
+      node.textContent = Dev.on ? 'This code points at ' + real.map(label).join(' / ') : '';
     } else {
       node.classList.add('warn');
       node.textContent = 'Your address is masked as a .local name — that needs ' +
@@ -4983,11 +5100,10 @@ const Lan = (() => {
     panel('lanPick');
     step('No lobby, no accounts');
     Diag.log('fail', (e && e.message) || 'handshake failed');
-    watch();                            // leave the log on screen to be read
-    $('#lanDiagBox').open = true;
-    renderLog();
+    // The log goes up behind the modal rather than under it: the modal sits
+    // at a higher layer, so opening the pane first would just hide it.
     modal('That did not work', (e && e.message) || 'The handshake failed.',
-      [{ label: 'OK', cls: 'grape' }]);
+      [{ label: 'OK', cls: 'grape', fn: () => { if (Dev.on) Dev.open(); } }]);
   }
 
   /** Host, from the main menu: open a LAN lobby and mint the first invite. */
@@ -5059,8 +5175,6 @@ const Lan = (() => {
     try {
       if (expect === 'answer') {
         $('#lanBusyMsg').textContent = 'Connecting…';
-        $('#lanPair').textContent = '';
-        watch();
         await Direct.accept(code);
         release();
         Sound.join();
@@ -5079,7 +5193,6 @@ const Lan = (() => {
       $('#lanNext').classList.add('hide');
       step('Step 2 of 2 · your reply');
       panel('lanShow');
-      watch();
 
       await ready;
       release();
@@ -5094,9 +5207,7 @@ const Lan = (() => {
 
   function back() {
     release();
-    $('#lanDiagWrap').classList.add('hide');
-    $('#lanDiagBox').open = false;
-    $('#lanWhy').textContent = '';
+    Dev.close();
     // `activeCount()` counts the host itself, so it is not the question here:
     // a host with someone already connected is only cancelling this one
     // invite, while a host who never connected to anyone is leaving.
@@ -5108,7 +5219,7 @@ const Lan = (() => {
   }
 
   return { beginHost, beginGuest, invite, back, paintQR, panel, stopCam, release, canScan,
-           scanInto, wireDiag, copyLog };
+           scanInto };
 })();
 
 /* ==== 60_boot.js ==== */
@@ -5138,9 +5249,12 @@ function paintSound() {
   });
 }
 ['#btnSound', '#btnSound2', '#btnRSound'].forEach(s => {
-  const b = $(s); if (b) b.onclick = () => { Sound.toggle(); paintSound(); };
+  // Doubling as the dev-mode gesture (ten taps) costs the button nothing:
+  // an even number of toggles leaves the sound exactly where it started.
+  const b = $(s); if (b) b.onclick = () => { Sound.toggle(); paintSound(); Dev.tap(); };
 });
 paintSound();
+Dev.init();
 
 /* ------------------------------ profile ------------------------------ */
 $('#nameIn').value = store.get('name', '');
@@ -5253,7 +5367,6 @@ $('#lanBack').onclick = () => { Sound.back(); Lan.back(); };
 $('#lanBeHost').onclick = () => { Sound.init(); Lan.beginHost(); };
 $('#lanBeGuest').onclick = () => { Sound.init(); Lan.beginGuest(); };
 $('#btnInvite').onclick = () => { Sound.init(); Lan.invite(); };
-Lan.wireDiag();
 $('#lanCopy').onclick = async () => {
   try { await navigator.clipboard.writeText($('#lanOut').value); toast('Code copied', 'good'); }
   catch (e) { $('#lanOut').select(); toast('Select and copy the code', 'bad'); }
