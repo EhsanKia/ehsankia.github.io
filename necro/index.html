@@ -1306,8 +1306,12 @@ const DATA = {
    "id": "grave",
    "name": "Grave",
    "currency": "mana",
-   "runeCost": 20,
-   "rune": "Ice",
+   "runes": [
+    {
+     "n": 20,
+     "type": "Ice"
+    }
+   ],
    "legendary": "Lich",
    "levels": [
     {
@@ -1407,8 +1411,12 @@ const DATA = {
    "id": "cupboard",
    "name": "Supply Cupboard",
    "currency": "slime",
-   "runeCost": 20,
-   "rune": "Poison",
+   "runes": [
+    {
+     "n": 20,
+     "type": "Poison"
+    }
+   ],
    "legendary": "Gorgon",
    "levels": [
     {
@@ -1508,8 +1516,12 @@ const DATA = {
    "id": "altar",
    "name": "Altar",
    "currency": "darkness",
-   "runeCost": 20,
-   "rune": "Blood",
+   "runes": [
+    {
+     "n": 20,
+     "type": "Blood"
+    }
+   ],
    "legendary": "Harpy",
    "levels": [
     {
@@ -1609,8 +1621,16 @@ const DATA = {
    "id": "lectern",
    "name": "Lectern",
    "currency": "mana",
-   "runeCost": 50,
-   "rune": "Ice + 20 Moon",
+   "runes": [
+    {
+     "n": 50,
+     "type": "Ice"
+    },
+    {
+     "n": 20,
+     "type": "Moon"
+    }
+   ],
    "legendary": "Reaper",
    "levels": [
     {
@@ -1714,8 +1734,16 @@ const DATA = {
    "id": "fridge",
    "name": "Fridge",
    "currency": "slime",
-   "runeCost": 50,
-   "rune": "Poison + 20 Moon",
+   "runes": [
+    {
+     "n": 50,
+     "type": "Poison"
+    },
+    {
+     "n": 20,
+     "type": "Moon"
+    }
+   ],
    "legendary": "Cyclops",
    "levels": [
     {
@@ -1823,8 +1851,16 @@ const DATA = {
    "id": "portal",
    "name": "Portal",
    "currency": "darkness",
-   "runeCost": 30,
-   "rune": "Death + 30 Blood",
+   "runes": [
+    {
+     "n": 30,
+     "type": "Death"
+    },
+    {
+     "n": 30,
+     "type": "Blood"
+    }
+   ],
    "legendary": "Archdemon",
    "levels": [
     {
@@ -1932,8 +1968,16 @@ const DATA = {
    "id": "chicken",
    "name": "Foul Chicken",
    "currency": null,
-   "runeCost": 30,
-   "rune": "Ice + 15 Poison",
+   "runes": [
+    {
+     "n": 30,
+     "type": "Ice"
+    },
+    {
+     "n": 15,
+     "type": "Poison"
+    }
+   ],
    "legendary": "Robo Chicken",
    "levels": [
     {
@@ -2026,8 +2070,12 @@ const DATA = {
    "id": "saucer",
    "name": "Crashed Saucer",
    "currency": "variable",
-   "runeCost": 20,
-   "rune": "Cosmic",
+   "runes": [
+    {
+     "n": 20,
+     "type": "Cosmic"
+    }
+   ],
    "legendary": "Shield Bot",
    "levels": [
     {
@@ -2708,13 +2756,16 @@ function renderStations() {
       b.classList.toggle('on', b.dataset.c === S.colour);
     }
   }
-  const runes = s.runeCost * Math.pow(2, S.slvl - 1);
-  const legend = s.runeCost * 32;
+  // Every rune component scales with the level, not just the first one:
+  // a level-N station is 2^(N-1) level-1 purchases, and a legendary is 32.
+  const runeSum = (mult) => s.runes
+      .map((r) => `${fmt(r.n * mult)} ${esc(r.type)}`)
+      .join(' + ');
   $('#runecost').innerHTML =
-      `A level ${S.slvl} ${esc(s.name)} costs <b>${runes} ${esc(s.rune)}</b> ` +
-      `runes to build up from scratch. Two level 5s merge into ` +
-      `<b>${esc(s.legendary)}</b> (${legend} ${esc(s.rune)}, minus the level 1 ` +
-      `Skully hands back).` +
+      `A level ${S.slvl} ${esc(s.name)} costs ` +
+      `<b>${runeSum(Math.pow(2, S.slvl - 1))}</b> runes to build up from ` +
+      `scratch. Two level 5s merge into <b>${esc(s.legendary)}</b> ` +
+      `(${runeSum(32)}, minus the level 1 Skully hands back).` +
       (s.id === 'chicken' ?
           ' Foul Chickens lay every 30 min at every level \u2014 as little as ' +
           '16 min with the Fouler Chicken spell and the Chicken relic.' : '');
