@@ -359,6 +359,34 @@ details.adv > summary #advsum {
   background: var(--acc); cursor: pointer;
 }
 
+.ck {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  cursor: pointer;
+}
+.ck input[type=checkbox] {
+  -webkit-appearance: none; appearance: none;
+  flex: 0 0 auto;
+  width: 22px; height: 22px; margin: 0;
+  border: 2px solid var(--acc); border-radius: 6px;
+  background: rgba(157,107,255,.10);
+  cursor: pointer; position: relative;
+}
+.ck input[type=checkbox]:checked { background: var(--acc); }
+.ck input[type=checkbox]:checked::after {
+  content: ''; position: absolute;
+  left: 6px; top: 2px; width: 4px; height: 10px;
+  border: solid #1a0f2e; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.ck > span { display: block; font-size: 13px; }
+.ck b { color: var(--acc2); }
+.ck small { display: block; color: var(--dim); font-size: 11px; margin-top: 4px; }
+
 .hint { font-size: 11.5px; color: var(--dim); margin-top: 8px; }
 .hidden { display: none !important; }
 
@@ -467,7 +495,7 @@ details.adv > summary #advsum {
 </section>
 
 <details class="card adv">
-  <summary>Merge bonuses <span id="advsum"></span></summary>
+  <summary>Bonuses <span id="advsum"></span></summary>
   <div class="advbody">
     <label class="sl">
       <span>Level skip <b id="skipv">0%</b></span>
@@ -479,7 +507,14 @@ details.adv > summary #advsum {
       <input type="range" id="dup" min="0" max="10" step="1" value="0">
       <small>5% if you own The Infernal. A merge occasionally yields two minions.</small>
     </label>
-    <div class="hint">Both are approximations: they average out a random process, and they are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure.</div>
+    <div class="hint">Both sliders are approximations: they average out a random process, and they are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure.</div>
+    <label class="ck">
+      <input type="checkbox" id="chick">
+      <span>
+        <b>Chick Stone</b>
+        <small>Tip&nbsp;Stone skin, 750 Gold. +5% chance a Foul Chicken lays two eggs at once. Affects Foul Chickens only.</small>
+      </span>
+    </label>
   </div>
 </details>
 
@@ -2340,7 +2375,54 @@ function tapDistribution(need, drops, quantiles) {
   return out;
 }
 
+/**
+ * Folds a "sometimes yields two items" bonus into an equivalent drop table.
+ *
+ * The Chick Stone skin gives Foul Chickens a 5% chance of laying two eggs at
+ * once. Each egg is drawn independently from the station's table, so a double
+ * lay can give two useful eggs, one useful and one wasted, or two wasted.
+ * Rather than teach the solvers about multi-item taps, the whole thing is
+ * folded into a single-draw table over the *total* scrap gained per event --
+ * both solvers then work unchanged.
+ *
+ * Probabilities are preserved: the single branch contributes (1 - pDouble) and
+ * the double branch contributes pDouble * (pHit + pMiss)^2 = pDouble.
+ *
+ * @param {!Array<{item: (string|undefined), w: number, p: number}>} drops
+ *     useful drops only; p need not sum to 1, the remainder being the chance
+ *     of drawing an item from some other family.
+ * @param {number} pDouble chance the event yields two draws instead of one
+ * @return {!Array<{item: (string|undefined), w: number, p: number}>}
+ */
+function compoundDrops(drops, pDouble) {
+  if (!pDouble || !drops.length) return drops;
+  const pHit = drops.reduce((s, d) => s + d.p, 0);
+  const pMiss = Math.max(0, 1 - pHit);
+  const pSingle = 1 - pDouble;
+  const by = new Map();
+  const add = (w, p, item) => {
+    if (p <= 0) return;
+    const cur = by.get(w);
+    if (cur) cur.p += p;
+    else by.set(w, {item, w, p});
+  };
+  for (const d of drops) {
+    add(d.w, pSingle * d.p, d.item);
+    // Doubled, but the other egg belongs to another family. Ordered, hence x2.
+    add(d.w, pDouble * 2 * d.p * pMiss, d.item);
+  }
+  for (const a of drops) {
+    for (const b of drops) {
+      add(a.w + b.w, pDouble * a.p * b.p,
+          a.item === b.item ? '2\u00d7 ' + a.item : a.item + ' + ' + b.item);
+    }
+  }
+  return [...by.values()].sort((x, y) => x.w - y.w);
+}
 
+if (typeof module !== 'undefined') {
+  module.exports = {expectedTaps, tapDistribution, compoundDrops};
+}
 
 
 // NecroMerger tap calculator -- UI.
@@ -2410,7 +2492,16 @@ function dropItem(station, drop, colour) {
   return station.variable[colour] || station.variable.mana;
 }
 
-/** Every (station, level) that can contribute to a family, in menu order. */
+/** Chick Stone skin: +5% chance a Foul Chicken lays two eggs instead of one. */
+const CHICK_DOUBLE = 0.05;
+
+/**
+ * Every (station, level) that can contribute to a family, in menu order.
+ *
+ * `drops` is the raw per-item table, used for display. `eff` is what the
+ * solvers see: identical unless a bonus changes the per-event yield, as the
+ * Chick Stone does for Foul Chickens.
+ */
 function sourcesFor(famId, colour) {
   const out = [];
   for (const s of DATA.stations) {
@@ -2423,7 +2514,11 @@ function sourcesFor(famId, colour) {
           drops.push({item, w: info.value, p: d.pct / 100});
         }
       }
-      if (drops.length) out.push({station: s, level: lv, drops});
+      if (drops.length) {
+        const eff = (S.chick && s.id === 'chicken') ?
+            compoundDrops(drops, CHICK_DOUBLE) : drops;
+        out.push({station: s, level: lv, drops, eff});
+      }
     }
   }
   return out;
@@ -2474,7 +2569,7 @@ function effectiveValue(fam, tgt, s, d) {
 // ------------------------------------------------------------------- state
 const DEFAULTS = {
   fam: 'zombies', lvl: 3, station: 'grave', slvl: 4,
-  colour: 'mana', inv: {}, skip: 0, dup: 0,
+  colour: 'mana', inv: {}, skip: 0, dup: 0, chick: false,
 };
 let S = Object.assign({}, DEFAULTS);
 
@@ -2642,8 +2737,8 @@ function renderResult() {
   const s = src.station;
   const lv = src.level;
   const cost = tapCost(s, lv, S.colour);
-  const dist = tapDistribution(need, src.drops, [0.5, 0.9]);
-  const mean = expectedTaps(need, src.drops);
+  const dist = tapDistribution(need, src.eff, [0.5, 0.9]);
+  const mean = expectedTaps(need, src.eff);
 
   $('#bigtaps').textContent = fmtTaps(mean);
   $('#bigtaps').classList.toggle('unreach', !isFinite(mean));
@@ -2667,7 +2762,7 @@ function renderResult() {
   $('#stats').innerHTML = [
     ['Median', fmtTaps(q[0.5])],
     ['90% by', fmtTaps(q[0.9])],
-    ['Per tap', (src.drops.reduce((a, d) => a + d.p * d.w, 0)).toFixed(2)],
+    ['Per tap', (src.eff.reduce((a, d) => a + d.p * d.w, 0)).toFixed(2)],
   ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`)
       .join('');
 
@@ -2694,7 +2789,7 @@ function renderResult() {
   // drop table ----------------------------------------------------------
   const dbox = $('#droptable');
   dbox.innerHTML = '';
-  const evTotal = src.drops.reduce((a, d) => a + d.p * d.w, 0);
+  const evTotal = src.eff.reduce((a, d) => a + d.p * d.w, 0);
   for (const d of lv.drops) {
     const item = dropItem(s, d, S.colour);
     const info = ITEM[item];
@@ -2706,10 +2801,18 @@ function renderResult() {
         `<span class="wv">${mine ? '+' + (d.pct / 100 * info.value).toFixed(2) : '\u2014'}</span>`);
     dbox.appendChild(row);
   }
+  const perEvent = src.eff === src.drops ? 'tap' :
+      (s.id === 'chicken' ? 'lay' : 'tap');
   dbox.appendChild(el('div', 'hint',
       `Useful yield <b style="color:var(--good)">${evTotal.toFixed(2)}</b> ` +
-      `${esc(fam.chain[0].item)} per tap \u00b7 ` +
+      `${esc(fam.chain[0].item)} per ${perEvent} \u00b7 ` +
       `${need} \u00f7 ${evTotal.toFixed(2)} \u2248 ${fmtTaps(need / evTotal)} taps`));
+  if (src.eff !== src.drops && s.id === 'chicken') {
+    dbox.appendChild(el('div', 'hint',
+        `Includes the Chick Stone: a ${(CHICK_DOUBLE * 100).toFixed(0)}% chance ` +
+        `of two eggs per lay, which is why the yield is above the ` +
+        `percentages listed here.`));
+  }
 }
 
 function renderInventory() {
@@ -2755,7 +2858,7 @@ function renderCompare() {
     for (const x of sourcesFor(S.fam, colour)) {
       if (x.station.id !== 'saucer' && colour !== 'mana') continue;
       const c = tapCost(x.station, x.level, colour);
-      const taps = expectedTaps(need, x.drops);
+      const taps = expectedTaps(need, x.eff);
       rows.push({
         sid: x.station.id, station: x.station, level: x.level, colour,
         taps, cost: c.amount * taps, currency: c.currency,
@@ -2801,11 +2904,13 @@ function renderCompare() {
 function renderAdvanced() {
   $('#skip').value = String(S.skip);
   $('#dup').value = String(S.dup);
+  $('#chick').checked = !!S.chick;
   $('#skipv').textContent = S.skip + '%';
   $('#dupv').textContent = S.dup + '%';
   const bits = [];
   if (S.skip) bits.push(S.skip + '% skip');
   if (S.dup) bits.push(S.dup + '% dupe');
+  if (S.chick) bits.push('Chick Stone');
   $('#advsum').textContent = bits.length ? bits.join(' \u00b7 ') : 'none';
 }
 
@@ -2838,9 +2943,10 @@ function boot() {
   for (const [id, key] of [['#skip', 'skip'], ['#dup', 'dup']]) {
     $(id).oninput = () => { S[key] = Number($(id).value); render(); };
   }
+  $('#chick').onchange = () => { S.chick = $('#chick').checked; render(); };
   $('#invclear').onclick = () => { S.inv = {}; render(); };
   render();
-  if (S.skip || S.dup) $('details.adv').open = true;
+  if (S.skip || S.dup || S.chick) $('details.adv').open = true;
 }
 
 if (typeof document !== 'undefined') {
