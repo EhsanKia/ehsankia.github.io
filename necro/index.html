@@ -460,6 +460,13 @@ details.adv > summary #advsum {
   <div class="chips" id="stations"></div>
   <div style="height:8px"></div>
   <div class="chips" id="slvls"></div>
+  <label class="ck" style="margin-top:10px">
+    <input type="checkbox" id="hacked">
+    <span>
+      <b>Hacked</b>
+      <small>1,500 runes from The&nbsp;Hacker, per station type, undone by a prestige. Drops the low tier of every line and raises the tap cost.</small>
+    </span>
+  </label>
   <div id="saucerbox" class="hidden" style="margin-top:10px">
     <div class="hint" style="margin:0 0 6px">Saucers change colour roughly every 100 taps &mdash; the cost and the bonus drop follow the colour.</div>
     <div class="seg" id="colours">
@@ -1323,7 +1330,16 @@ const DATA = {
        "pct": 100.0
       }
      ],
-     "img": "Grave L1"
+     "img": "Grave L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 2,
@@ -1338,7 +1354,16 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Grave L2"
+     "img": "Grave L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 3,
@@ -1357,7 +1382,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Grave L3"
+     "img": "Grave L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Severed Hand",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 4,
@@ -1380,7 +1418,20 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Grave L4"
+     "img": "Grave L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Severed Hand",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 5,
@@ -1403,7 +1454,20 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Grave L5"
+     "img": "Grave L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Severed Hand",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     }
    ]
   },
@@ -1428,7 +1492,16 @@ const DATA = {
        "pct": 100.0
       }
      ],
-     "img": "Cupboard L1"
+     "img": "Cupboard L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 2,
@@ -1443,7 +1516,16 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Cupboard L2"
+     "img": "Cupboard L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 3,
@@ -1462,7 +1544,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Cupboard L3"
+     "img": "Cupboard L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Bandage",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 4,
@@ -1485,7 +1580,20 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Cupboard L4"
+     "img": "Cupboard L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Bandage",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 5,
@@ -1508,7 +1616,20 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Cupboard L5"
+     "img": "Cupboard L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Bandage",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     }
    ]
   },
@@ -1533,7 +1654,16 @@ const DATA = {
        "pct": 100.0
       }
      ],
-     "img": "Altar L1"
+     "img": "Altar L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 2,
@@ -1548,7 +1678,16 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Altar L2"
+     "img": "Altar L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 100
+       }
+      ],
+      "cost": 400
+     }
     },
     {
      "lvl": 3,
@@ -1567,7 +1706,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Altar L3"
+     "img": "Altar L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Pair of Wings",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 4,
@@ -1590,7 +1742,20 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Altar L4"
+     "img": "Altar L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Pair of Wings",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 5,
@@ -1613,7 +1778,20 @@ const DATA = {
        "pct": 40.0
       }
      ],
-     "img": "Altar L5"
+     "img": "Altar L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Pair of Wings",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     }
    ]
   },
@@ -1646,7 +1824,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Lectern L1"
+     "img": "Lectern L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Scroll",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 2,
@@ -1661,7 +1852,20 @@ const DATA = {
        "pct": 60.0
       }
      ],
-     "img": "Lectern L2"
+     "img": "Lectern L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Scroll",
+        "pct": 90
+       }
+      ],
+      "cost": 1000
+     }
     },
     {
      "lvl": 3,
@@ -1680,7 +1884,24 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Lectern L3"
+     "img": "Lectern L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Scroll",
+        "pct": 20
+       },
+       {
+        "item": "Greater Tome",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     },
     {
      "lvl": 4,
@@ -1703,7 +1924,24 @@ const DATA = {
        "pct": 10.0
       }
      ],
-     "img": "Lectern L4"
+     "img": "Lectern L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Scroll",
+        "pct": 20
+       },
+       {
+        "item": "Greater Tome",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     },
     {
      "lvl": 5,
@@ -1726,7 +1964,24 @@ const DATA = {
        "pct": 25.0
       }
      ],
-     "img": "Lectern L5"
+     "img": "Lectern L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Ribcage",
+        "pct": 10
+       },
+       {
+        "item": "Scroll",
+        "pct": 20
+       },
+       {
+        "item": "Greater Tome",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     }
    ]
   },
@@ -1759,7 +2014,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Fridge L1"
+     "img": "Fridge L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Takeout",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 2,
@@ -1774,7 +2042,20 @@ const DATA = {
        "pct": 60.0
       }
      ],
-     "img": "Fridge L2"
+     "img": "Fridge L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Takeout",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 3,
@@ -1793,7 +2074,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Fridge L3"
+     "img": "Fridge L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Takeout",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 4,
@@ -1816,7 +2110,24 @@ const DATA = {
        "pct": 25.0
       }
      ],
-     "img": "Fridge L4"
+     "img": "Fridge L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Takeout",
+        "pct": 20
+       },
+       {
+        "item": "CrateParts",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     },
     {
      "lvl": 5,
@@ -1843,7 +2154,24 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Fridge L5"
+     "img": "Fridge L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "EyeJar",
+        "pct": 10
+       },
+       {
+        "item": "Takeout",
+        "pct": 20
+       },
+       {
+        "item": "CrateParts",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     }
    ]
   },
@@ -1876,7 +2204,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Portal L1"
+     "img": "Portal L1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Bangle",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 2,
@@ -1891,7 +2232,20 @@ const DATA = {
        "pct": 60.0
       }
      ],
-     "img": "Portal L2"
+     "img": "Portal L2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Bangle",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 3,
@@ -1910,7 +2264,20 @@ const DATA = {
        "pct": 30.0
       }
      ],
-     "img": "Portal L3"
+     "img": "Portal L3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Bangle",
+        "pct": 90
+       }
+      ],
+      "cost": 1750
+     }
     },
     {
      "lvl": 4,
@@ -1933,7 +2300,24 @@ const DATA = {
        "pct": 25.0
       }
      ],
-     "img": "Portal L4"
+     "img": "Portal L4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Bangle",
+        "pct": 20
+       },
+       {
+        "item": "Set of Horns",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     },
     {
      "lvl": 5,
@@ -1960,7 +2344,24 @@ const DATA = {
        "pct": 20.0
       }
      ],
-     "img": "Portal L5"
+     "img": "Portal L5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "Set of Fangs",
+        "pct": 10
+       },
+       {
+        "item": "Bangle",
+        "pct": 20
+       },
+       {
+        "item": "Set of Horns",
+        "pct": 70
+       }
+      ],
+      "cost": 2500
+     }
     }
    ]
   },
@@ -2095,7 +2496,24 @@ const DATA = {
        "pct": 30
       }
      ],
-     "img": "Crashed Saucer 1"
+     "img": "Crashed Saucer 1",
+     "hacked": {
+      "drops": [
+       {
+        "item": "VAR",
+        "pct": 20
+       },
+       {
+        "item": "Alien Skull",
+        "pct": 80
+       }
+      ],
+      "costs": {
+       "mana": 3750,
+       "slime": 3250,
+       "darkness": 2750
+      }
+     }
     },
     {
      "lvl": 2,
@@ -2114,7 +2532,24 @@ const DATA = {
        "pct": 60
       }
      ],
-     "img": "Crashed Saucer 2"
+     "img": "Crashed Saucer 2",
+     "hacked": {
+      "drops": [
+       {
+        "item": "VAR",
+        "pct": 20
+       },
+       {
+        "item": "Alien Skull",
+        "pct": 80
+       }
+      ],
+      "costs": {
+       "mana": 3750,
+       "slime": 3250,
+       "darkness": 2750
+      }
+     }
     },
     {
      "lvl": 3,
@@ -2137,7 +2572,24 @@ const DATA = {
        "pct": 30
       }
      ],
-     "img": "Crashed Saucer 3"
+     "img": "Crashed Saucer 3",
+     "hacked": {
+      "drops": [
+       {
+        "item": "VAR",
+        "pct": 20
+       },
+       {
+        "item": "Alien Skull",
+        "pct": 80
+       }
+      ],
+      "costs": {
+       "mana": 3750,
+       "slime": 3250,
+       "darkness": 2750
+      }
+     }
     },
     {
      "lvl": 4,
@@ -2164,7 +2616,28 @@ const DATA = {
        "pct": 25
       }
      ],
-     "img": "Crashed Saucer 4"
+     "img": "Crashed Saucer 4",
+     "hacked": {
+      "drops": [
+       {
+        "item": "VAR",
+        "pct": 10
+       },
+       {
+        "item": "Alien Skull",
+        "pct": 30
+       },
+       {
+        "item": "Puddle",
+        "pct": 60
+       }
+      ],
+      "costs": {
+       "mana": 6000,
+       "slime": 5500,
+       "darkness": 5000
+      }
+     }
     },
     {
      "lvl": 5,
@@ -2195,7 +2668,28 @@ const DATA = {
        "pct": 20
       }
      ],
-     "img": "Crashed Saucer 5"
+     "img": "Crashed Saucer 5",
+     "hacked": {
+      "drops": [
+       {
+        "item": "VAR",
+        "pct": 10
+       },
+       {
+        "item": "Alien Skull",
+        "pct": 30
+       },
+       {
+        "item": "Puddle",
+        "pct": 60
+       }
+      ],
+      "costs": {
+       "mana": 6000,
+       "slime": 5500,
+       "darkness": 5000
+      }
+     }
     }
    ],
    "variable": {
@@ -2544,6 +3038,18 @@ function dropItem(station, drop, colour) {
 const CHICK_DOUBLE = 0.05;
 
 /**
+ * The drop table and tap cost in force for a station level.
+ *
+ * Hacking a station strips its low-tier drops and raises the tap cost, so it
+ * swaps in a whole different table. Stations nobody has reported hacked
+ * numbers for -- currently just the Foul Chicken -- keep their normal one, so
+ * the toggle is a no-op there rather than a dead end.
+ */
+function activeLevel(station, lv) {
+  return (S.hacked && lv.hacked) ? lv.hacked : lv;
+}
+
+/**
  * Every (station, level) that can contribute to a family, in menu order.
  *
  * `drops` is the raw per-item table, used for display. `eff` is what the
@@ -2554,8 +3060,9 @@ function sourcesFor(famId, colour) {
   const out = [];
   for (const s of DATA.stations) {
     for (const lv of s.levels) {
+      const table = activeLevel(s, lv);
       const drops = [];
-      for (const d of lv.drops) {
+      for (const d of table.drops) {
         const item = dropItem(s, d, colour);
         const info = ITEM[item];
         if (info && info.fam === famId) {
@@ -2565,20 +3072,25 @@ function sourcesFor(famId, colour) {
       if (drops.length) {
         const eff = (S.chick && s.id === 'chicken') ?
             compoundDrops(drops, CHICK_DOUBLE) : drops;
-        out.push({station: s, level: lv, drops, eff});
+        out.push({station: s, level: lv, table, drops, eff});
       }
     }
   }
   return out;
 }
 
-/** What one tap costs, and in which currency. */
-function tapCost(station, lv, colour) {
+/** Tap cost read off one specific table -- a normal level, or a hacked one. */
+function costOf(station, tbl, colour) {
   if (station.id === 'saucer') {
-    return {amount: lv.costs[colour], currency: colour};
+    return {amount: tbl.costs[colour], currency: colour};
   }
   if (station.currency == null) return {amount: 0, currency: null};
-  return {amount: lv.cost, currency: station.currency};
+  return {amount: tbl.cost, currency: station.currency};
+}
+
+/** What one tap costs right now, and in which currency. */
+function tapCost(station, lv, colour) {
+  return costOf(station, activeLevel(station, lv), colour);
 }
 
 // ------------------------------------------------------- merge bonuses
@@ -2617,7 +3129,7 @@ function effectiveValue(fam, tgt, s, d) {
 // ------------------------------------------------------------------- state
 const DEFAULTS = {
   fam: 'zombies', lvl: 3, station: 'grave', slvl: 4,
-  colour: 'mana', inv: {}, skip: 0, dup: 0, chick: false,
+  colour: 'mana', inv: {}, skip: 0, dup: 0, chick: false, hacked: false,
 };
 let S = Object.assign({}, DEFAULTS);
 
@@ -2750,6 +3262,7 @@ function renderStations() {
     if (ok) n.onclick = () => { S.slvl = lv.lvl; render(); };
     lbox.appendChild(n);
   }
+  $('#hacked').checked = !!S.hacked;
   $('#saucerbox').classList.toggle('hidden', S.station !== 'saucer');
   if (S.station === 'saucer') {
     for (const b of $('#colours').children) {
@@ -2841,7 +3354,7 @@ function renderResult() {
   const dbox = $('#droptable');
   dbox.innerHTML = '';
   const evTotal = src.eff.reduce((a, d) => a + d.p * d.w, 0);
-  for (const d of lv.drops) {
+  for (const d of src.table.drops) {
     const item = dropItem(s, d, S.colour);
     const info = ITEM[item];
     const mine = info && info.fam === S.fam;
@@ -2863,6 +3376,16 @@ function renderResult() {
         `Includes the Chick Stone: a ${(CHICK_DOUBLE * 100).toFixed(0)}% chance ` +
         `of two eggs per lay, which is why the yield is above the ` +
         `percentages listed here.`));
+  }
+  if (S.hacked) {
+    dbox.appendChild(el('div', 'hint', lv.hacked ?
+        `Hacked: this ${esc(s.name)} drops only the top component of each ` +
+        `line, and taps cost <b>${fmt(cost.amount)}</b> instead of ` +
+        `<b>${fmt(costOf(s, lv, S.colour).amount)}</b>. That is not always a ` +
+        `win \u2014 lines whose top component is already the lowest tier, like ` +
+        `Scrolls, just get more expensive.` :
+        `Nobody has reported hacked numbers for the ${esc(s.name)}, so it is ` +
+        `shown unhacked.`));
   }
 }
 
@@ -2995,6 +3518,7 @@ function boot() {
     $(id).oninput = () => { S[key] = Number($(id).value); render(); };
   }
   $('#chick').onchange = () => { S.chick = $('#chick').checked; render(); };
+  $('#hacked').onchange = () => { S.hacked = $('#hacked').checked; render(); };
   $('#invclear').onclick = () => { S.inv = {}; render(); };
   render();
   if (S.skip || S.dup || S.chick) $('details.adv').open = true;
