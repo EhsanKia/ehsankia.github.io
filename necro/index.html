@@ -506,22 +506,20 @@ details.adv > summary #advsum {
   <div class="advbody">
     <label class="sl">
       <span>Level skip <b id="skipv">0%</b></span>
-      <input type="range" id="skip" min="0" max="40" step="1" value="0">
-      <small>10% per Archdemon (max 3) plus up to 10% from the Skip relic. A merge jumps two levels instead of one.</small>
+      <input type="range" id="skip" min="0" max="60" step="1" value="0">
+      <small>10% per Archdemon, capped at three, plus the Skip relic. A merge jumps two levels instead of one.</small>
     </label>
     <label class="sl">
       <span>Duplicate on merge <b id="dupv">0%</b></span>
-      <input type="range" id="dup" min="0" max="10" step="1" value="0">
+      <input type="range" id="dup" min="0" max="15" step="1" value="0">
       <small>5% if you own The Infernal. A merge occasionally yields two minions.</small>
     </label>
-    <div class="hint">Both sliders are approximations: they average out a random process, and they are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure.</div>
-    <label class="ck">
-      <input type="checkbox" id="chick">
-      <span>
-        <b>Chick Stone</b>
-        <small>Tip&nbsp;Stone skin, 750 Gold. +5% chance a Foul Chicken lays two eggs at once. Affects Foul Chickens only.</small>
-      </span>
+    <label class="sl">
+      <span>Two eggs at once <b id="eggv">0%</b></span>
+      <input type="range" id="egg" min="0" max="30" step="1" value="0">
+      <small>+5% from the Chick&nbsp;Stone skin (750 Gold). A Foul Chicken lays two eggs on one tick. Affects Foul Chickens only.</small>
     </label>
+    <div class="hint">The sliders are approximations: they average out a random process, and skip and duplicate are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure. The wiki only documents 40% skip, 5% duplicate and 5% two-egg, but players report reaching the ceilings above in current versions.</div>
   </div>
 </details>
 
@@ -3034,9 +3032,6 @@ function dropItem(station, drop, colour) {
   return station.variable[colour] || station.variable.mana;
 }
 
-/** Chick Stone skin: +5% chance a Foul Chicken lays two eggs instead of one. */
-const CHICK_DOUBLE = 0.05;
-
 /**
  * The drop table and tap cost in force for a station level.
  *
@@ -3054,7 +3049,7 @@ function activeLevel(station, lv) {
  *
  * `drops` is the raw per-item table, used for display. `eff` is what the
  * solvers see: identical unless a bonus changes the per-event yield, as the
- * Chick Stone does for Foul Chickens.
+ * two-egg chance does for Foul Chickens.
  */
 function sourcesFor(famId, colour) {
   const out = [];
@@ -3070,8 +3065,10 @@ function sourcesFor(famId, colour) {
         }
       }
       if (drops.length) {
-        const eff = (S.chick && s.id === 'chicken') ?
-            compoundDrops(drops, CHICK_DOUBLE) : drops;
+        // compoundDrops returns its input unchanged at 0, so `eff === drops`
+        // stays the test for "a bonus is in play here".
+        const eff = s.id === 'chicken' ?
+            compoundDrops(drops, S.egg / 100) : drops;
         out.push({station: s, level: lv, table, drops, eff});
       }
     }
@@ -3129,7 +3126,7 @@ function effectiveValue(fam, tgt, s, d) {
 // ------------------------------------------------------------------- state
 const DEFAULTS = {
   fam: 'zombies', lvl: 3, station: 'grave', slvl: 4,
-  colour: 'mana', inv: {}, skip: 0, dup: 0, chick: false, hacked: false,
+  colour: 'mana', inv: {}, skip: 0, dup: 0, egg: 0, hacked: false,
 };
 let S = Object.assign({}, DEFAULTS);
 
@@ -3144,6 +3141,13 @@ function loadState() {
     catch (e) { raw = null; }
   }
   if (raw) S = Object.assign({}, DEFAULTS, raw, {inv: raw.inv || {}});
+  // The two-egg chance used to be a fixed-5% checkbox called `chick`.
+  if (raw && raw.chick && raw.egg == null) S.egg = 5;
+  delete S.chick;
+  // Saved state can predate a cap change, and a shared link can say anything.
+  for (const [k, max] of [['skip', 60], ['dup', 15], ['egg', 30]]) {
+    S[k] = Math.min(max, Math.max(0, Number(S[k]) || 0));
+  }
   if (!FAM[S.fam]) S.fam = DEFAULTS.fam;
 }
 function saveState() {
@@ -3373,9 +3377,8 @@ function renderResult() {
       `${need} \u00f7 ${evTotal.toFixed(2)} \u2248 ${fmtTaps(need / evTotal)} taps`));
   if (src.eff !== src.drops && s.id === 'chicken') {
     dbox.appendChild(el('div', 'hint',
-        `Includes the Chick Stone: a ${(CHICK_DOUBLE * 100).toFixed(0)}% chance ` +
-        `of two eggs per lay, which is why the yield is above the ` +
-        `percentages listed here.`));
+        `Includes a ${S.egg}% chance of two eggs per lay, which is why the ` +
+        `yield is above the percentages listed here.`));
   }
   if (S.hacked) {
     dbox.appendChild(el('div', 'hint', lv.hacked ?
@@ -3478,13 +3481,14 @@ function renderCompare() {
 function renderAdvanced() {
   $('#skip').value = String(S.skip);
   $('#dup').value = String(S.dup);
-  $('#chick').checked = !!S.chick;
+  $('#egg').value = String(S.egg);
   $('#skipv').textContent = S.skip + '%';
   $('#dupv').textContent = S.dup + '%';
+  $('#eggv').textContent = S.egg + '%';
   const bits = [];
   if (S.skip) bits.push(S.skip + '% skip');
   if (S.dup) bits.push(S.dup + '% dupe');
-  if (S.chick) bits.push('Chick Stone');
+  if (S.egg) bits.push(S.egg + '% two-egg');
   $('#advsum').textContent = bits.length ? bits.join(' \u00b7 ') : 'none';
 }
 
@@ -3514,14 +3518,13 @@ function boot() {
       renderCompare();
     };
   }
-  for (const [id, key] of [['#skip', 'skip'], ['#dup', 'dup']]) {
+  for (const [id, key] of [['#skip', 'skip'], ['#dup', 'dup'], ['#egg', 'egg']]) {
     $(id).oninput = () => { S[key] = Number($(id).value); render(); };
   }
-  $('#chick').onchange = () => { S.chick = $('#chick').checked; render(); };
   $('#hacked').onchange = () => { S.hacked = $('#hacked').checked; render(); };
   $('#invclear').onclick = () => { S.inv = {}; render(); };
   render();
-  if (S.skip || S.dup || S.chick) $('details.adv').open = true;
+  if (S.skip || S.dup || S.egg) $('details.adv').open = true;
 }
 
 if (typeof document !== 'undefined') {

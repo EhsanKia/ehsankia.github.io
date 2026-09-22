@@ -9,7 +9,7 @@
  * deploy can never reuse a stale cache and nobody has to remember to bump a
  * version constant by hand.
  */
-const CACHE = 'necro-0176b53ee20c';
+const CACHE = 'necro-f919a40d1f45';
 const ASSETS = [
   './',
   './index.html',
