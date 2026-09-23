@@ -519,6 +519,11 @@ details.adv > summary #advsum {
       <input type="range" id="egg" min="0" max="30" step="1" value="0">
       <small>+5% from the Chick&nbsp;Stone skin (750 Gold). A Foul Chicken lays two eggs on one tick. Affects Foul Chickens only.</small>
     </label>
+    <label class="sl">
+      <span>Chicken lay time <b id="layv">30m</b></span>
+      <input type="range" id="lay" min="0" max="14" step="1" value="0">
+      <small>Every Foul Chicken lays every 30m by default. Up to &minus;9m from the Fouler&nbsp;Chicken spell at level&nbsp;3 and &minus;1m per level of the Chicken relic, capped at level&nbsp;5.</small>
+    </label>
     <div class="hint">The sliders are approximations: they average out a random process, and skip and duplicate are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure. The wiki only documents 40% skip, 5% duplicate and 5% two-egg, but players report reaching the ceilings above in current versions.</div>
   </div>
 </details>
@@ -3018,6 +3023,8 @@ const FAM = {};
 for (const f of DATA.families) FAM[f.id] = f;
 const ST = {};
 for (const s of DATA.stations) ST[s.id] = s;
+/** Base Foul Chicken lay time in seconds, before any reduction. */
+const LAY_BASE = (ST.chicken && ST.chicken.levels[0].seconds) || 1800;
 /** item name -> {famId, value, index} */
 const ITEM = {};
 for (const f of DATA.families) {
@@ -3090,6 +3097,15 @@ function tapCost(station, lv, colour) {
   return costOf(station, activeLevel(station, lv), colour);
 }
 
+/**
+ * How long a Foul Chicken takes to lay, after the Fouler Chicken spell and
+ * the Chicken relic. The base is the same at every level; only the drop table
+ * changes with level.
+ */
+function laySeconds(lv) {
+  return Math.max(60, (lv.seconds || 0) - S.lay * 60);
+}
+
 // ------------------------------------------------------- merge bonuses
 // Two late-game effects make a target cheaper than its nominal scrap value.
 //
@@ -3126,7 +3142,7 @@ function effectiveValue(fam, tgt, s, d) {
 // ------------------------------------------------------------------- state
 const DEFAULTS = {
   fam: 'zombies', lvl: 3, station: 'grave', slvl: 4,
-  colour: 'mana', inv: {}, skip: 0, dup: 0, egg: 0, hacked: false,
+  colour: 'mana', inv: {}, skip: 0, dup: 0, egg: 0, lay: 0, hacked: false,
 };
 let S = Object.assign({}, DEFAULTS);
 
@@ -3145,7 +3161,7 @@ function loadState() {
   if (raw && raw.chick && raw.egg == null) S.egg = 5;
   delete S.chick;
   // Saved state can predate a cap change, and a shared link can say anything.
-  for (const [k, max] of [['skip', 60], ['dup', 15], ['egg', 30]]) {
+  for (const [k, max] of [['skip', 60], ['dup', 15], ['egg', 30], ['lay', 14]]) {
     S[k] = Math.min(max, Math.max(0, Number(S[k]) || 0));
   }
   if (!FAM[S.fam]) S.fam = DEFAULTS.fam;
@@ -3256,7 +3272,7 @@ function renderStations() {
   for (const lv of s.levels) {
     const ok = useful.has(lv.lvl);
     const cost = tapCost(s, lv, S.colour);
-    const sub = s.id === 'chicken' ? fmtTime(lv.seconds) :
+    const sub = s.id === 'chicken' ? fmtTime(laySeconds(lv)) :
         cost.amount ? fmt(cost.amount) : '';
     const n = el('button',
         'chip' + (lv.lvl === S.slvl && ok ? ' on' : '') + (ok ? '' : ' off'),
@@ -3320,7 +3336,7 @@ function renderResult() {
         `<span style="font-size:13px;color:var(--mut);font-weight:500">${cur.name}</span>`;
   } else if (s.id === 'chicken') {
     cbox.classList.remove('hidden');
-    cbox.innerHTML = `<span>${fmtTime(mean * lv.seconds)}</span>` +
+    cbox.innerHTML = `<span>${fmtTime(mean * laySeconds(lv))}</span>` +
         `<span style="font-size:13px;color:var(--mut);font-weight:500">of laying</span>`;
   } else {
     cbox.classList.add('hidden');
@@ -3439,7 +3455,7 @@ function renderCompare() {
       rows.push({
         sid: x.station.id, station: x.station, level: x.level, colour,
         taps, cost: c.amount * taps, currency: c.currency,
-        seconds: x.station.id === 'chicken' ? x.level.seconds * taps : null,
+        seconds: x.station.id === 'chicken' ? laySeconds(x.level) * taps : null,
       });
     }
   }
@@ -3482,13 +3498,18 @@ function renderAdvanced() {
   $('#skip').value = String(S.skip);
   $('#dup').value = String(S.dup);
   $('#egg').value = String(S.egg);
+  $('#lay').value = String(S.lay);
   $('#skipv').textContent = S.skip + '%';
   $('#dupv').textContent = S.dup + '%';
   $('#eggv').textContent = S.egg + '%';
+  // The slider is "minutes shaved", but the number a player recognises is the
+  // resulting lay time, so that is what the label shows.
+  $('#layv').textContent = fmtTime(LAY_BASE - S.lay * 60);
   const bits = [];
   if (S.skip) bits.push(S.skip + '% skip');
   if (S.dup) bits.push(S.dup + '% dupe');
   if (S.egg) bits.push(S.egg + '% two-egg');
+  if (S.lay) bits.push(fmtTime(LAY_BASE - S.lay * 60) + ' lay');
   $('#advsum').textContent = bits.length ? bits.join(' \u00b7 ') : 'none';
 }
 
@@ -3518,13 +3539,15 @@ function boot() {
       renderCompare();
     };
   }
-  for (const [id, key] of [['#skip', 'skip'], ['#dup', 'dup'], ['#egg', 'egg']]) {
+  const sliders = [['#skip', 'skip'], ['#dup', 'dup'], ['#egg', 'egg'],
+                   ['#lay', 'lay']];
+  for (const [id, key] of sliders) {
     $(id).oninput = () => { S[key] = Number($(id).value); render(); };
   }
   $('#hacked').onchange = () => { S.hacked = $('#hacked').checked; render(); };
   $('#invclear').onclick = () => { S.inv = {}; render(); };
   render();
-  if (S.skip || S.dup || S.egg) $('details.adv').open = true;
+  if (S.skip || S.dup || S.egg || S.lay) $('details.adv').open = true;
 }
 
 if (typeof document !== 'undefined') {
