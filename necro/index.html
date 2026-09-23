@@ -521,10 +521,10 @@ details.adv > summary #advsum {
     </label>
     <label class="sl">
       <span>Chicken lay time <b id="layv">30m</b></span>
-      <input type="range" id="lay" min="0" max="14" step="1" value="0">
-      <small>Every Foul Chicken lays every 30m by default. Up to &minus;9m from the Fouler&nbsp;Chicken spell at level&nbsp;3 and &minus;1m per level of the Chicken relic, capped at level&nbsp;5.</small>
+      <input type="range" id="lay" min="0" max="15" step="1" value="0">
+      <small>Every Foul Chicken lays every 30m by default. The Fouler&nbsp;Chicken spell takes off up to &minus;9m at level&nbsp;3, and the Chicken relic another &minus;1m per level, capped at level&nbsp;5.</small>
     </label>
-    <div class="hint">The sliders are approximations: they average out a random process, and skip and duplicate are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure. The wiki only documents 40% skip, 5% duplicate and 5% two-egg, but players report reaching the ceilings above in current versions.</div>
+    <div class="hint">The sliders are approximations: they average out a random process, and skip and duplicate are assumed not to fire on component&nbsp;&rarr;&nbsp;Level&nbsp;1 merges. Leave them at 0 if you are unsure. The wiki only documents 40% skip, 5% duplicate, 5% two-egg and a 16m floor on the lay timer, but players report reaching the ceilings above in current versions.</div>
   </div>
 </details>
 
@@ -3161,7 +3161,7 @@ function loadState() {
   if (raw && raw.chick && raw.egg == null) S.egg = 5;
   delete S.chick;
   // Saved state can predate a cap change, and a shared link can say anything.
-  for (const [k, max] of [['skip', 60], ['dup', 15], ['egg', 30], ['lay', 14]]) {
+  for (const [k, max] of [['skip', 60], ['dup', 15], ['egg', 30], ['lay', 15]]) {
     S[k] = Math.min(max, Math.max(0, Number(S[k]) || 0));
   }
   if (!FAM[S.fam]) S.fam = DEFAULTS.fam;
@@ -3301,7 +3301,7 @@ function renderStations() {
       `(${runeSum(32)}, minus the level 1 Skully hands back).` +
       (s.id === 'chicken' ?
           ' Foul Chickens lay every 30 min at every level \u2014 as little as ' +
-          '16 min with the Fouler Chicken spell and the Chicken relic.' : '');
+          '15 min with the Fouler Chicken spell and the Chicken relic.' : '');
 }
 
 /** The currently selected source, with its useful drops resolved. */
