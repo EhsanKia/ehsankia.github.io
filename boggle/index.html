@@ -357,7 +357,11 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   transition:transform .13s var(--ease-out),box-shadow .13s,background .13s,color .13s;
 }
 .tile span{pointer-events:none;display:block;transform:translateY(calc(var(--td) * -.34))}
-.tile .qu{font-size:.72em}
+.tile{min-width:0;min-height:0}
+/* `.tile span` above also matches the nested .qu span, which made the u a
+   block on its own line -- the extra height is what stretched Qu tiles. */
+.tile > span{white-space:nowrap}
+.tile .qu{display:inline;transform:none;font-size:.72em}
 .tile.sel{
   background:linear-gradient(168deg,#c2a4ff,var(--grape) 48%,var(--grape-lo));
   color:#fff;
@@ -1561,12 +1565,16 @@ function rollDice(size) {
   return dice.map(d => { const f = d[rnd(6)]; return f === 'Q' ? 'QU' : f; });
 }
 
-/* ============================= SOLVER ============================= */
-function solveBoard(board, size, minLen) {
+/* ============================= SOLVER =============================
+   `cov`, if given, is a Uint8Array(size*size) that comes back with a 1 on
+   every cell that takes part in at least one legal word. It costs one
+   extra loop per word found, which is nothing next to the walk itself.
+   ================================================================== */
+function solveBoard(board, size, minLen, cov) {
   const adj = adjacency(size), n = size * size;
   const used = new Uint8Array(n);
   const found = new Set();
-  const buf = [];
+  const buf = [], cells = [];
 
   function walk(i, lo, hi, depth) {
     const face = board[i];
@@ -1576,13 +1584,16 @@ function solveBoard(board, size, minLen) {
       if (a >= b) return;
       d++;
     }
-    buf.push(face);
-    if (d >= minLen && Lex.lenOf(a) === d) found.add(buf.join(''));
+    buf.push(face); cells.push(i);
+    if (d >= minLen && Lex.lenOf(a) === d) {
+      found.add(buf.join(''));
+      if (cov) for (let k = 0; k < cells.length; k++) cov[cells[k]] = 1;
+    }
     used[i] = 1;
     const nb = adj[i];
     for (let k = 0; k < nb.length; k++) if (!used[nb[k]]) walk(nb[k], a, b, d);
     used[i] = 0;
-    buf.pop();
+    buf.pop(); cells.pop();
   }
 
   const [r0, r1] = Lex.root;
@@ -1609,22 +1620,44 @@ function findPath(board, size, word) {
   return null;
 }
 
-/** Roll boards until we get one that's actually fun to play. */
+/** How many cells of a solved board are part of no word at all. */
+const deadCells = cov => { let n = 0; for (let k = 0; k < cov.length; k++) n += 1 - cov[k]; return n; };
+
+/** Roll boards until we get one that's actually fun to play.
+
+    Two requirements, in priority order:
+
+    1. **Every tile is usable.** A letter that is in no word at all is a
+       dead square the player stares at for the whole round wondering what
+       they are missing. Somewhere between 10% (6x6, 5+ letters) and 50%
+       (5x5, 3+) of random rolls pass, so this is a filter, not a search.
+    2. **Enough words.** `target` is roughly the 75th percentile of a
+       random roll for each (size, minLen), measured against the shipped
+       word list -- retune these if the dictionary ever changes.
+
+    A roll plus solve is well under a millisecond, so this can afford to
+    be picky: it keeps rolling until it has both or the budget runs out,
+    and then falls back to the best full-coverage board it saw. Coverage
+    is only ever given up if not one of ~600 rolls achieved it, which the
+    measured rates put at vanishingly unlikely. */
 function makeBoard(size, minLen) {
-  // Roughly the 75th percentile of a random roll for each (size, minLen)
-  // combination, measured against the shipped word list. Aiming this high
-  // means ~1 roll in 4 is accepted immediately and 9 tries almost always
-  // finds one; aiming higher would just burn every attempt and return the
-  // best of nine anyway. Retune these if the dictionary ever changes.
   const target = { 4: { 3: 72, 4: 46, 5: 18 },
                    5: { 3: 168, 4: 125, 5: 58 },
                    6: { 3: 264, 4: 212, 5: 120 } }[size][minLen];
-  let best = null, bestWords = null;
-  for (let attempt = 0; attempt < 9; attempt++) {
+  const n = size * size;
+  const MAX_ROLLS = 600, BUDGET_MS = 250;
+  const t0 = Date.now();
+  let best = null, bestWords = null, bestDead = Infinity;
+  for (let attempt = 0; attempt < MAX_ROLLS; attempt++) {
     const b = rollDice(size);
-    const w = solveBoard(b, size, minLen);
-    if (!best || w.length > bestWords.length) { best = b; bestWords = w; }
-    if (w.length >= target) break;
+    const cov = new Uint8Array(n);
+    const w = solveBoard(b, size, minLen, cov);
+    const dead = deadCells(cov);
+    if (dead < bestDead || (dead === bestDead && w.length > bestWords.length)) {
+      best = b; bestWords = w; bestDead = dead;
+    }
+    if (bestDead === 0 && bestWords.length >= target) break;
+    if (bestDead === 0 && Date.now() - t0 > BUDGET_MS) break;
   }
   return { board: best, words: bestWords };
 }
@@ -4118,7 +4151,12 @@ const Board = (() => {
     root.style.setProperty('--tr', Math.round(cell * .21) + 'px');
     root.style.setProperty('--tf', Math.round(cell * .46) + 'px');
     root.style.setProperty('--td', Math.max(3, Math.round(cell * .075)) + 'px');
-    root.style.gridTemplateColumns = 'repeat(' + size + ',1fr)';
+    // minmax(0,1fr), not 1fr: a bare `1fr` is `minmax(auto,1fr)`, so the
+    // two-glyph "Qu" tile's min-content width pushed its whole column (and
+    // row) wider than the rest. Zero floor = every track exactly equal.
+    const track = 'repeat(' + size + ',minmax(0,1fr))';
+    root.style.gridTemplateColumns = track;
+    root.style.gridTemplateRows = track;
 
     centers = [];
     for (let i = 0; i < size * size; i++) {
