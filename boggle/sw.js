@@ -20,10 +20,16 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
 });
 
+// CacheStorage is per origin, not per scope, and ehsankia.com hosts other apps
+// (/necro/) with their own caches. Only ever clean up our own old versions --
+// deleting every other key wiped the neighbour's offline copy.
+const PREFIX = 'boggle-';
+
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k === CACHE ? null : caches.delete(k))));
+    await Promise.all(keys.map(k =>
+        (k.startsWith(PREFIX) && k !== CACHE ? caches.delete(k) : null)));
     await self.clients.claim();
   })());
 });
