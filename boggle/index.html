@@ -460,54 +460,125 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   color:var(--ink-faint);flex:0 0 auto}
 #rspeed .lock:empty{display:none}
 
-/* the word-by-word reveal stage */
-#rreveal{position:relative;flex:0 0 auto;margin:0 4px 10px;padding:11px 14px 12px;border-radius:var(--r-m);
-  min-height:106px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;
-  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08)}
+/* the word-by-word reveal stage: label, a real-looking board, then the word pill.
+   --mb (board size) is set by Results.fitMini() to whatever the rows leave free. */
+#rreveal{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;margin:0 4px 12px}
 #rreveal.hide{display:none}
-#rphase{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:9px;min-height:14px}
-#rphase b{font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim)}
+#rphase{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:14px}
+#rphase b{font-size:12px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
 #rphase span{font-size:11px;font-weight:800;color:var(--ink-faint)}
 #rphase.uniq b{color:var(--gold)}
 #rphase.final b{color:var(--mint)}
-#rreveal.slim{min-height:0;padding:11px 14px}
+#rphase.finish b{color:var(--rose)}
 #rreveal.slim #rphase{margin-bottom:0}
-#rreveal.slim #rword{display:none}
-#rword{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 12px;min-height:50px}
+#rreveal.slim #rword,#rreveal.slim #rmini{display:none}
+
+#rmini{--mb:260px;position:relative;width:var(--mb);height:var(--mb);display:grid;gap:var(--mg,6px);padding:var(--mg,6px);
+  border-radius:calc(var(--mtr,12px) + 8px);background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.16));
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.07),0 18px 44px -20px rgba(0,0,0,.95)}
+#rmini i{display:grid;place-items:center;min-width:0;min-height:0;border-radius:var(--mtr,10px);font-style:normal;font-weight:900;
+  font-size:var(--mf,24px);line-height:1;letter-spacing:-.02em;color:var(--tile-ink);white-space:nowrap;
+  background:linear-gradient(168deg,#fffdf5 0%,var(--tile) 45%,var(--tile-lo) 100%);
+  box-shadow:0 var(--mtd,4px) 0 #b0a488,inset 0 2px 0 rgba(255,255,255,.95);
+  transition:background .16s,color .16s,box-shadow .16s,transform .22s var(--ease-back)}
+#rmini i.on{background:linear-gradient(168deg,#9dffd0,var(--mint) 48%,#17b06e);color:#04331f;transform:scale(1.06);
+  box-shadow:0 var(--mtd,4px) 0 #0c7d4c,0 0 22px 2px rgba(61,220,151,.7),inset 0 2px 0 rgba(255,255,255,.45)}
+#rmini.u i.on{background:linear-gradient(168deg,#ffe793,var(--gold) 48%,var(--gold-deep));color:#3a1d00;
+  box-shadow:0 var(--mtd,4px) 0 #9c6b00,0 0 22px 2px rgba(255,210,63,.7),inset 0 2px 0 rgba(255,255,255,.5)}
+#rmini svg{position:absolute;inset:var(--mg,6px);width:calc(100% - 2 * var(--mg,6px));height:calc(100% - 2 * var(--mg,6px));
+  pointer-events:none;overflow:visible;z-index:2}
+#rmini polyline{fill:none;stroke:rgba(255,255,255,.7);stroke-linecap:round;stroke-linejoin:round}
+
+/* the gold word pill; finders' avatars hang off its bottom-right corner */
+#rword{position:relative;display:flex;align-items:center;gap:14px;margin-top:14px;min-height:56px;
+  width:min(100%,calc(var(--mb) + 70px));padding:8px 22px;border-radius:99px;color:#3a1d00;
+  background:linear-gradient(180deg,#ffe071,var(--gold) 45%,var(--gold-deep));
+  box-shadow:0 5px 0 #9c6b00,0 16px 30px -12px rgba(255,180,0,.55),inset 0 1px 0 rgba(255,255,255,.6);
+  transition:box-shadow .3s}
 #rword.empty{visibility:hidden}
-#rword .w{grid-area:1/1;min-width:0;font-size:clamp(23px,7.4vw,34px);font-weight:900;letter-spacing:.07em;
-  line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#rword .p{grid-area:1/2/3/3;align-self:center;font-size:clamp(17px,5vw,24px);font-weight:900;
-  color:rgba(255,210,63,.78);white-space:nowrap}
-#rword .finders{grid-area:2/1;display:flex;align-items:center;gap:4px;margin-top:6px;min-height:20px;overflow:hidden}
-#rword .finders .only{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
-#rword.uniq .w{background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;
-  color:transparent}
-#rword.uniq .p{color:var(--gold)}
+#rword.hot{box-shadow:0 5px 0 #9c6b00,0 0 0 3px rgba(255,255,255,.7),0 0 34px 6px rgba(255,210,63,.85),inset 0 1px 0 rgba(255,255,255,.6)}
+#rword .w{flex:1 1 auto;min-width:0;font-size:clamp(24px,8vw,36px);font-weight:900;letter-spacing:.06em;
+  line-height:1.1;overflow:hidden;white-space:nowrap}
+#rword .p{flex:0 0 auto;font-size:clamp(20px,6vw,28px);font-weight:900;white-space:nowrap;opacity:.85}
+#rword .finders{position:absolute;right:-4px;bottom:-18px;display:flex;align-items:center;gap:0}
+#rword .finders .av{margin-left:-7px;box-shadow:0 0 0 2.5px #2a1a55}
+/* E1: rubber stamp on unique words, slapped on the pill's top-left */
+#rword .stamp{position:absolute;left:-6px;top:-14px;padding:3px 9px;border-radius:7px;font-size:12px;font-weight:900;
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;color:#fff;background:var(--rose);
+  box-shadow:0 3px 0 #a3203a,0 0 16px rgba(255,87,115,.6);transform:rotate(-8deg)}
+#rword .stamp.me{background:var(--mint);color:#04331f;box-shadow:0 3px 0 #0c7d4c,0 0 16px rgba(61,220,151,.7)}
 
 #rrows{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 4px 8px}
-.rrow{position:relative;display:flex;align-items:center;gap:11px;padding:11px 13px;margin-bottom:9px;border-radius:var(--r-m);
+.rrow{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:8px;border-radius:var(--r-m);
   background:rgba(255,255,255,.055);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);overflow:hidden;
   transition:box-shadow .3s,background .3s}
-.rrow.moving{will-change:transform}
-.rrow .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--c),transparent);opacity:.19;
-  transition:width .5s var(--ease-out)}
+#rrows.dense .rrow{padding:6px 10px;margin-bottom:6px;gap:8px}
+.rrow.moving{will-change:transform;z-index:2}
+.rrow .fill{position:absolute;inset:0;width:0%;border-radius:inherit;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 42%,transparent),color-mix(in srgb,var(--c) 22%,transparent));
+  box-shadow:inset 0 -3px 0 color-mix(in srgb,var(--c) 80%,transparent);transition:width .5s var(--ease-out)}
 .rrow>*{position:relative}
 .rrow .info{flex:1 1 auto;min-width:0}
-.rrow .nm{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rrow .sub{font-size:11px;color:var(--ink-faint);font-weight:800;margin-top:2px}
-.rrow .sc{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);min-width:74px;text-align:right}
-.rrow .rk{width:26px;text-align:center;font-size:15px;font-weight:900;color:var(--ink-faint)}
+.rrow .top{display:flex;align-items:center;gap:10px;min-width:0}
+.rrow .nm{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 0 auto;max-width:40%}
+.rrow .sub{font-size:11px;color:var(--ink-faint);font-weight:800;white-space:nowrap;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis}
+#rrows:not(.done) .rrow .sub{display:none}
+.rrow .sc{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);min-width:66px;text-align:right}
+.rrow .rk{width:22px;text-align:center;font-size:15px;font-weight:900;color:var(--ink-faint)}
 .rrow.p1{background:linear-gradient(100deg,rgba(255,210,63,.2),rgba(255,255,255,.05));box-shadow:inset 0 0 0 2px rgba(255,210,63,.5)}
 .rrow.p1 .rk{color:var(--gold);font-size:20px}
 .rrow.mine{box-shadow:inset 0 0 0 2px rgba(255,255,255,.4)}
 .rrow.p1.mine{box-shadow:inset 0 0 0 2px rgba(255,210,63,.8)}
-.rrow .wstream{position:absolute;right:94px;top:50%;transform:translateY(-50%);pointer-events:none}
+/* word lane: newest word on the left, older ones slide right and fade out */
+.rrow .lane{flex:1 1 auto;min-width:0;display:flex;gap:4px;height:24px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)}
+.lw{flex:0 0 auto;align-self:center;padding:2px 7px;border-radius:7px;font-size:11px;font-weight:900;letter-spacing:.05em;
+  line-height:16px;white-space:nowrap;color:var(--tile-ink);background:linear-gradient(180deg,#fffdf5,var(--tile));
+  box-shadow:0 2px 0 #b0a488}
+.lw.big{box-shadow:0 2px 0 #b0a488,inset 0 0 0 2px var(--mint)}
+.lw.u{background:linear-gradient(180deg,#ffe071,var(--gold));color:#3a1d00;box-shadow:0 2px 0 #9c6b00}
+/* the flying copy of a word, on its way from the card to a finder's lane */
+.rfly{position:fixed;left:0;top:0;z-index:60;pointer-events:none;font-size:13px;padding:4px 10px;line-height:17px;
+  box-shadow:0 3px 0 #b0a488,0 10px 22px -6px rgba(0,0,0,.6)}
+.rfly.u{box-shadow:0 3px 0 #9c6b00,0 0 20px rgba(255,210,63,.8)}
+/* live race furniture: crown on the current leader, movement badge, callout */
+.rrow .avw{position:relative;flex:0 0 auto}
+.rrow .crown{position:absolute;left:50%;top:-12px;font-size:17px;line-height:1;pointer-events:none;
+  transform:translateX(-50%) scale(0) rotate(-30deg);opacity:0;transition:transform .42s var(--ease-back),opacity .2s;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.rrow.lead .crown{transform:translateX(-50%) scale(1) rotate(-12deg);opacity:1}
+.rrow .mv{position:absolute;left:4px;top:3px;font-size:9.5px;font-weight:900;letter-spacing:.02em;line-height:1;
+  padding:2px 4px;border-radius:5px;opacity:0;pointer-events:none}
+.rrow .mv.up{color:#04331f;background:var(--mint)}
+.rrow .mv.dn{color:#fff;background:rgba(255,87,115,.85)}
+.rrow .call{position:absolute;right:78px;top:3px;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:900;
+  letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:#3a1d00;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffe071,var(--gold));box-shadow:0 0 18px rgba(255,210,63,.7)}
+.rrow .wstream{position:absolute;right:78px;top:50%;transform:translateY(-50%);pointer-events:none}
 .wpop{position:absolute;right:0;top:0;transform:translate(0,-50%);white-space:nowrap;font-size:12px;font-weight:900;
   letter-spacing:.05em;padding:4px 9px;border-radius:99px;background:rgba(0,0,0,.55);
   box-shadow:0 0 0 1.5px rgba(255,255,255,.18);opacity:0}
 .wpop.uniq{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#3a1d00;box-shadow:0 0 16px rgba(255,210,63,.8)}
-.wpop.dup{opacity:.5;text-decoration:line-through}
+
+/* E2: the full-screen moment for 7+ letter words */
+#rbig{position:fixed;inset:0;z-index:77;display:grid;place-items:center;pointer-events:none;
+  background:radial-gradient(60% 40% at 50% 46%,rgba(61,220,151,.22),transparent 70%),rgba(8,4,20,.78)}
+#rbig.u{background:radial-gradient(60% 40% at 50% 46%,rgba(255,210,63,.26),transparent 70%),rgba(8,4,20,.78)}
+#rbig .box{text-align:center;padding:0 16px;max-width:100%}
+#rbig .k{font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:900;color:var(--mint)}
+#rbig.u .k{color:var(--gold)}
+#rbig .w{font-size:clamp(34px,12vw,78px);font-weight:900;letter-spacing:.08em;line-height:1.1;margin:6px 0;
+  background:linear-gradient(180deg,#fff,var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.7));overflow-wrap:anywhere}
+#rbig.u .w{background-image:linear-gradient(180deg,#fff,var(--gold))}
+#rbig .p{font-size:clamp(20px,6vw,32px);font-weight:900;color:var(--gold)}
+#rbig .who{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px;font-size:13px;font-weight:800;color:var(--ink-dim)}
+
+/* E3: photo finish -- a vignette, not a blur, so it costs nothing to composite */
+#scr-results::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s;
+  background:radial-gradient(75% 60% at 50% 45%,transparent 45%,rgba(0,0,0,.72))}
+#scr-results.tense::after{opacity:1}
 
 #rbest{flex:0 0 auto;margin:0 4px 10px;padding:13px 16px;border-radius:var(--r-m);display:flex;align-items:center;gap:13px;
   background:linear-gradient(100deg,rgba(255,210,63,.26),rgba(255,120,180,.12));
@@ -830,6 +901,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     </div>
     <div id="rreveal">
       <div id="rphase"></div>
+      <div id="rmini"><svg><polyline></polyline></svg></div>
       <div id="rword" class="empty">
         <div class="w"></div>
         <div class="p"></div>
@@ -1734,6 +1806,24 @@ const Sound = (() => {
     pop(i) { init(); tone(hz(SC[Math.min(i, 9)] + 24), .09, { type: 'sine', vol: .22 }); },
     coin() { init(); tone(1180, .07, { type: 'square', vol: .16 }); tone(1560, .18, { type: 'square', vol: .14, at: .06 }); },
     whoosh() { init(); noise(.34, { vol: .1, hp: 1200 }); },
+    // Results show: a rising three-note sting when someone takes the lead.
+    lead() { init();[12, 19, 24].forEach((st, i) => tone(hz(st + 12), .26, { type: 'triangle', vol: .28, at: i * .085 })); },
+    // A sprinkle of high notes for a 6-letter word.
+    sparkle() { init();[5, 7, 9, 11, 13].forEach((k, i) => tone(hz(SC[k] + 24), .16, { type: 'sine', vol: .13, at: i * .04 })); },
+    // Whistle up, then a bang with a low thump under it.
+    firework(at = 0) {
+      init();
+      tone(520, .3, { type: 'sine', vol: .07, to: 1500, at });
+      noise(.55, { vol: .2, hp: 250, at: at + .3 });
+      tone(110, .3, { type: 'triangle', vol: .28, to: 40, at: at + .3 });
+    },
+    // Snare roll that speeds up and swells, ending on a hit.
+    drumroll(dur = 1.3) {
+      init();
+      let t = 0, i = 0;
+      while (t < dur) { noise(.05, { vol: .04 + .12 * (t / dur), hp: 900, at: t }); t += Math.max(.028, .085 - .045 * (t / dur)); i++; }
+      noise(.3, { vol: .22, hp: 300, at: dur }); tone(98, .35, { type: 'triangle', vol: .3, at: dur, to: 50 });
+    },
     fanfare() {
       init();
       [[0, 0], [4, .12], [7, .24], [12, .36], [7, .5], [12, .58], [16, .7], [19, .82]]
@@ -3706,7 +3796,9 @@ function beginRound(p, spectate) {
   // countdown, so without this the ring shows a stale number next to the
   // countdown's own "90s" chip.
   $('#ringNum').textContent = p.dur;
-  $('#scoreLbl').textContent = spectate ? 'spectating' : 'points';
+  // Your running score stays hidden until the results show: the header counts
+  // words instead, the same thing everyone else's pips show.
+  $('#scoreLbl').textContent = spectate ? 'spectating' : 'words';
   renderPips();
 
   const wrap = $('#boardwrap');
@@ -4005,6 +4097,12 @@ function renderPips(flashId) {
 /* ===================================================================
    WORD SUBMISSION
    =================================================================== */
+/** What floats up off the board for a new word: praise that grows with the
+ *  length, standing in for the points we no longer show mid-round. */
+function praise(len) {
+  return len >= 8 ? 'Incredible!' : len === 7 ? 'Amazing!' : len === 6 ? 'Great!' : len === 5 ? 'Nice!' : '+1';
+}
+
 function submitWord(word, cells) {
   const R = G.round;
   if (!R || R.ended || R.spectate) return 'no';
@@ -4017,19 +4115,20 @@ function submitWord(word, cells) {
   R.score += pts;
   Sound.good(word.length); buzz(word.length >= 6 ? [10, 24, 16] : 12);
 
-  const sn = $('#scoreNum'), holder = $('#gscore');
-  odometer(sn, R.score - pts, R.score, 420);
+  // No points anywhere during play -- they would spoil the results show.
+  const n = R.words.size, sn = $('#scoreNum'), holder = $('#gscore');
+  odometer(sn, n - 1, n, 300);
+  $('#scoreLbl').textContent = n === 1 ? 'word' : 'words';
   holder.classList.remove('bump'); void holder.offsetWidth; holder.classList.add('bump');
 
   const chip = el('div', 'chip' + (word.length >= 6 ? ' big' : ''), word);
-  chip.appendChild(el('b', null, '+' + pts));
   const strip = $('#fchips');
   strip.insertBefore(chip, strip.firstChild);
   strip.scrollLeft = 0;
   $('#foundCt').textContent = R.words.size + (R.total ? ' / ' + R.total : '');
 
   const r = $('#board').getBoundingClientRect();
-  floatText('+' + pts, r.left + r.width / 2, r.top + r.height / 2);
+  floatText(praise(word.length), r.left + r.width / 2, r.top + r.height / 2);
   if (word.length >= 6) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 26, 6.28, -1.57, 8);
 
   const p = meP(); if (p) p.found = R.words.size;
@@ -4240,7 +4339,7 @@ const Board = (() => {
       bubble.classList.toggle('ok', state === 'ok');
       bubble.classList.toggle('dup', state === 'dup');
       bWord.textContent = w;
-      bPts.textContent = state === 'ok' ? '+' + wordPoints(w.length)
+      bPts.textContent = state === 'ok' ? '✓'
         : state === 'dup' ? 'found' : w.length + (sticky && path.length > 1 ? ' · tap ✓' : '');
     } else {
       bubble.classList.remove('on', 'ok', 'dup');
@@ -4428,19 +4527,24 @@ const Board = (() => {
 /* =====================================================================
    RESULTS — the post-round show
 
-   Deliberately staged so the outcome stays hidden until the end:
+   Staged as a race whose ending stays open until the last few words:
 
      1. SHARED words, shortest first — everyone who found the word scores
         together. Cheap words, small gains, nobody pulls away.
      2. UNIQUE words, shortest first — double points, and this is where the
-        standings actually get decided.
+        standings actually get decided. If the finish is close, the last few
+        are introduced with a "photo finish" drumroll.
      3. Best word.
-     4. Only now do the rows sort themselves into rank order and grow medals.
-     5. Winner splash.
+     4. Medals, then the winner splash.
 
-   Nothing before step 4 is allowed to give the result away: no medals, no
-   leader highlight, no reordering, and the progress bars are scaled to the
-   current leader rather than the final one.
+   Each word is traced on a mini board, then a copy flies from the word card
+   into the lane of every player who found it; their score ticks up as it
+   lands and the rows re-sort live (▲/▼ badges, a crown on the leader, and a
+   callout when the lead changes). The *current* leader is visible, the final
+   one is not: unique words — worth double — come last, so the order can still
+   flip at the end. Bars are scaled to the current leader for the same reason.
+
+   6-letter words get a sparkle; 7+ letters get a full-screen fireworks beat.
    ===================================================================== */
 
 const Results = (() => {
@@ -4450,6 +4554,24 @@ const Results = (() => {
   // Pacing is live: the host can retune it mid-reveal, so the loop reads `gap`
   // fresh on every word rather than closing over a value computed up front.
   let paceIdx = 1, gap = 700, wordCount = 0;
+  let scorers = 0, leader = null;     // live race
+  let mini = [], trail = null;        // mini board tiles + trace line
+  // Every deferred visual (flights, landings, sparkle cleanup) goes through
+  // `later`, so skip/stop can cancel the lot in one go.
+  let timers = new Set();
+  const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function later(fn, ms) {
+    const t = setTimeout(() => { timers.delete(t); fn(); }, ms);
+    timers.add(t);
+  }
+  function killFx() {
+    timers.forEach(clearTimeout); timers.clear();
+    document.querySelectorAll('.rfly').forEach(n => n.remove());
+    const b = $('#rbig'); if (b) b.remove();
+    $('#scr-results').classList.remove('tense');
+    $('#rword').classList.remove('hot');
+  }
 
   /* --------------------------- skippable waits ------------------------- */
   function wait(ms) {
@@ -4463,10 +4585,10 @@ const Results = (() => {
     const r = resolvers; resolvers = [];
     r.forEach(x => { clearTimeout(x.t); x.res(); });
   }
-  function skip() { skipped = true; flushWaits(); }
+  function skip() { skipped = true; flushWaits(); killFx(); }
 
   function stop() {
-    seq++; skipped = true; flushWaits();
+    seq++; skipped = true; flushWaits(); killFx();
     const w = $('#rwin'); if (w) w.remove();
     const s = $('#rstage'); if (s) s.remove();
     FX.clear();
@@ -4532,31 +4654,34 @@ const Results = (() => {
     });
   })();
 
-  /* ------------------------------- FLIP -------------------------------- */
+  /* ------------------------------- FLIP --------------------------------
+     Rows now re-sort on every credited word, often while the previous move
+     is still in flight. So: read each row's *visual* position (layout +
+     whatever transform is mid-animation), mutate, read the new layout
+     position from offsetTop (which ignores transforms), then restart a WAAPI
+     slide from the visual spot. No jump when a move interrupts a move.
+     ------------------------------------------------------------------- */
   function flip(container, mutate) {
     const kids = Array.from(container.children);
-    const before = new Map();
-    kids.forEach(k => before.set(k, k.getBoundingClientRect().top));
+    const base = container.getBoundingClientRect().top - container.scrollTop + container.clientTop;
+    const vis = new Map();
+    kids.forEach(k => vis.set(k, k.getBoundingClientRect().top - base));
     mutate();
-    // Read every new position first, then write every transform. Interleaving
-    // them invalidates layout on each iteration and reflows once per row.
-    const after = Array.from(container.children).map(k => [k, k.getBoundingClientRect().top]);
-    const moved = [];
-    after.forEach(([k, top]) => {
-      const b = before.get(k);
-      if (b == null || b === top) return;
-      k.classList.add('moving');
-      k.style.transition = 'none';
-      k.style.transform = 'translateY(' + (b - top) + 'px)';
-      moved.push(k);
+    const moves = [];
+    Array.from(container.children).forEach(k => {
+      const v = vis.get(k);
+      if (v == null) return;
+      const d = v - k.offsetTop;
+      if (Math.abs(d) > .5) moves.push([k, d]);
     });
-    if (!moved.length) return;
-    requestAnimationFrame(() => {
-      moved.forEach(k => {
-        k.style.transition = 'transform .45s cubic-bezier(.22,1,.36,1)';
-        k.style.transform = '';
-        setTimeout(() => k.classList.remove('moving'), 500);
-      });
+    moves.forEach(([k, d]) => {
+      if (k._flip) k._flip.cancel();
+      if (!CAN_WAAPI) return;
+      k.classList.add('moving');
+      const a = k.animate([{ transform: 'translateY(' + d + 'px)' }, { transform: 'none' }],
+        { duration: 520, easing: 'cubic-bezier(.34,1.32,.64,1)' });
+      k._flip = a;
+      a.onfinish = a.oncancel = () => { if (k._flip === a) { k._flip = null; k.classList.remove('moving'); } };
     });
   }
 
@@ -4566,38 +4691,62 @@ const Results = (() => {
   function buildRows() {
     const box = $('#rrows');
     box.innerHTML = '';
+    box.classList.remove('done');
+    box.classList.toggle('dense', data.players.length > 4);
+    const avSz = data.players.length > 4 ? 32 : 38;
     live = new Map();
     data.players.forEach(p => {
       const row = el('div', 'rrow' + (p.id === G.me.id ? ' mine' : ''));
       row.dataset.id = p.id;
       row.style.setProperty('--c', p.color);
       const fill = el('i', 'fill');
+      const mv = el('div', 'mv');
       const rk = el('div', 'rk', '');
+      const avw = el('div', 'avw');
+      avw.append(avatar(p, avSz), el('span', 'crown', '👑'));
       const info = el('div', 'info');
-      info.appendChild(el('div', 'nm', p.name));
+      // Name and word lane share a line, as in the mockup; the word/unique
+      // summary only appears under the name once the show is over.
+      const top = el('div', 'top');
       const sub = el('div', 'sub', p.spect ? 'spectating' : '0 words');
-      info.appendChild(sub);
+      const lane = el('div', 'lane');
+      top.append(el('div', 'nm', p.name), lane);
+      info.append(top, sub);
       const stream = el('div', 'wstream');
-      // One reusable pop node per row, animated on demand. The old code
-      // created and destroyed one per word per player.
+      // One reusable pop node per row, animated on demand.
       const pop = el('div', 'wpop');
       stream.appendChild(pop);
+      const call = el('div', 'call', 'Takes the lead!');
       const sc = el('div', 'sc mono', '0');
-      row.append(fill, rk, avatar(p, 38), info, stream, sc);
+      row.append(fill, mv, rk, avw, info, stream, call, sc);
       box.appendChild(row);
-      live.set(p.id, { row, sc, sub, fill, rk, pop, score: 0, shown: 0, p });
+      live.set(p.id, { row, sc, sub, fill, rk, pop, lane, mv, call, score: 0, shown: 0, p });
     });
   }
 
+  /** Sort rows by score. Ties keep their current order, so a tie never makes
+   *  rows swap places for no visible reason mid-race. */
   function reorder() {
     const box = $('#rrows');
     flip(box, () => {
+      const at = new Map(Array.from(box.children).map((r, i) => [r, i]));
       const rows = Array.from(box.children).sort((a, b) => {
         const A = live.get(a.dataset.id), B = live.get(b.dataset.id);
         if (A.p.spect !== B.p.spect) return A.p.spect ? 1 : -1;
-        return B.score - A.score || A.p.name.localeCompare(B.p.name);
+        return B.score - A.score || at.get(a) - at.get(b);
       });
       rows.forEach(r => box.appendChild(r));
+    });
+  }
+
+  /** Plain position numbers while the race is on; medals come at the end. */
+  function paintPositions() {
+    let rank = 0, prev = null;
+    Array.from($('#rrows').children).forEach((r, i) => {
+      const L = live.get(r.dataset.id);
+      if (L.p.spect || !L.score) { L.rk.textContent = ''; return; }
+      if (L.score !== prev) { rank = i; prev = L.score; }
+      L.rk.textContent = rank + 1;
     });
   }
 
@@ -4647,23 +4796,102 @@ const Results = (() => {
     $('#rword').classList.add('empty');
   }
 
+  /* ----------------------------- mini board ----------------------------- */
+  function buildMini() {
+    const box = $('#rmini'), n = data.size;
+    box.querySelectorAll('i').forEach(t => t.remove());
+    const track = 'repeat(' + n + ',minmax(0,1fr))';
+    box.style.gridTemplateColumns = track;
+    box.style.gridTemplateRows = track;
+    const svg = $('svg', box);
+    svg.setAttribute('viewBox', '0 0 ' + n + ' ' + n);
+    mini = data.board.map(face => {
+      const t = el('i', null, face === 'QU' ? 'Qu' : face);
+      box.insertBefore(t, svg);
+      return t;
+    });
+    trail = $('polyline', box);
+    trail.setAttribute('points', '');
+    trail.setAttribute('stroke-width', '.2');
+    box.classList.remove('u');
+  }
+
+  /** Make the board as big as the rows allow: start at the width cap, then
+   *  give back whatever the rows would otherwise have to scroll. */
+  function fitMini() {
+    const box = $('#rmini'), rows = $('#rrows');
+    if (!data || $('#rreveal').classList.contains('hide')) return;
+    const set = sz => {
+      const n = data.size, g = Math.max(3, Math.round(sz * (n >= 6 ? .014 : .02)));
+      const cell = (sz - g * (n + 1)) / n;
+      box.style.setProperty('--mb', sz + 'px');
+      box.style.setProperty('--mg', g + 'px');
+      box.style.setProperty('--mf', Math.round(cell * .46) + 'px');
+      box.style.setProperty('--mtr', Math.round(cell * .2) + 'px');
+      box.style.setProperty('--mtd', Math.max(2, Math.round(cell * .07)) + 'px');
+    };
+    const cap = Math.min(rows.clientWidth - 40, 360);
+    set(cap);
+    const deficit = rows.scrollHeight - rows.clientHeight;
+    if (deficit > 0) set(Math.max(150, cap - deficit));
+  }
+  addEventListener('resize', () => { if (live.size) fitMini(); });
+
+  /** Light up the word's path on the mini board, one cell after another. */
+  function trace(r, ms) {
+    const path = findPath(data.board, data.size, r.w) || [];
+    $('#rmini').classList.toggle('u', r.uniq);
+    mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
+    if (!path.length) { trail.setAttribute('points', ''); return; }
+    const n = data.size, step = path.length > 1 ? ms / (path.length - 1) : 0;
+    path.forEach((i, k) => { mini[i].style.transitionDelay = Math.round(k * step) + 'ms'; mini[i].classList.add('on'); });
+    const pts = path.map(i => [(i % n) + .5, ((i / n) | 0) + .5]);
+    trail.setAttribute('points', pts.map(q => q.join(',')).join(' '));
+    let len = 0;
+    for (let k = 1; k < pts.length; k++) len += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
+    trail.style.strokeDasharray = len + ' ' + (len + 1);
+    trail.style.strokeDashoffset = '0';
+    // fill:'backwards' rather than 'both': the resting state lives in the
+    // style, so hundreds of finished animations are never kept alive.
+    if (CAN_WAAPI && ms > 0 && len > 0) {
+      trail.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: ms, easing: 'linear', fill: 'backwards' });
+    }
+  }
+
   function showWord(r) {
     const box = $('#rword');
     box.classList.remove('empty');
     box.classList.toggle('uniq', r.uniq);
-    $('.w', box).textContent = r.w;
-    $('.p', box).textContent = '+' + r.pts.toLocaleString() + (r.uniq ? ' ×2' : '');
+    const wn = $('.w', box);
+    wn.textContent = r.w;
+    // Shrink long words to fit beside the mini board instead of ellipsing
+    // them: the word is the whole point of the card.
+    wn.style.fontSize = '';
+    if (wn.scrollWidth > wn.clientWidth + 1) {
+      wn.style.fontSize = Math.max(13, parseFloat(getComputedStyle(wn).fontSize) * wn.clientWidth / wn.scrollWidth - .5) + 'px';
+    }
+    const pe = $('.p', box);
+    pe.textContent = '+' + r.pts.toLocaleString() + (r.uniq ? ' ×2' : '');
 
     const f = $('.finders', box);
     f.innerHTML = '';
-    if (!r.uniq) {
-      r.ids.forEach(id => {
-        const L = live.get(id);
-        if (L) f.appendChild(avatar(L.p, 20));
-      });
-    } else {
+    r.ids.forEach(id => { const L = live.get(id); if (L) f.appendChild(avatar(L.p, 28)); });
+    const old = $('.stamp', box); if (old) old.remove();
+    if (r.uniq) {
+      // E1: a rubber stamp slams onto the pill for unique words.
       const L = live.get(r.ids[0]);
-      if (L) { f.appendChild(avatar(L.p, 20)); f.appendChild(el('span', 'only', 'only ' + L.p.name)); }
+      if (L) {
+        const me = L.p.id === G.me.id;
+        const st = el('span', 'stamp' + (me ? ' me' : ''), me ? 'Only you!' : 'Only ' + L.p.name);
+        box.appendChild(st);
+        replay(st, [
+          { opacity: 0, transform: 'rotate(-8deg) scale(2.6)' },
+          { opacity: 1, transform: 'rotate(-8deg) scale(.9)', offset: .55 },
+          { opacity: 1, transform: 'rotate(-8deg) scale(1)' },
+        ], 380, 'cubic-bezier(.2,.9,.3,1.2)');
+        replay(pe, [{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .4 }, { transform: 'scale(1)' }], 520,
+          'cubic-bezier(.34,1.56,.64,1)');
+      }
     }
 
     replay(box, [
@@ -4673,54 +4901,233 @@ const Results = (() => {
     ], r.uniq ? 520 : 380);
   }
 
-  /** Credit one word to everyone who found it, all at the same instant. */
-  function credit(r) {
-    const hit = [];
-    r.ids.forEach(id => {
-      const L = live.get(id); if (!L) return;
-      const from = L.score;
-      L.score += r.pts; L.shown++;
-      odometer(L.sc, from, L.score, Math.min(520, Math.max(180, gap * .85)));
-      L.sub.textContent = L.shown + (L.shown === 1 ? ' word' : ' words');
-      L.pop.textContent = '+' + r.pts.toLocaleString();
-      L.pop.classList.toggle('uniq', r.uniq);
-      replay(L.pop, [
-        { opacity: 0, transform: 'translate(16px,-50%) scale(.7)' },
-        { opacity: 1, transform: 'translate(0,-50%) scale(1)', offset: .25 },
-        { opacity: 1, transform: 'translate(0,-50%) scale(1)', offset: .7 },
-        { opacity: 0, transform: 'translate(-12px,-50%) scale(.86)' },
-      ], 900);
-      hit.push(L);
+  /** Send a copy of the word from the card to every finder's lane. Scores
+   *  only change when the copy lands. */
+  function launch(r, ms) {
+    const token = seq;
+    const Ls = r.ids.map(id => live.get(id)).filter(Boolean);
+    if (!Ls.length) return;
+    let pending = Ls.length;
+    const landed = L => {
+      if (token !== seq || skipped) return;
+      land(L, r, pending === Ls.length);
+      if (--pending === 0) race();
+    };
+    if (!CAN_WAAPI || RM || ms <= 0) { Ls.forEach(landed); return; }
+
+    const rng = document.createRange(); rng.selectNodeContents($('#rword .w'));
+    const src = rng.getBoundingClientRect();
+    const sx = src.left + src.width / 2, sy = src.top + src.height / 2;
+    const view = $('#rrows').getBoundingClientRect();
+    // All writes, then all reads, then all animations: one layout, not eight.
+    const flies = Ls.map(() => {
+      const n = el('div', 'lw rfly' + (r.uniq ? ' u' : ''), r.w);
+      document.body.appendChild(n);
+      return n;
     });
+    const geo = Ls.map((L, k) => [flies[k].offsetWidth, L.lane.getBoundingClientRect()]);
+    const T = (x, y, sc, rot) => 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) rotate(' + (rot || 0) + 'deg) scale(' + sc + ')';
+    Ls.forEach((L, k) => {
+      const n = flies[k], [w, lr] = geo[k];
+      const dx = lr.left + w / 2;
+      const dy = clamp(lr.top + lr.height / 2, view.top + 10, view.bottom - 10);
+      const mx = (sx + dx) / 2, my = Math.min(sy, dy) - 36, tilt = dx < sx ? -14 : 14;
+      n.style.transform = T(dx, dy, 1);
+      const a = n.animate([
+        { transform: T(sx, sy, 1.5), opacity: 0 },
+        { transform: T(sx, sy, 1.5), opacity: 1, offset: .08 },
+        { transform: T(mx, my, 1.25, tilt), opacity: 1, offset: .5 },
+        { transform: T(dx, dy, 1), opacity: 1 },
+      ], { duration: ms + k * 45, easing: 'cubic-bezier(.45,0,.3,1)' });
+      a.onfinish = () => { n.remove(); landed(L); };
+      a.oncancel = () => n.remove();
+    });
+  }
 
-    // Bars are scaled to the current leader, not the final one. Pre-scaling
-    // to the final maximum quietly leaks who wins on the very first word.
+  /** One copy of a word arrives in one player's row. */
+  function land(L, r, first) {
+    const from = L.score;
+    L.score += r.pts; L.shown++;
+    odometer(L.sc, from, L.score, Math.min(520, Math.max(180, gap * .85)));
+    L.sub.textContent = L.shown + (L.shown === 1 ? ' word' : ' words');
+
+    const chip = el('div', 'lw' + (r.uniq ? ' u' : r.w.length >= 6 ? ' big' : ''), r.w);
+    L.lane.insertBefore(chip, L.lane.firstChild);
+    while (L.lane.childElementCount > 10) L.lane.lastChild.remove();
+    replay(chip, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], 300,
+      'cubic-bezier(.34,1.56,.64,1)');
+
+    // Bars are scaled to the current leader, not the final one.
     let max = 1;
-    live.forEach(L => { if (L.score > max) max = L.score; });
-    live.forEach(L => { L.fill.style.width = (100 * L.score / max) + '%'; });
+    live.forEach(X => { if (X.score > max) max = X.score; });
+    live.forEach(X => { X.fill.style.width = (100 * X.score / max) + '%'; });
+    pulse(L.row, r.uniq);
 
-    hit.forEach(L => pulse(L.row, r.uniq));
+    // One sound per word, on the first landing.
+    if (first) {
+      if (r.uniq) Sound.coin(); else Sound.pop(Math.min(9, r.w.length - 2));
+      if (r.uniq && r.pts >= 1200) buzz(12);
+    }
+  }
 
-    // One sound for the word, not one per player who found it.
-    if (r.uniq) Sound.coin(); else Sound.pop(Math.min(9, r.w.length - 2));
-    if (r.uniq && r.pts >= 1200) buzz(12);
+  /** Re-sort after a word has fully landed: movement badges, crown, callout. */
+  function race() {
+    if (scorers < 2) { paintPositions(); return; }
+    const box = $('#rrows');
+    const before = new Map(Array.from(box.children).map((r, i) => [r, i]));
+    reorder();
+    const kids = Array.from(box.children);
+    kids.forEach((r, i) => {
+      const d = before.get(r) - i;
+      if (!d) return;
+      const L = live.get(r.dataset.id);
+      L.mv.textContent = (d > 0 ? '▲' : '▼') + Math.abs(d);
+      L.mv.className = 'mv ' + (d > 0 ? 'up' : 'dn');
+      replay(L.mv, [
+        { opacity: 0, transform: 'translateY(4px)' },
+        { opacity: 1, transform: 'none', offset: .12 },
+        { opacity: 1, transform: 'none', offset: .8 },
+        { opacity: 0, transform: 'none' },
+      ], 1500);
+    });
+    paintPositions();
+
+    // The crown only moves on a strict lead; a tie leaves it where it was.
+    const A = live.get(kids[0].dataset.id), B = kids[1] && live.get(kids[1].dataset.id);
+    if (A.p.spect || !A.score || (B && !B.p.spect && B.score >= A.score) || leader === A) return;
+    const prev = leader;
+    if (prev) prev.row.classList.remove('lead');
+    leader = A;
+    A.row.classList.add('lead');
+    if (prev) {
+      replay(A.call, [
+        { opacity: 0, transform: 'translateX(24px) scale(.8)' },
+        { opacity: 1, transform: 'scale(1.06)', offset: .14 },
+        { opacity: 1, transform: 'none', offset: .24 },
+        { opacity: 1, transform: 'none', offset: .82 },
+        { opacity: 0, transform: 'translateX(-12px)' },
+      ], 1700);
+      Sound.lead(); buzz([8, 30, 8]);
+    }
+  }
+
+  /* ---------------------------- E2: big words ---------------------------
+     6 letters: the card glows and sprinkles. 7+: a full-screen beat with
+     fireworks, more of them for 8+. */
+  const PALETTES = [
+    ['#ffd23f', '#fff4c2', '#ff9f43'], ['#3ddc97', '#d6ffe9', '#3bc9ff'],
+    ['#ff5773', '#f472b6', '#ffd6e0'], ['#8b5cf6', '#3bc9ff', '#e4dcff'],
+  ];
+
+  function sparkle(r) {
+    const box = $('#rword');
+    box.classList.add('hot');
+    later(() => box.classList.remove('hot'), 900);
+    Sound.sparkle();
+    if (RM) return;
+    const rng = document.createRange(); rng.selectNodeContents($('#rword .w'));
+    const q = rng.getBoundingClientRect();
+    FX.burst(q.left + q.width / 2, q.top + q.height / 2, 24, 6.283, -1.57, 5.5, r.uniq ? PALETTES[0] : PALETTES[1]);
+  }
+
+  async function fireworks(r) {
+    if (RM) { sparkle(r); return; }
+    const len = r.w.length;
+    const ov = el('div'); ov.id = 'rbig';
+    if (r.uniq) ov.className = 'u';
+    const box = el('div', 'box');
+    box.appendChild(el('div', 'k', (len >= 8 ? 'Incredible' : 'Amazing') + ' · ' + len + ' letters'));
+    const w = el('div', 'w', r.w);
+    box.appendChild(w);
+    box.appendChild(el('div', 'p', '+' + r.pts.toLocaleString() + (r.uniq ? ' ×2' : '')));
+    const who = el('div', 'who');
+    r.ids.forEach(id => { const L = live.get(id); if (L) who.appendChild(avatar(L.p, 26)); });
+    if (r.ids.length === 1) {
+      const L = live.get(r.ids[0]);
+      if (L) who.appendChild(el('span', null, L.p.id === G.me.id ? 'You!' : L.p.name));
+    }
+    box.appendChild(who);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    replay(ov, [{ opacity: 0 }, { opacity: 1 }], 220, 'ease-out');
+    replay(w, [
+      { opacity: 0, transform: 'scale(2.8) rotate(-8deg)' },
+      { opacity: 1, transform: 'scale(.94) rotate(-2deg)', offset: .5 },
+      { opacity: 1, transform: 'scale(1) rotate(0)' },
+    ], 640, 'cubic-bezier(.2,.9,.3,1.15)');
+    buzz(len >= 8 ? [20, 50, 20, 50, 30] : [16, 40, 16]);
+
+    const shots = len >= 8 ? 6 : 4;
+    for (let k = 0; k < shots; k++) {
+      const at = 200 + k * 260;
+      Sound.firework(Math.max(0, at / 1000 - .3));
+      later(() => {
+        if (!ov.isConnected) return;
+        const x = innerWidth * (.14 + Math.random() * .72), y = innerHeight * (.14 + Math.random() * .34);
+        FX.burst(x, y, len >= 8 ? 50 : 42, 6.283, 0, 7.5, PALETTES[k % PALETTES.length]);
+      }, at);
+    }
+    await wait([2000, 1600, 1100][paceIdx] || 1600);
+    if (!ov.isConnected) return;
+    if (skipped || !CAN_WAAPI) { ov.remove(); return; }
+    ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+    later(() => ov.remove(), 250);
+  }
+
+  /* ------------------------ E3: photo finish ----------------------------
+     Only when it is genuinely close: the top two finish within 15%, or the
+     lead is going to change during the last few words. */
+  function closeFinish(list, K) {
+    const scored = data.players.filter(p => !p.spect).sort((a, b) => b.score - a.score);
+    if (scored.length < 2 || !scored[0].score) return false;
+    const [a, b] = scored;
+    if (a.score - b.score <= a.score * .15) return true;
+    const pre = new Map(scored.map(p => [p.id, p.score]));
+    list.slice(-K).forEach(r => r.ids.forEach(id => pre.set(id, (pre.get(id) || 0) - r.pts)));
+    let best = null;
+    pre.forEach((v, id) => { if (best == null || v > pre.get(best)) best = id; });
+    return best !== a.id;
+  }
+
+  async function photoFinish(K) {
+    setPhase('Photo finish', K === 1 ? 'last word' : 'last ' + K + ' words', 'finish');
+    $('#scr-results').classList.add('tense');
+    mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
+    trail.setAttribute('points', '');
+    Sound.drumroll(1.25);
+    buzz([6, 60, 6, 50, 6, 40, 6, 30, 12]);
+    await wait(1500);
   }
 
   async function revealPhase(token, list, title, sub, kind) {
     if (!list.length) return;
     setPhase(title, sub, kind);
     await wait(kind === 'uniq' ? 1000 : 700);
-    for (const r of list) {
+    const K = Math.min(3, list.length);
+    const tenseAt = kind === 'uniq' && scorers > 1 && list.length >= 2 && closeFinish(list, K) ? list.length - K : -1;
+    for (let idx = 0; idx < list.length; idx++) {
+      const r = list[idx];
       if (token !== seq) return;
       if (skipped) break;
+      if (idx === tenseAt) { await photoFinish(K); if (token !== seq) return; if (skipped) break; }
+      const len = r.w.length, slow = tenseAt >= 0 && idx >= tenseAt ? 1.5 : 1;
       showWord(r);
-      credit(r);
+      if (len >= 7) { await fireworks(r); if (token !== seq) return; if (skipped) break; }
+      // The trace and the flight are squeezed into the dwell; on the fastest
+      // paces the trace is dropped so chips are not queuing up behind it.
+      const traceMs = gap * slow >= 300 && !RM ? Math.min(420, gap * slow * .4) : 0;
+      const flyMs = clamp(gap * slow * .55, 240, 520);
+      trace(r, traceMs);
+      later(() => launch(r, flyMs), traceMs);
+      if (len === 6) sparkle(r);
       // Linger on the long words; that is where the drama is.
-      await wait(gap * (1 + Math.min(5, Math.max(0, r.w.length - 4)) * .09));
+      await wait(slow * gap * (1 + Math.min(5, Math.max(0, len - 4)) * .09) + (len === 6 ? 220 : 0));
     }
+    $('#scr-results').classList.remove('tense');
   }
 
   function applyFinalTotals() {
+    $('#rrows').classList.add('done');
     let max = 1;
     data.players.forEach(p => { if (p.score > max) max = p.score; });
     data.players.forEach(p => {
@@ -4732,6 +5139,13 @@ const Results = (() => {
       const uq = p.words.filter(w => w.u).length;
       L.sub.textContent = p.spect ? 'spectating'
         : p.words.length + (p.words.length === 1 ? ' word' : ' words') + (uq ? ' · ' + uq + ' unique' : '');
+      // After a skip the lanes are half-filled; show the player's best words.
+      if (skipped || L.shown !== p.words.length) {
+        L.lane.innerHTML = '';
+        p.words.slice().sort((a, b) => b.w.length - a.w.length || (b.u ? 1 : 0) - (a.u ? 1 : 0)).slice(0, 10)
+          .forEach(w => L.lane.appendChild(el('div', 'lw' + (w.u ? ' u' : w.w.length >= 6 ? ' big' : ''), w.w)));
+        L.shown = p.words.length;
+      }
     });
   }
 
@@ -4920,45 +5334,50 @@ const Results = (() => {
     $('#chalBar').classList.add('hide');
     $('#againMsg').textContent = '';
     const mine = p.players.find(x => x.id === G.me.id);
-    $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters'
-      + (mine && !mine.spect ? ' · you found ' + mine.words.length : '');
+    $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters';
 
+    killFx();
+    leader = null;
     buildRows();
+    buildMini();
+    fitMini();
 
     const plan = buildPlan();
     wordCount = plan.shared.length + plan.unique.length;
     paceIdx = p.pace != null ? p.pace : G.settings.pace;
     recomputeGap();
     paintSpeed();
-    const scorers = data.players.filter(x => !x.spect).length;
+    scorers = data.players.filter(x => !x.spect).length;
 
-    setPhase('Time!', wordCount ? 'counting it all up…' : 'nobody found a thing', '');
+    setPhase('Time!', wordCount ? '' : 'nobody found a thing', '');
     await wait(1200);
     if (token !== seq) return;
 
     if (scorers <= 1) {
-      await revealPhase(token, plan.shared.concat(plan.unique), 'Your words',
-        'shortest first', '');
+      await revealPhase(token, plan.shared.concat(plan.unique), 'Your words', '', '');
     } else {
-      await revealPhase(token, plan.shared, 'Shared words',
-        'found by more than one of you', '');
+      await revealPhase(token, plan.shared, 'Shared words', '', '');
       if (token !== seq) return;
-      await revealPhase(token, plan.unique, 'Unique words',
-        'nobody else found these · double points', 'uniq');
+      await revealPhase(token, plan.unique, 'Unique words', '', 'uniq');
     }
     if (token !== seq) return;
 
+    // Let the last word's copies land before the totals are pinned.
+    if (!skipped) await wait(700);
+    if (token !== seq) return;
+    killFx();
     applyFinalTotals();
     showBest();
     // Skipping should still leave the best word on screen long enough to read.
     await (skipped ? sleep(1200) : wait(1600));
     if (token !== seq) return;
 
-    // Everything above deliberately kept the standings hidden. This is the
-    // moment the rows actually sort themselves out.
+    // The race has been live all along; this beat pins it down with medals.
     setPhase('Final standings', '', 'final');
     Sound.whoosh();
     reorder(); paintRanks();
+    const topScore = Math.max(0, ...data.players.filter(x => !x.spect).map(x => x.score));
+    live.forEach(L => L.row.classList.toggle('lead', scorers > 1 && !L.p.spect && topScore > 0 && L.score === topScore));
     await sleep(skipped ? 900 : 1500);
     if (token !== seq) return;
 
