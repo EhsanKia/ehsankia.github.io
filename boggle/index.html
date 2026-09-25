@@ -462,9 +462,9 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 
 /* the word-by-word reveal stage: label, a real-looking board, then the word pill.
    --mb (board size) is set by Results.fitMini() to whatever the rows leave free. */
-#rreveal{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;margin:0 4px 12px}
+#rreveal{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;margin:2px 4px 28px}
 #rreveal.hide{display:none}
-#rphase{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:14px}
+#rphase{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;min-height:14px}
 #rphase b{font-size:12px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
 #rphase span{font-size:11px;font-weight:800;color:var(--ink-faint)}
 #rphase.uniq b{color:var(--gold)}
@@ -486,11 +486,12 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #rmini.u i.on{background:linear-gradient(168deg,#ffe793,var(--gold) 48%,var(--gold-deep));color:#3a1d00;
   box-shadow:0 var(--mtd,4px) 0 #9c6b00,0 0 22px 2px rgba(255,210,63,.7),inset 0 2px 0 rgba(255,255,255,.5)}
 #rmini svg{position:absolute;inset:var(--mg,6px);width:calc(100% - 2 * var(--mg,6px));height:calc(100% - 2 * var(--mg,6px));
-  pointer-events:none;overflow:visible;z-index:2}
-#rmini polyline{fill:none;stroke:rgba(255,255,255,.7);stroke-linecap:round;stroke-linejoin:round}
+  pointer-events:none;overflow:visible;z-index:2;filter:drop-shadow(0 0 6px rgba(61,220,151,.95))}
+#rmini.u svg{filter:drop-shadow(0 0 6px rgba(255,210,63,.95))}
+#rmini polyline{fill:none;stroke:rgba(255,255,255,.85);stroke-linecap:round;stroke-linejoin:round}
 
 /* the gold word pill; finders' avatars hang off its bottom-right corner */
-#rword{position:relative;display:flex;align-items:center;gap:14px;margin-top:14px;min-height:56px;
+#rword{position:relative;display:flex;align-items:center;gap:14px;margin-top:22px;min-height:54px;
   width:min(100%,calc(var(--mb) + 70px));padding:8px 22px;border-radius:99px;color:#3a1d00;
   background:linear-gradient(180deg,#ffe071,var(--gold) 45%,var(--gold-deep));
   box-shadow:0 5px 0 #9c6b00,0 16px 30px -12px rgba(255,180,0,.55),inset 0 1px 0 rgba(255,255,255,.6);
@@ -520,7 +521,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 .rrow>*{position:relative}
 .rrow .info{flex:1 1 auto;min-width:0}
 .rrow .top{display:flex;align-items:center;gap:10px;min-width:0}
-.rrow .nm{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 0 auto;max-width:40%}
+.rrow .nm{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 0 auto;max-width:64%}
 .rrow .sub{font-size:11px;color:var(--ink-faint);font-weight:800;white-space:nowrap;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis}
 #rrows:not(.done) .rrow .sub{display:none}
@@ -1808,6 +1809,8 @@ const Sound = (() => {
     whoosh() { init(); noise(.34, { vol: .1, hp: 1200 }); },
     // Results show: a rising three-note sting when someone takes the lead.
     lead() { init();[12, 19, 24].forEach((st, i) => tone(hz(st + 12), .26, { type: 'triangle', vol: .28, at: i * .085 })); },
+    // One rising pluck per letter while a word is traced on the results board.
+    trace(k) { init(); tone(hz(SC[Math.min(k, 12)] + 12), .12, { type: 'triangle', vol: .2 }); },
     // A sprinkle of high notes for a 6-letter word.
     sparkle() { init();[5, 7, 9, 11, 13].forEach((k, i) => tone(hz(SC[k] + 24), .16, { type: 'sine', vol: .13, at: i * .04 })); },
     // Whistle up, then a bang with a low thump under it.
@@ -4830,21 +4833,48 @@ const Results = (() => {
       box.style.setProperty('--mtr', Math.round(cell * .2) + 'px');
       box.style.setProperty('--mtd', Math.max(2, Math.round(cell * .07)) + 'px');
     };
-    const cap = Math.min(rows.clientWidth - 40, 360);
+    // About two thirds of the width: big enough to read, small enough that the
+    // pill and the rows get room to breathe.
+    const cap = Math.min(Math.round(rows.clientWidth * .66), 270);
     set(cap);
     const deficit = rows.scrollHeight - rows.clientHeight;
-    if (deficit > 0) set(Math.max(150, cap - deficit));
+    if (deficit > 0) set(Math.max(140, cap - deficit));
   }
   addEventListener('resize', () => { if (live.size) fitMini(); });
 
   /** Light up the word's path on the mini board, one cell after another. */
+  let traceSeq = 0;
+  const tilePop = t => replay(t, [
+    { transform: 'scale(.86)' }, { transform: 'scale(1.24)', offset: .4 }, { transform: 'scale(1.06)' },
+  ], 360, 'cubic-bezier(.34,1.56,.64,1)');
+
   function trace(r, ms) {
     const path = findPath(data.board, data.size, r.w) || [];
+    const ts = ++traceSeq;
     $('#rmini').classList.toggle('u', r.uniq);
     mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
     if (!path.length) { trail.setAttribute('points', ''); return; }
     const n = data.size, step = path.length > 1 ? ms / (path.length - 1) : 0;
-    path.forEach((i, k) => { mini[i].style.transitionDelay = Math.round(k * step) + 'ms'; mini[i].classList.add('on'); });
+    // Each letter lands with its own pop and a rising pluck, like the word
+    // being swiped again; then the whole word flashes once.
+    const plucks = ms >= 180;
+    path.forEach((i, k) => {
+      const go = () => {
+        if (ts !== traceSeq) return;
+        mini[i].classList.add('on');
+        if (ms > 0 && !RM) tilePop(mini[i]);
+        if (plucks) Sound.trace(k);
+      };
+      if (k === 0 || !step) go(); else later(go, Math.round(k * step));
+    });
+    if (ms > 0 && !RM) later(() => {
+      if (ts !== traceSeq) return;
+      path.forEach(i => replay(mini[i], [
+        { transform: 'scale(1.06)', filter: 'brightness(1)' },
+        { transform: 'scale(1.14)', filter: 'brightness(1.25)', offset: .4 },
+        { transform: 'scale(1.06)', filter: 'brightness(1)' },
+      ], 300, 'ease-out'));
+    }, ms + 90);
     const pts = path.map(i => [(i % n) + .5, ((i / n) | 0) + .5]);
     trail.setAttribute('points', pts.map(q => q.join(',')).join(' '));
     let len = 0;
@@ -4895,10 +4925,10 @@ const Results = (() => {
     }
 
     replay(box, [
-      { opacity: 0, transform: 'translateY(14px) scale(.94)' },
-      { opacity: 1, transform: 'none', offset: .3 },
+      { opacity: 0, transform: 'translateY(10px) scale(.62) rotate(-3deg)' },
+      { opacity: 1, transform: 'translateY(0) scale(1.07) rotate(1deg)', offset: .55 },
       { opacity: 1, transform: 'none' },
-    ], r.uniq ? 520 : 380);
+    ], r.uniq ? 520 : 440, 'cubic-bezier(.34,1.56,.64,1)');
   }
 
   /** Send a copy of the word from the card to every finder's lane. Scores
@@ -4908,9 +4938,9 @@ const Results = (() => {
     const Ls = r.ids.map(id => live.get(id)).filter(Boolean);
     if (!Ls.length) return;
     let pending = Ls.length;
-    const landed = L => {
+    const landed = (L, x, y) => {
       if (token !== seq || skipped) return;
-      land(L, r, pending === Ls.length);
+      land(L, r, pending === Ls.length, x, y);
       if (--pending === 0) race();
     };
     if (!CAN_WAAPI || RM || ms <= 0) { Ls.forEach(landed); return; }
@@ -4934,18 +4964,18 @@ const Results = (() => {
       const mx = (sx + dx) / 2, my = Math.min(sy, dy) - 36, tilt = dx < sx ? -14 : 14;
       n.style.transform = T(dx, dy, 1);
       const a = n.animate([
-        { transform: T(sx, sy, 1.5), opacity: 0 },
-        { transform: T(sx, sy, 1.5), opacity: 1, offset: .08 },
-        { transform: T(mx, my, 1.25, tilt), opacity: 1, offset: .5 },
+        { transform: T(sx, sy, 1.1), opacity: 0 },
+        { transform: T(sx, sy - 12, 1.6, -tilt / 3), opacity: 1, offset: .16 },
+        { transform: T(mx, my, 1.3, tilt), opacity: 1, offset: .55 },
         { transform: T(dx, dy, 1), opacity: 1 },
-      ], { duration: ms + k * 45, easing: 'cubic-bezier(.45,0,.3,1)' });
-      a.onfinish = () => { n.remove(); landed(L); };
+      ], { duration: ms + 90 + k * 55, easing: 'cubic-bezier(.5,0,.25,1)' });
+      a.onfinish = () => { n.remove(); landed(L, dx, dy); };
       a.oncancel = () => n.remove();
     });
   }
 
   /** One copy of a word arrives in one player's row. */
-  function land(L, r, first) {
+  function land(L, r, first, x, y) {
     const from = L.score;
     L.score += r.pts; L.shown++;
     odometer(L.sc, from, L.score, Math.min(520, Math.max(180, gap * .85)));
@@ -4954,8 +4984,16 @@ const Results = (() => {
     const chip = el('div', 'lw' + (r.uniq ? ' u' : r.w.length >= 6 ? ' big' : ''), r.w);
     L.lane.insertBefore(chip, L.lane.firstChild);
     while (L.lane.childElementCount > 10) L.lane.lastChild.remove();
-    replay(chip, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], 300,
+    // Impact: the chip squashes in, the score jumps, a few sparks fly.
+    replay(chip, [
+      { opacity: .6, transform: 'scale(1.35,.7)' },
+      { opacity: 1, transform: 'scale(.9,1.12)', offset: .45 },
+      { opacity: 1, transform: 'scale(1)' },
+    ], 360, 'cubic-bezier(.34,1.56,.64,1)');
+    replay(L.sc, [{ transform: 'scale(1)' }, { transform: 'scale(1.28)', offset: .3 }, { transform: 'scale(1)' }], 420,
       'cubic-bezier(.34,1.56,.64,1)');
+    if (x != null && !RM) FX.burst(x, y, r.uniq ? 12 : 7, 6.283, -1.57, r.uniq ? 4 : 3,
+      r.uniq ? PALETTES[0] : ['#fffdf5', '#3ddc97', '#ffd23f']);
 
     // Bars are scaled to the current leader, not the final one.
     let max = 1;
@@ -5115,7 +5153,7 @@ const Results = (() => {
       if (len >= 7) { await fireworks(r); if (token !== seq) return; if (skipped) break; }
       // The trace and the flight are squeezed into the dwell; on the fastest
       // paces the trace is dropped so chips are not queuing up behind it.
-      const traceMs = gap * slow >= 300 && !RM ? Math.min(420, gap * slow * .4) : 0;
+      const traceMs = gap * slow >= 300 && !RM ? Math.min(560, gap * slow * .5) : 0;
       const flyMs = clamp(gap * slow * .55, 240, 520);
       trace(r, traceMs);
       later(() => launch(r, flyMs), traceMs);
