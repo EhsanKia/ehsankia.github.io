@@ -944,6 +944,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 <div class="devpane hide" id="devPane" role="dialog" aria-label="Connection log">
   <div class="row">
     <h4>CONNECTION LOG</h4>
+    <button class="btn ghost sm" id="devDemo">Test results</button>
     <button class="btn ghost sm" id="devClear">Clear</button>
     <button class="btn ghost sm" id="devClose">Close</button>
   </div>
@@ -1502,6 +1503,7 @@ const Dev = (() => {
     document.body.classList.toggle('dev', on);
     $('#devChip').onclick = () => ($('#devPane').classList.contains('hide') ? open() : close());
     $('#devClose').onclick = close;
+    $('#devDemo').onclick = () => { close(); Results.demo(); };
     $('#devCopy').onclick = copy;
     const sh = $('#devShare');
     if (navigator.share) { sh.classList.remove('hide'); sh.onclick = share; }
@@ -5427,7 +5429,61 @@ const Results = (() => {
   $$('#rtabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; Sound.tick(4); renderTab(); });
   $('#btnSkip').onclick = () => { skip(); Sound.tick(2); };
 
-  return { play, stop, skip, setPace, paintSpeed };
+  /* ------------------------------- demo ---------------------------------
+     Dev mode: jump straight to a results show for a made-up 4-player round
+     (you + three bots) on a fresh random board, so the reveal can be looked
+     at without rounding up three other people. Runs as a solo session, so
+     "New board" / "Main menu" afterwards behave exactly as after a solo game. */
+  function demo() {
+    if (G.mode === 'host' || G.mode === 'guest') { toast('Leave the lobby first', 'bad'); return; }
+    G.mode = 'solo';
+    G.challenge = null;
+    const size = pick([4, 5, 6]), minLen = 3;
+    const board = makeBoard(size, minLen).board;
+    const all = solveBoard(board, size, minLen);
+
+    const me = { id: G.me.id, name: G.me.name || 'You', color: G.me.color, av: G.me.av };
+    const pool = ['Samantha', 'Bo', 'Priya', 'Jean-Luc', 'Mo', 'Kai', 'Zed', 'Ines', 'Theo', 'Ana'];
+    const colors = COLORS.filter(c => c !== me.color);
+    const avs = Av.keys.filter(k => k !== me.av);
+    const bots = pool.sort(() => Math.random() - .5).slice(0, 3).map((name, i) => ({
+      id: 'demo' + i, name, color: colors[i % colors.length], av: pick(avs),
+    }));
+    const people = [me].concat(bots);
+
+    // Each player has a "skill": the share of the board's words they find,
+    // with long words rarer. Overlap between them falls out naturally.
+    const found = new Map(people.map(p => [p.id, new Set()]));
+    people.forEach(p => {
+      const skill = .07 + Math.random() * .18;
+      all.forEach(w => { if (Math.random() < skill * Math.pow(.8, Math.max(0, w.length - 4))) found.get(p.id).add(w); });
+    });
+    // Make sure the long-word moments get exercised when the board has them.
+    const longest = all.filter(w => w.length >= 7).sort(() => Math.random() - .5).slice(0, 2);
+    longest.forEach(w => found.get(pick(people).id).add(w));
+    const six = all.filter(w => w.length === 6);
+    if (six.length) found.get(pick(people).id).add(pick(six));
+
+    const seenBy = new Map();
+    found.forEach(set => set.forEach(w => seenBy.set(w, (seenBy.get(w) || 0) + 1)));
+    let best = null;
+    const players = people.map(p => {
+      const words = Array.from(found.get(p.id)).map(w => {
+        const uniq = seenBy.get(w) === 1, pts = wordPoints(w.length) * (uniq ? UNIQUE_MULT : 1);
+        if (!best || pts > best.pts || (pts === best.pts && w.length > best.w.length)) best = { w, pts, id: p.id, uniq };
+        return { w, p: pts, u: uniq ? 1 : 0 };
+      }).sort((a, b) => b.p - a.p || a.w.localeCompare(b.w));
+      return { id: p.id, name: p.name, color: p.color, av: p.av, score: words.reduce((s, x) => s + x.p, 0), words, spect: false };
+    });
+
+    const payload = { t: 'results', rid: 'demo', players, best, multi: true, pace: G.settings.pace,
+      total: all.length, board, size, minLen };
+    Diag.log('dev', 'demo results: ' + size + 'x' + size + ', ' + players.map(p => p.name + ' ' + p.score).join(', '));
+    G.results = payload;
+    play(payload);
+  }
+
+  return { play, stop, skip, setPace, paintSpeed, demo };
 })();
 
 /* ==== 55_lan.js ==== */
