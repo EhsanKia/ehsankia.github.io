@@ -277,6 +277,13 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #avcolors button{width:34px;height:34px;border:0;border-radius:50%;cursor:pointer;background:var(--c);
   box-shadow:0 2px 0 rgba(0,0,0,.3),inset 0 -3px 6px rgba(0,0,0,.18),inset 0 2px 4px rgba(255,255,255,.55)}
 #avcolors button.sel{outline:3px solid #fff;outline-offset:2px}
+#avcolors button.taken{opacity:.22;cursor:not-allowed;box-shadow:none}
+#avNameWrap{display:none;flex:0 0 auto}
+#avsheet.lobby #avNameWrap{display:block}
+.pcard.me{cursor:pointer}
+.pcard.me:active{transform:scale(.985)}
+.pcard .edit{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);
+  padding:4px 8px;border-radius:99px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14)}
 
 #plist{display:flex;flex-direction:column;gap:8px}
 .pcard{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-m);
@@ -932,9 +939,10 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 <div id="avsheet" role="dialog" aria-modal="true" aria-label="Choose your character">
   <div class="sheet">
     <div>
-      <h3>Choose your character</h3>
+      <h3 id="avTitle">Choose your character</h3>
       <div class="sub">Your colour is how the scoreboard tells players apart.</div>
     </div>
+    <label class="field" id="avNameWrap"><input id="avName" maxlength="14" placeholder="Your name" autocomplete="nickname" spellcheck="false"></label>
     <div id="avgrid"></div>
     <div id="avcolors"></div>
     <button class="btn primary" id="avdone">Done</button>
@@ -3761,6 +3769,26 @@ function renderSettings() {
   $('#setLock').textContent = canControl() ? '' : '— set by host';
 }
 
+/** Push an edited name/character/colour from the lobby to everyone. A guest
+ *  asks the host, which owns the roster and has the final say on colour. */
+function updateProfile() {
+  const me = meP();
+  if (me) Object.assign(me, { name: G.me.name, color: G.me.color, av: G.me.av });
+  if (G.mode === 'guest') Net.toHost({ t: 'profile', name: G.me.name, color: G.me.color, av: G.me.av });
+  else if (G.mode === 'host') Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+  if (G.screen === 'lobby') renderLobby();
+}
+
+/** A guest's view of itself follows the host's roster, so a colour the host
+ *  refused (someone took it first) snaps back instead of drifting apart. */
+function syncSelf() {
+  const me = meP();
+  if (!me) return;
+  G.me.name = me.name; G.me.color = me.color; G.me.av = me.av;
+  store.set('color', me.color); store.set('av', me.av);
+  if (typeof paintAvatar === 'function') paintAvatar();
+}
+
 function rosterWire() {
   return roster().map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: !!p.host }));
 }
@@ -3786,7 +3814,14 @@ function renderLobby() {
     row.style.animationDelay = (i * .05) + 's';
     row.appendChild(avatar(p, 40, p.host ? 'crown' : ''));
     row.appendChild(el('div', 'nm', p.name));
-    if (p.id === G.me.id) row.appendChild(el('span', 'badge you', 'You'));
+    if (p.id === G.me.id) {
+      // Your own row is the way into editing your name and character.
+      row.classList.add('me');
+      row.title = 'Edit your name and character';
+      row.onclick = () => Picker.open(true);
+      row.appendChild(el('span', 'edit', '✎ Edit'));
+      row.appendChild(el('span', 'badge you', 'You'));
+    }
     else if (p.host) row.appendChild(el('span', 'badge host', 'Host'));
     if (G.mode === 'host' && p.id !== G.me.id) {
       const k = el('button', 'iconbtn', '✕');
@@ -4096,6 +4131,19 @@ function handleMessage(from, m) {
         if (G.screen === 'game') renderPips();
         break;
       }
+      case 'profile': {
+        const p = G.players.get(from);
+        if (!p) break;
+        p.name = String(m.name || p.name).slice(0, 14).trim() || p.name;
+        const used = roster().filter(q => q.id !== from).map(q => q.color);
+        if (COLORS.includes(m.color) && !used.includes(m.color)) p.color = m.color;
+        p.av = Av.norm(m.av, from);
+        // Everyone, the sender included: its colour may have been refused.
+        Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+        if (G.screen === 'lobby') renderLobby();
+        if (G.screen === 'game') renderPips();
+        break;
+      }
       case 'act': {
         const p = G.players.get(from);
         if (p) { p.found = m.n | 0; renderPips(from); }
@@ -4132,6 +4180,7 @@ function handleMessage(from, m) {
     case 'lobby': {
       const before = G.players.size;
       setPlayersFrom(m.players);
+      syncSelf();
       G.settings = m.settings || G.settings;
       preloadLang();
       if (G.players.size > before) Sound.join(); else if (G.players.size < before) Sound.part();
@@ -5925,8 +5974,15 @@ function paintAvatar() {
 }
 
 /* --------------------------- avatar picker ---------------------------- */
-(function buildPicker() {
+/* One sheet for both places you can be someone: the home screen (character
+   and colour; the name has its own field there) and the lobby, where it also
+   carries the name and pushes the change to everyone on close. */
+const Picker = (function buildPicker() {
   const sheet = $('#avsheet'), grid = $('#avgrid'), cols = $('#avcolors');
+  let inLobby = false;
+  // Colours someone else in the lobby already wears. The host would refuse
+  // them anyway, so they are greyed out rather than silently bounced.
+  const taken = () => inLobby ? roster().filter(p => p.id !== G.me.id).map(p => p.color) : [];
 
   // Built once. Repainting is a class toggle, not a re-render, so opening
   // the sheet never costs 20 SVG parses.
@@ -5955,7 +6011,7 @@ function paintAvatar() {
     b.style.setProperty('--c', c);
     b.dataset.c = c;
     b.onclick = () => {
-      if (G.me.color === c) return;
+      if (G.me.color === c || b.classList.contains('taken')) return;
       G.me.color = c;
       store.set('color', c);
       paint(); paintAvatar(); Sound.tick(4); buzz(6);
@@ -5965,16 +6021,39 @@ function paintAvatar() {
   });
 
   function paint() {
+    const busy = taken();
     cells.forEach(b => b.classList.toggle('sel', b.dataset.k === G.me.av));
-    swatches.forEach(b => b.classList.toggle('sel', b.dataset.c === G.me.color));
+    swatches.forEach(b => {
+      b.classList.toggle('sel', b.dataset.c === G.me.color);
+      b.classList.toggle('taken', busy.includes(b.dataset.c));
+    });
     cells.forEach(b => $('.av', b).style.setProperty('--c', G.me.color));
   }
 
-  const close = () => sheet.classList.remove('on');
-  $('#avbtn').onclick = () => { paint(); sheet.classList.add('on'); Sound.init(); };
+  function open(lobby) {
+    inLobby = !!lobby;
+    sheet.classList.toggle('lobby', inLobby);
+    $('#avTitle').textContent = inLobby ? 'Edit your profile' : 'Choose your character';
+    $('#avName').value = G.me.name;
+    paint();
+    sheet.classList.add('on');
+    Sound.init();
+  }
+  function close() {
+    if (!sheet.classList.contains('on')) return;
+    sheet.classList.remove('on');
+    if (inLobby) {
+      const n = $('#avName').value.trim().slice(0, 14);
+      if (n) { G.me.name = n; $('#nameIn').value = n; store.set('name', n); }
+      updateProfile();
+    }
+  }
+  $('#avbtn').onclick = () => open(false);
   $('#avdone').onclick = close;
+  $('#avName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
   sheet.onclick = e => { if (e.target === sheet) close(); };
   addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  return { open };
 })();
 
 paintAvatar();
