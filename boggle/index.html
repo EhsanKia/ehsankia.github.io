@@ -523,6 +523,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #rrows.dense .rrow{padding:6px 10px;margin-bottom:6px;gap:8px}
 .rrow.moving{will-change:transform;z-index:2}
 .rrow .fill{position:absolute;inset:0;width:0%;border-radius:inherit;
+  background:rgba(255,255,255,.14);box-shadow:inset 0 -3px 0 var(--c);
   background:linear-gradient(90deg,color-mix(in srgb,var(--c) 42%,transparent),color-mix(in srgb,var(--c) 22%,transparent));
   box-shadow:inset 0 -3px 0 color-mix(in srgb,var(--c) 80%,transparent);transition:width .5s var(--ease-out)}
 .rrow>*{position:relative}
@@ -532,7 +533,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 .rrow .sub{font-size:11px;color:var(--ink-faint);font-weight:800;white-space:nowrap;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis}
 #rrows:not(.done) .rrow .sub{display:none}
-.rrow .sc{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);min-width:66px;text-align:right}
+.rrow .sc{flex:0 0 auto;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);min-width:66px;text-align:right}
 .rrow .rk{width:22px;text-align:center;font-size:15px;font-weight:900;color:var(--ink-faint)}
 .rrow.p1{background:linear-gradient(100deg,rgba(255,210,63,.2),rgba(255,255,255,.05));box-shadow:inset 0 0 0 2px rgba(255,210,63,.5)}
 .rrow.p1 .rk{color:var(--gold);font-size:20px}
@@ -686,6 +687,240 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   #fchips{flex-direction:column;overflow-x:hidden;overflow-y:auto;align-items:flex-start;
     -webkit-mask-image:linear-gradient(180deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
 }
+/* ============================ TV MODE (phone side) ============================ */
+/* TV-only furniture stays out of the phone layout entirely. */
+#tvplayers,#tvflash,.tvchrome{display:none}
+.linkbtn{margin-top:16px;font-size:13px;font-weight:800;color:var(--ink-faint);text-decoration:underline;
+  text-underline-offset:3px;opacity:.85}
+.linkbtn:active{opacity:1}
+
+/* "Show it on a TV": same shape as the avatar sheet */
+#tvsheet{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:12px;
+  background:rgba(6,3,16,.82)}
+#tvsheet.on{display:flex}
+#tvsheet .sheet{width:min(520px,100%);max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:13px;
+  padding:20px 18px;border-radius:26px;background:#231348;
+  box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1.5px 0 rgba(255,255,255,.12);animation:sheetUp .3s var(--ease-back) both}
+#tvsheet h3{font-size:17px;letter-spacing:-.01em}
+#tvsheet .sub{font-size:12px;font-weight:700;color:var(--ink-faint);margin-top:3px;line-height:1.45}
+#tvsheet .tvs-sec{display:flex;flex-direction:column;gap:9px;padding:12px;border-radius:var(--r-m);
+  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08)}
+#tvsheet .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:900}
+#tvsheet .tvs-sec p{font-size:13px;font-weight:700;color:var(--ink-dim);line-height:1.45}
+#tvsheet .tvs-sec p b{color:var(--gold);white-space:nowrap}
+#tvsCast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#tvsCast .ico{width:22px;height:22px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#tvsCast.on{background:linear-gradient(180deg,#3ddc97,#17b06e);color:#04331f;box-shadow:0 5px 0 #0c7d4c}
+#tvsCastNote{margin-top:-6px}
+
+/* "Watch the TV": covers the stage while the hidden show runs underneath */
+#scr-results{position:relative}
+#scr-results.watching #rreveal,#scr-results.watching #rrows,#scr-results.watching #rbest{visibility:hidden}
+#rwatch{position:absolute;left:10px;right:10px;bottom:calc(var(--safe-b) + 10px);z-index:7;display:flex;
+  flex-direction:column;align-items:center;gap:12px;text-align:center;animation:scrIn .42s var(--ease-out) both}
+#rwatch.hide{display:none}
+#rwatch .art{margin-top:auto;width:min(62vw,250px);height:auto;filter:drop-shadow(0 0 34px rgba(255,210,63,.22));
+  animation:brandFloat 4.2s ease-in-out infinite}
+#rwatch .art .tvb{fill:#45387f;stroke:#9384de;stroke-width:3}
+#rwatch .art .scr{fill:#170d33}
+#rwatch .art .tl rect{fill:#f7f1e1}
+#rwatch .art .tl rect.on{fill:#3ddc97}
+#rwatch .art .spark path{fill:#ffd23f;transform-box:fill-box;transform-origin:center;animation:twinkle 1.8s ease-in-out infinite}
+#rwatch .art .spark path:nth-child(2){fill:#3ddc97;animation-delay:.45s}
+#rwatch .art .spark path:nth-child(3){animation-delay:.9s}
+#rwatch .art .spark path:nth-child(4){fill:#3ddc97;animation-delay:1.35s}
+@keyframes twinkle{0%,100%{transform:scale(.55);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+#rwatch h3{font-size:30px;font-weight:900;letter-spacing:-.01em}
+#rwatch p{font-size:15px;font-weight:700;color:var(--ink-dim);margin-top:-4px}
+#rwatch .btn{margin-top:auto;max-width:520px}
+
+/* ============================ TV MODE (the big screen) ============================
+   Sized in vh so one layout reads the same on a 720p Chromecast, a 1080p
+   laptop and a 4K browser. Couch distance: nothing smaller than ~1.5vh. */
+body.tv .tvchrome{display:block}
+body.tv.tvplay .tvchrome{display:none}
+body.tv .screen{padding:5vh 4.5vw}
+body.tv.idle,body.tv.idle *{cursor:none!important}
+body.tv #toasts{top:3vh;max-width:80vw}
+body.tv .toast{font-size:2.4vh;padding:1.4vh 3vh}
+body.tv #modal .box{max-width:70vh}
+.tvsound{position:fixed;left:50%;bottom:2.6vh;transform:translateX(-50%);z-index:85;padding:1.1vh 2.6vh;border-radius:99px;
+  font-size:2vh;font-weight:900;color:var(--ink-dim);white-space:nowrap;background:rgba(18,10,42,.9);
+  box-shadow:inset 0 0 0 .2vh var(--glass-line)}
+.tvfull{position:fixed;right:2.4vw;bottom:2.6vh;z-index:85;padding:1vh 2vh;border-radius:1.2vh;font-size:1.8vh;font-weight:900;
+  color:var(--ink-faint);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 .2vh var(--glass-line)}
+.tvfull:hover{color:var(--ink)}
+body.tv .brand .word{gap:1.3vh}
+body.tv .brand .word span{width:10vh;height:10vh;border-radius:2.4vh;font-size:6vh;
+  box-shadow:0 .8vh 0 #b9ad91,0 2vh 4vh -1vh rgba(0,0,0,.65),inset 0 .3vh 0 rgba(255,255,255,.9)}
+body.tv .brand .word span:nth-child(even){box-shadow:0 .8vh 0 #a86f00,0 2vh 4vh -1vh rgba(0,0,0,.65),inset 0 .3vh 0 rgba(255,255,255,.7)}
+.tvpanel,.tvj-panel,.tvl-join,.tvl-players{border-radius:3.4vh;
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.03));
+  box-shadow:inset 0 0 0 .2vh var(--glass-line),0 3vh 6vh -3vh rgba(0,0,0,.75)}
+
+/* ---- join ---- */
+#scr-tvjoin.on{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.2vh}
+.tvj-label{margin-top:-1vh;padding-left:.6em;font-size:2.2vh;font-weight:900;letter-spacing:.6em;text-transform:uppercase;color:var(--ink-faint)}
+.tvj-panels{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:2.4vw;width:min(92vw,165vh);margin-top:1.4vh}
+.tvj-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:5.4vh 3vw;text-align:center;min-width:0}
+.tvj-panel h3{font-size:4.2vh;font-weight:900}
+.tvj-boxes,.tvj-code{display:flex;gap:1.8vh}
+.tvj-boxes{outline:none;cursor:pointer}
+.tvj-boxes b,.tvj-code b{display:grid;place-items:center;width:12vh;height:14vh;border-radius:2.4vh;font-size:9vh;font-weight:900;line-height:1}
+.tvj-boxes b{color:var(--tile-ink);background:linear-gradient(170deg,#fffdf5,var(--tile) 50%,var(--tile-lo));
+  box-shadow:0 .9vh 0 #b9ad91,inset 0 .3vh 0 rgba(255,255,255,.9);transition:box-shadow .15s,transform .15s var(--ease-back)}
+.tvj-boxes b.empty{background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 .3vh rgba(255,255,255,.18)}
+.tvj-boxes b.focus{transform:translateY(-.7vh);box-shadow:0 .9vh 0 #b9ad91,0 0 0 .55vh var(--gold),0 0 5vh rgba(255,210,63,.55),inset 0 .3vh 0 rgba(255,255,255,.9)}
+.tvj-boxes b.empty.focus{box-shadow:0 0 0 .55vh var(--gold),0 0 5vh rgba(255,210,63,.45)}
+.tvj-boxes b.empty.focus::after{content:"";width:.5vh;height:7vh;border-radius:99px;background:var(--gold);animation:blink 1.1s ease-in-out infinite}
+.tvj-boxes.shake{animation:tileBad .45s ease-in-out}
+.tvj-in{position:absolute;left:-9999px;opacity:0;width:1px;height:1px}
+.tvj-hint{font-size:2.2vh;font-weight:800;color:var(--ink-faint)}
+.tvj-status{min-height:3.2vh;font-size:2.5vh;font-weight:900;color:var(--ink-dim)}
+.tvj-status.bad{color:#ff8197}
+.tvj-status.busy::before{content:"";display:inline-block;width:2.2vh;height:2.2vh;margin-right:1.2vh;vertical-align:-.35vh;border-radius:50%;
+  border:.4vh solid rgba(255,255,255,.2);border-top-color:var(--gold);animation:spin .8s linear infinite}
+.tvj-or{display:flex;flex-direction:column;align-items:center;gap:1.6vh}
+.tvj-or::before,.tvj-or::after{content:"";flex:1;width:.25vh;border-radius:99px;background:var(--glass-line)}
+.tvj-or span{padding:1vh 1.6vh;border-radius:1.4vh;font-size:2.2vh;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-dim);background:rgba(255,255,255,.07)}
+.tvj-say{font-size:3.2vh;font-weight:800;line-height:1.38;max-width:28ch}
+.tvj-say b{color:var(--gold);white-space:nowrap}
+.tvj-code b{color:#3a1d00;background:linear-gradient(170deg,#ffe793,var(--gold) 50%,var(--gold-deep));
+  box-shadow:0 .9vh 0 #a86f00,0 2vh 4vh -1vh rgba(0,0,0,.6),inset 0 .3vh 0 rgba(255,255,255,.7);animation:codePop .5s var(--ease-back) both}
+.tvj-wait{display:none}
+#tvjPair.wait .tvj-wait{display:block}
+#tvjPair.wait .tvj-code{opacity:.35}
+.tvj-foot{font-size:2.2vh;font-weight:800;color:var(--ink-faint)}
+.tvj-exit{position:fixed;left:2.4vw;bottom:2.6vh;margin:0;font-size:1.7vh;opacity:.6}
+body.tv.tvplay .tvj-exit{display:none}
+.tvj-foot b{color:var(--ink-dim)}
+
+/* ---- lobby ---- */
+#scr-tvlobby.on{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,60fr);gap:3vw;align-items:center}
+.tvl-join{display:flex;flex-direction:column;align-items:center;gap:3vh;padding:4.4vh 2.6vw;text-align:center;min-width:0}
+.tvl-join h2,.tvl-players h2{font-size:3vh;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.tvl-code{display:flex;gap:1.6vh}
+.tvl-code b{display:grid;place-items:center;width:11vh;height:13vh;border-radius:2.2vh;font-size:8.6vh;font-weight:900;line-height:1;
+  color:var(--tile-ink);background:linear-gradient(170deg,#fffdf5,var(--tile) 50%,var(--tile-lo));
+  box-shadow:0 .9vh 0 #b9ad91,0 2vh 4vh -1vh rgba(0,0,0,.6),inset 0 .3vh 0 rgba(255,255,255,.9);animation:codePop .5s var(--ease-back) both}
+.tvl-qr{background:#fff;border-radius:2.4vh;padding:1.4vh;line-height:0;box-shadow:0 2vh 5vh -2vh rgba(0,0,0,.8)}
+.tvl-qr canvas{width:31vh;height:31vh;image-rendering:pixelated}
+.tvl-join p{font-size:2.4vh;font-weight:800;color:var(--ink-dim);line-height:1.4;max-width:30ch}
+.tvl-join p b{color:var(--gold);white-space:nowrap}
+.tvl-right{display:flex;flex-direction:column;gap:3.2vh;min-width:0}
+.tvl-players{padding:4vh 2.8vw 4.6vh}
+.tvl-players h2{color:var(--ink-faint);letter-spacing:.16em}
+.tvl-players h2 span{color:var(--gold)}
+#tvlGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3.6vh 1.4vw;margin-top:3.6vh}
+.tvl-p{position:relative;display:flex;flex-direction:column;align-items:center;gap:1.6vh;min-width:0;animation:pIn .45s var(--ease-back) both}
+.tvl-p .av{--sz:13vh!important}
+.tvl-p .nm{font-size:2.8vh;font-weight:900;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tvl-p .hostb{position:absolute;top:11.2vh;left:50%;transform:translateX(-50%);padding:.35vh 1.2vh;border-radius:99px;
+  font-size:1.5vh;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#3a1d00;
+  background:linear-gradient(180deg,#ffe071,var(--gold));box-shadow:0 .3vh 0 #9c6b00}
+.tvl-p.empty{animation:none}
+.tvl-p.empty .slot{width:13vh;height:13vh;border-radius:3vh;border:.3vh dashed rgba(255,255,255,.2)}
+.tvl-p.empty .nm{color:var(--ink-faint);font-weight:800;font-size:2.4vh;opacity:.8}
+.tvl-set{display:flex;flex-wrap:wrap;gap:1.4vh;justify-content:center}
+.tvl-set span{padding:1.1vh 2.6vh;border-radius:99px;font-size:2.6vh;font-weight:900;color:var(--gold);
+  background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 .2vh rgba(255,210,63,.35)}
+.tvl-set span:first-child{color:#3a1d00;background:linear-gradient(180deg,#ffe071,var(--gold));box-shadow:none}
+.tvl-wait{font-size:3.2vh;font-weight:900;text-align:center}
+.tvl-badge{position:fixed;top:3vh;right:3vw;padding:1vh 2vh;border-radius:1.4vh;font-size:2vh;font-weight:900;color:var(--ink-dim);
+  background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 .2vh var(--glass-line)}
+
+/* ---- round ---- */
+body.tv #scr-game.on{display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  gap:0 3.4vw;width:100%;max-width:none;margin:0}
+body.tv #gtop{grid-column:2;grid-row:1;justify-content:center;padding:0 0 3.6vh}
+body.tv #gscore,body.tv #gpips,body.tv #found{display:none}
+body.tv #boardwrap{grid-column:1;grid-row:1/3;position:relative;align-items:flex-end;padding:0}
+body.tv #board.locked{filter:none}
+body.tv #board.locked.done{filter:saturate(.45) brightness(.72)}
+body.tv .ring{width:21vh;height:21vh}
+body.tv .ring b{font-size:8.6vh}
+body.tv #tvplayers{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:1.5vh;min-height:0;align-content:start}
+body.tv #tvplayers.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.tvp{position:relative;display:flex;align-items:center;gap:1.8vh;min-width:0;padding:1.1vh 2.8vh 1.1vh 1.1vh;border-radius:99px;
+  /* plain fallbacks first: an older Cast receiver may not know color-mix() */
+  background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 .25vh rgba(255,255,255,.16);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 32%,rgba(20,10,46,.7)),rgba(255,255,255,.05));
+  box-shadow:inset 0 0 0 .25vh color-mix(in srgb,var(--c) 55%,transparent),0 1.4vh 3vh -1.6vh rgba(0,0,0,.8)}
+.tvp .av{--sz:8.6vh!important}
+.tvp .nm{flex:1 1 auto;min-width:0;font-size:3.4vh;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tvp .ct{flex:0 0 auto;text-align:right;line-height:1}
+.tvp .ct b{display:block;font-size:5vh;font-weight:900}
+.tvp .ct small{display:block;margin-top:.4vh;font-size:1.5vh;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim)}
+.tvp .plus{position:absolute;right:-.4vh;top:-1.6vh;padding:.4vh 1.2vh;border-radius:99px;font-style:normal;font-size:2vh;font-weight:900;
+  color:#04331f;background:var(--mint);box-shadow:0 0 2vh rgba(61,220,151,.7);opacity:0;pointer-events:none}
+#tvplayers.two .tvp{gap:1.2vh;padding-right:2vh}
+#tvplayers.two .tvp .av{--sz:7vh!important}
+#tvplayers.two .tvp .nm{font-size:2.6vh}
+#tvplayers.two .tvp .ct b{font-size:4vh}
+body.tv #tvflash{display:flex;position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:9;align-items:center;gap:1.6vh;
+  padding:1.5vh 4vh;border-radius:99px;white-space:nowrap;font-size:3.2vh;font-weight:900;color:#3a1d00;
+  background:linear-gradient(180deg,#ffe58a,var(--gold) 55%,var(--gold-deep));
+  box-shadow:0 .7vh 0 #9c6b00,0 0 6vh rgba(255,210,63,.55),inset 0 .2vh 0 rgba(255,255,255,.7);
+  opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+body.tv #tvflash.on{opacity:1;visibility:visible}
+body.tv #tvflash.huge{color:#04331f;background:linear-gradient(180deg,#a5ffd6,var(--mint) 55%,#17b06e);
+  box-shadow:0 .7vh 0 #0c7d4c,0 0 7vh rgba(61,220,151,.6),inset 0 .2vh 0 rgba(255,255,255,.7)}
+#tvflash .sp{font-size:3.4vh}
+body.tv #cd .box{gap:4vh}
+body.tv #cd .set{gap:1.4vh}
+body.tv #cd .set span{font-size:2.4vh;padding:1.2vh 2.6vh}
+body.tv #cd b{font-size:42vh}
+body.tv #rstage .slam{font-size:22vh}
+
+/* ---- results show ---- */
+body.tv #scr-results.on{display:grid;grid-template-columns:minmax(0,43fr) minmax(0,57fr);grid-template-rows:minmax(0,1fr);
+  gap:0 3.4vw;align-items:stretch;max-width:none;margin:0;padding:5vh 4.5vw}
+body.tv #rhead,body.tv #rspeed,body.tv #rtabs,body.tv #rbest,body.tv #rwatch,body.tv #scr-results>.wrap{display:none!important}
+body.tv #rreveal{grid-column:1;grid-row:1;margin:0;justify-content:center;min-height:0;min-width:0}
+body.tv #rphase{margin-bottom:2.8vh;min-height:3vh}
+body.tv #rphase b{font-size:2.6vh;letter-spacing:.24em}
+body.tv #rphase span{font-size:2.2vh}
+body.tv #rword{margin-top:4.4vh;min-height:10vh;gap:2.4vh;padding:1.4vh 4.4vh;width:min(100%,calc(var(--mb) + 14vh));
+  box-shadow:0 .8vh 0 #9c6b00,0 2.4vh 5vh -2vh rgba(255,180,0,.55),inset 0 .2vh 0 rgba(255,255,255,.6)}
+body.tv #rword.hot{box-shadow:0 .8vh 0 #9c6b00,0 0 0 .5vh rgba(255,255,255,.7),0 0 7vh 1vh rgba(255,210,63,.85)}
+body.tv #rword .w{font-size:6.4vh}
+body.tv #rword .p{font-size:4.6vh}
+body.tv #rword .finders{right:-1vh;bottom:-3.4vh}
+body.tv #rword .finders .av{--sz:6.4vh!important;margin-left:-1.4vh;box-shadow:0 0 0 .45vh #2a1a55}
+body.tv #rword .stamp{left:-1.4vh;top:-2.8vh;padding:.6vh 1.8vh;font-size:2.2vh;border-radius:1.2vh}
+body.tv #rtvwait{margin-top:4.6vh;font-size:2.5vh;font-weight:900;color:var(--ink-dim);text-align:center;line-height:1.35}
+#rtvwait{display:none}
+body.tv #rtvwait:not(.hide){display:block}
+body.tv #rrows{grid-column:2;grid-row:1;display:flex;flex-direction:column;justify-content:center;gap:1.6vh;overflow:visible;padding:0}
+body.tv .rrow,body.tv #rrows.dense .rrow{flex:0 0 auto;height:var(--rh);margin:0;padding:0 2.8vh 0 2vh;gap:2vh;border-radius:2.2vh}
+body.tv .rrow .av{--sz:calc(var(--rh) * .64)!important}
+body.tv .rrow .rk{width:5vh;font-size:calc(var(--rh) * .3)}
+body.tv .rrow.p1 .rk{font-size:calc(var(--rh) * .38)}
+body.tv .rrow .top{gap:2vh}
+body.tv .rrow .nm{font-size:calc(var(--rh) * .3);max-width:56%}
+body.tv .rrow .lane{height:calc(var(--rh) * .42);gap:.8vh}
+body.tv .lw{font-size:calc(var(--rh) * .2);line-height:1.4;padding:.12em .6em;border-radius:.55em;box-shadow:0 .35vh 0 #b0a488}
+body.tv .lw.u{box-shadow:0 .35vh 0 #9c6b00}
+body.tv .lw.big{box-shadow:0 .35vh 0 #b0a488,inset 0 0 0 .3vh var(--mint)}
+body.tv .rrow .sub{font-size:calc(var(--rh) * .17)}
+body.tv .rrow .sc{font-size:calc(var(--rh) * .4);min-width:18vh}
+body.tv .rrow .crown{font-size:calc(var(--rh) * .3);top:calc(var(--rh) * -.16)}
+body.tv .rrow .mv{left:.8vh;top:.6vh;font-size:1.7vh;padding:.3vh .7vh;border-radius:.7vh}
+body.tv .rrow .call,body.tv .rrow .wstream{right:21vh}
+body.tv .rrow .call{top:.6vh;font-size:1.7vh;padding:.3vh 1.2vh}
+body.tv .rfly{font-size:2.6vh;padding:.6vh 1.6vh;line-height:1.3;border-radius:1vh}
+body.tv #rbig .k{font-size:2.6vh}
+body.tv #rbig .w{font-size:14vh}
+body.tv #rbig .p{font-size:6vh}
+body.tv #rbig .who{font-size:3vh;gap:1.4vh;margin-top:2.4vh}
+body.tv #rbig .who .av{--sz:6vh!important}
+body.tv #rwin .av{--sz:24vh!important;margin-bottom:3vh}
+body.tv #rwin .row .av{--sz:18vh!important}
+body.tv #rwin .nm{font-size:11vh}
+body.tv #rwin .k{font-size:2.8vh;margin-top:1vh}
+body.tv #rwin .sc{font-size:6vh;margin-top:2.4vh}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
 }
@@ -734,6 +969,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
           <button class="iconbtn" id="btnSound" title="Sound">🔊</button>
           <button class="iconbtn" id="btnHelp" title="How to play">?</button>
         </div>
+        <button class="linkbtn" id="btnTvMode">📺 Use this screen as a TV</button>
       </div>
     </div>
   </section>
@@ -759,6 +995,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
           <h2 class="hd" style="margin-bottom:11px">Players <span id="pcount" style="color:var(--gold)"></span></h2>
           <div id="plist"></div>
           <button class="btn ghost sm hide" id="btnInvite" style="margin-top:12px;width:100%">📷 Show an invite code</button>
+          <button class="btn ghost sm hide" id="btnTv" style="margin-top:12px;width:100%">📺 Show it on a TV</button>
         </div>
 
         <div class="card">
@@ -885,8 +1122,10 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
       <div id="gpips"></div>
     </div>
     <div id="boardwrap">
+      <div id="tvflash"><span class="sp">✨</span><b></b><span class="sp">✨</span></div>
       <div id="board"><svg id="trail"></svg><div id="bubble"><span id="bubbleW"></span><span class="pts" id="bubbleP"></span></div></div>
     </div>
+    <div id="tvplayers"></div>
     <div id="found">
       <div class="hdr">
         <span><span id="foundLbl">Your words</span><i id="minBadge"></i></span>
@@ -916,6 +1155,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
         <div class="p"></div>
         <div class="finders"></div>
       </div>
+      <div id="rtvwait" class="hide"></div>
     </div>
     <div id="rbest" class="hide"></div>
     <div id="rtabs" class="hide">
@@ -924,6 +1164,21 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
       <button data-t="all">Board</button>
     </div>
     <div id="rrows" class="scrolly"></div>
+    <div id="rwatch" class="hide">
+      <svg class="art" viewBox="0 0 220 170" aria-hidden="true">
+        <g class="spark"><path d="M30 34l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M188 22l2.4 6 6 2.4-6 2.4-2.4 6-2.4-6-6-2.4 6-2.4z"/><path d="M196 104l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M16 112l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></g>
+        <rect x="34" y="26" width="152" height="104" rx="14" class="tvb"/>
+        <rect x="44" y="36" width="132" height="84" rx="8" class="scr"/>
+        <g class="tl"><rect x="78" y="45" width="15" height="15" rx="3"/><rect x="96" y="45" width="15" height="15" rx="3"/><rect x="114" y="45" width="15" height="15" rx="3"/><rect x="132" y="45" width="15" height="15" rx="3"/>
+          <rect x="78" y="63" width="15" height="15" rx="3"/><rect x="96" y="63" width="15" height="15" rx="3" class="on"/><rect x="114" y="63" width="15" height="15" rx="3" class="on"/><rect x="132" y="63" width="15" height="15" rx="3"/>
+          <rect x="78" y="81" width="15" height="15" rx="3"/><rect x="96" y="81" width="15" height="15" rx="3"/><rect x="114" y="81" width="15" height="15" rx="3" class="on"/><rect x="132" y="81" width="15" height="15" rx="3"/>
+          <rect x="78" y="99" width="15" height="15" rx="3"/><rect x="96" y="99" width="15" height="15" rx="3"/><rect x="114" y="99" width="15" height="15" rx="3"/><rect x="132" y="99" width="15" height="15" rx="3"/></g>
+        <path d="M96 130h28l6 16H90z" class="tvb"/><rect x="74" y="144" width="72" height="8" rx="4" class="tvb"/>
+      </svg>
+      <h3>Watch the TV 📺</h3>
+      <p>The results are playing on the big screen.</p>
+      <button class="btn ghost" id="btnWatchHere">Show it here instead</button>
+    </div>
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
       <div id="chalBar" class="chalbar hide"></div>
       <button class="btn primary" id="btnAgain"><span class="shine"></span>Play again</button>
@@ -931,6 +1186,48 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
       <button class="btn ghost hide" id="btnBack" style="margin-top:10px">Back</button>
       <p class="muted" id="againMsg" style="margin-top:10px"></p>
     </div>
+  </section>
+
+  <!-- ============ TV: JOIN ============ -->
+  <section id="scr-tvjoin" class="screen">
+    <div class="brand"><div class="word" id="brandtv"></div></div>
+    <div class="tvj-label">TV screen</div>
+    <div class="tvj-panels">
+      <div class="tvj-panel">
+        <h3>Enter the room code</h3>
+        <div class="tvj-boxes" id="tvjBoxes" tabindex="0" role="textbox" aria-label="Room code"></div>
+        <input id="tvjIn" class="tvj-in" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code">
+        <p class="tvj-hint">Use your remote's arrows and OK, or a keyboard</p>
+        <p class="tvj-status" id="tvjStatus"></p>
+      </div>
+      <div class="tvj-or"><span>or</span></div>
+      <div class="tvj-panel" id="tvjPair">
+        <p class="tvj-say">On a phone that's in the lobby, tap <b>📺 Show it on a TV</b> and enter:</p>
+        <div class="tvj-code" id="tvjCode"></div>
+        <p class="tvj-hint tvj-wait">Connecting…</p>
+      </div>
+    </div>
+    <p class="tvj-foot">Create a lobby on your phone at <b id="tvjUrl"></b></p>
+    <button class="linkbtn tvj-exit" id="tvjExit">Not a TV? Play on this device instead</button>
+  </section>
+
+  <!-- ============ TV: LOBBY ============ -->
+  <section id="scr-tvlobby" class="screen">
+    <div class="tvl-join">
+      <h2>Join on your phone</h2>
+      <div class="tvl-code" id="tvlCode"></div>
+      <div class="tvl-qr"><canvas id="tvlQr" width="1" height="1"></canvas></div>
+      <p>Scan with your camera, or go to <b id="tvlUrl"></b> and enter the code</p>
+    </div>
+    <div class="tvl-right">
+      <div class="tvl-players">
+        <h2>Players <span id="tvlCount"></span></h2>
+        <div id="tvlGrid"></div>
+      </div>
+      <div class="tvl-set" id="tvlSet"></div>
+      <div class="tvl-wait" id="tvlWait"></div>
+    </div>
+    <div class="tvl-badge hide" id="tvlScreens"></div>
   </section>
 
 </main>
@@ -947,6 +1244,36 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
     <div id="avcolors"></div>
     <button class="btn primary" id="avdone">Done</button>
   </div>
+</div>
+
+<div id="tvsheet" role="dialog" aria-modal="true" aria-label="Show it on a TV">
+  <div class="sheet">
+    <div>
+      <h3>Show it on a TV</h3>
+      <div class="sub">Everyone keeps playing on their phone. The TV shows the board, the clock and the results show.</div>
+    </div>
+    <button class="btn grape hide" id="tvsCast"></button>
+    <p class="muted hide" id="tvsCastNote">Chromecast and Google TV. The TV joins by itself.</p>
+    <div class="tvs-sec">
+      <div class="lbl">TV with a web browser</div>
+      <p>On the TV, open <b id="tvsUrl"></b> and type the code it shows:</p>
+      <div class="row" style="gap:8px">
+        <label class="field" style="flex:1"><input id="tvsCode" class="code" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false" autocapitalize="characters"></label>
+        <button class="btn ghost sm" id="tvsGo" style="height:58px;padding-inline:18px;width:auto">Connect</button>
+      </div>
+    </div>
+    <div class="tvs-sec">
+      <div class="lbl">Laptop plugged into the TV</div>
+      <button class="btn ghost sm" id="tvsLink">🔗 Copy the TV link</button>
+    </div>
+    <p class="muted" id="tvsCount"></p>
+    <button class="btn primary" id="tvsDone">Done</button>
+  </div>
+</div>
+
+<div class="tvchrome">
+  <div class="tvsound hide" id="tvSound">🔇 Press OK or click to turn the sound on</div>
+  <button class="tvfull hide" id="tvFull" title="Full screen">⛶ Full screen</button>
 </div>
 
 <button class="devchip" id="devChip" title="Connection log" aria-label="Connection log">DEV</button>
@@ -1822,7 +2149,10 @@ const UNIQUE_MULT = 2;
    Everything is synthesised, so the whole game stays one file.
    ================================================================== */
 const Sound = (() => {
-  let ctx = null, master = null, on = true;
+  // `on` is the player's own switch and is remembered; `hush` is a temporary
+  // mute the game sets itself (a phone sitting next to a TV that is already
+  // playing the same show) and is never saved.
+  let ctx = null, master = null, on = true, hush = false;
   try { on = localStorage.getItem('sb.sound') !== '0'; } catch (e) { }
 
   function init() {
@@ -1837,7 +2167,7 @@ const Sound = (() => {
   const t0 = () => ctx.currentTime;
 
   function tone(f, dur, { type = 'sine', vol = 1, at = 0, to = null, atk = .006 } = {}) {
-    if (!on || !ctx) return;
+    if (!on || hush || !ctx) return;
     const t = t0() + at;
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t);
@@ -1849,7 +2179,7 @@ const Sound = (() => {
     o.start(t); o.stop(t + dur + .04);
   }
   function noise(dur, { vol = .5, at = 0, hp = 700 } = {}) {
-    if (!on || !ctx) return;
+    if (!on || hush || !ctx) return;
     const t = t0() + at, n = Math.floor(ctx.sampleRate * dur);
     const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
@@ -1865,7 +2195,13 @@ const Sound = (() => {
   return {
     init,
     get on() { return on; },
+    /** False until the browser lets audio play (usually after a tap or key). */
+    get ready() { return !!ctx && ctx.state === 'running'; },
+    hush(v) { hush = !!v; },
     toggle() { on = !on; try { localStorage.setItem('sb.sound', on ? '1' : '0'); } catch (e) { } if (on) { init(); this.tick(2); } return on; },
+    /** Switch on for this page only. A TV has no mute button, and a phone
+     *  muted on this same browser some other day must not leave it silent. */
+    forceOn() { on = true; },
     tick(n) { init(); tone(hz(SC[Math.min(n, SC.length - 1)] + 12), .1, { type: 'triangle', vol: .5 }); },
     back() { init(); tone(330, .07, { type: 'sine', vol: .3, to: 240 }); },
     good(len) {
@@ -1974,9 +2310,16 @@ const FX = (() => {
 
   const HUES = ['#ffd23f', '#ff5773', '#3ddc97', '#8b5cf6', '#3bc9ff', '#ff9f43', '#f472b6', '#ffffff'];
 
+  // Set while a phone's results show runs hidden behind "Watch the TV":
+  // confetti would draw straight over the cover.
+  let quiet = false;
+
   return {
     low: LOW_END,
+    get quiet() { return quiet; },
+    set quiet(v) { quiet = !!v; if (quiet) { parts.length = 0; } },
     burst(x, y, n = 34, spread = 6.283, dir = -1.57, power = 9, colors = HUES) {
+      if (quiet) return;
       n = Math.max(6, Math.round(n * SCALE));
       for (let i = 0; i < n; i++) {
         const ang = dir + (Math.random() - .5) * spread, sp = power * (.35 + Math.random());
@@ -1990,6 +2333,7 @@ const FX = (() => {
       start();
     },
     rain(n = 130) {
+      if (quiet) return;
       if (!sized) size();
       n = Math.max(20, Math.round(n * SCALE));
       for (let i = 0; i < n; i++) {
@@ -2008,6 +2352,31 @@ const FX = (() => {
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       release();
     },
+  };
+})();
+
+/* ============================ WAKE LOCK ===========================
+   A phone that dims mid-round drops its connection, and a TV that drifts
+   into its screensaver is no use to anyone. Ask the browser to keep the
+   screen on while a game is showing; it hands the lock back by itself when
+   the page is hidden, so take it again when the page comes back.
+   ================================================================== */
+const Wake = (() => {
+  let lock = null, want = false, asking = false;
+  async function grab() {
+    if (!want || lock || asking || document.hidden || !('wakeLock' in navigator)) return;
+    asking = true;
+    try {
+      lock = await navigator.wakeLock.request('screen');
+      lock.addEventListener('release', () => { lock = null; });
+      if (!want) { const l = lock; lock = null; l.release().catch(() => { }); }
+    } catch (e) { lock = null; }
+    asking = false;
+  }
+  if (document.addEventListener) document.addEventListener('visibilitychange', () => { if (!document.hidden) grab(); });
+  return {
+    on() { want = true; grab(); },
+    off() { want = false; if (lock) { const l = lock; lock = null; l.release().catch(() => { }); } },
   };
 })();
 
@@ -2085,11 +2454,15 @@ function avatar(p, sizePx, extra) {
 /* =====================================================================
    QR — a small encoder, and the base32 alphabet the payloads ride in.
 
-   Only what the LAN handshake needs: alphanumeric mode, error correction
-   level M, versions 1-10 (up to 311 characters). Alphanumeric mode packs
-   two characters into 11 bits, which beats byte mode for uppercase
-   payloads -- and BarcodeDetector hands back a string, so a byte-mode
-   payload of raw bytes would be mangled on the way out anyway.
+   Error correction level M, versions 1-10. Two modes:
+
+     alphanumeric  the LAN and challenge codes (up to 311 characters). It
+                   packs two characters into 11 bits, which beats byte mode
+                   for uppercase payloads -- and BarcodeDetector hands back a
+                   string, so raw binary would be mangled on the way out.
+     byte          URLs for a phone's own camera app to open (the TV lobby's
+                   join link). A URL path is case-sensitive and needs `?` and
+                   `=`, none of which alphanumeric mode can carry.
    ===================================================================== */
 
 const B32 = (() => {
@@ -2185,29 +2558,37 @@ const QR = (() => {
     for (let i = len - 1; i >= 0; i--) this.buf.push((val >> i) & 1);
   };
 
-  const cciBits = v => (v <= 9 ? 9 : 11);
+  const cciBits = (v, bytes) => (bytes ? (v <= 9 ? 8 : 16) : (v <= 9 ? 9 : 11));
 
-  /** Largest payload (in characters) that fits a given version. */
-  function capacity(v) {
-    const bits = SPEC[v][0] * 8 - 4 - cciBits(v);
+  /** Largest payload (characters, or bytes in byte mode) a version holds. */
+  function capacity(v, bytes) {
+    const bits = SPEC[v][0] * 8 - 4 - cciBits(v, bytes);
+    if (bytes) return Math.floor(bits / 8);
     const pairs = Math.floor(bits / 11);
     return (bits - pairs * 11) >= 6 ? pairs * 2 + 1 : pairs * 2;
   }
 
-  function pickVersion(n) {
-    for (let v = 1; v <= 10; v++) if (capacity(v) >= n) return v;
+  function pickVersion(n, bytes) {
+    for (let v = 1; v <= 10; v++) if (capacity(v, bytes) >= n) return v;
     return 0;
   }
 
   /* --------------------------- data codewords -------------------------- */
-  function codewords(text, v) {
+  /** `data` is a string (alphanumeric mode) or an array of bytes (byte mode). */
+  function codewords(data, v) {
     const b = new Bits();
-    b.push(0b0010, 4);
-    b.push(text.length, cciBits(v));
-    for (let i = 0; i < text.length; i += 2) {
-      const a = ALNUM.indexOf(text[i]);
-      if (i + 1 < text.length) b.push(a * 45 + ALNUM.indexOf(text[i + 1]), 11);
-      else b.push(a, 6);
+    if (typeof data === 'string') {
+      b.push(0b0010, 4);
+      b.push(data.length, cciBits(v, false));
+      for (let i = 0; i < data.length; i += 2) {
+        const a = ALNUM.indexOf(data[i]);
+        if (i + 1 < data.length) b.push(a * 45 + ALNUM.indexOf(data[i + 1]), 11);
+        else b.push(a, 6);
+      }
+    } else {
+      b.push(0b0100, 4);
+      b.push(data.length, cciBits(v, true));
+      for (let i = 0; i < data.length; i++) b.push(data[i], 8);
     }
     const total = SPEC[v][0] * 8;
     b.push(0, Math.min(4, total - b.buf.length));
@@ -2409,16 +2790,23 @@ const QR = (() => {
     return score;
   }
 
-  /** Encode uppercase alphanumeric text. Returns {size, version, at(r,c)}. */
-  function encode(text) {
-    const s = String(text).toUpperCase();
-    for (const ch of s) {
-      if (ALNUM.indexOf(ch) < 0) throw new Error('QR: unsupported character ' + JSON.stringify(ch));
+  /** Encode text. By default it is uppercased and must be alphanumeric;
+      with `asBytes` it is sent verbatim as UTF-8 (byte mode), which is what a
+      URL needs. Returns {size, version, mask, at(r,c)}. */
+  function encode(text, asBytes) {
+    let data;
+    if (asBytes) {
+      data = Array.from(new TextEncoder().encode(String(text)));
+    } else {
+      data = String(text).toUpperCase();
+      for (const ch of data) {
+        if (ALNUM.indexOf(ch) < 0) throw new Error('QR: unsupported character ' + JSON.stringify(ch));
+      }
     }
-    const v = pickVersion(s.length);
-    if (!v) throw new Error('QR: payload too long (' + s.length + ' chars)');
+    const v = pickVersion(data.length, !!asBytes);
+    if (!v) throw new Error('QR: payload too long (' + data.length + (asBytes ? ' bytes)' : ' chars)'));
 
-    const bytes = interleave(codewords(s, v), v);
+    const bytes = interleave(codewords(data, v), v);
     let best = null;
     for (let mask = 0; mask < 8; mask++) {
       const grid = build(v);
@@ -2431,11 +2819,12 @@ const QR = (() => {
       }
       applyFormat(m, size, mask);
       const p = penalty(m, size);
-      if (!best || p < best.p) best = { p, m, size };
+      if (!best || p < best.p) best = { p, m, size, mask };
     }
     return {
       size: best.size,
       version: v,
+      mask: best.mask,
       at: (r, c) => best.m[r][c],
       rows: best.m,
     };
@@ -2883,6 +3272,14 @@ const Chal = (() => {
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no I/O/0/1 lookalikes
 const ROOM_PREFIX = 'swbgl3-';
 const MAX_PLAYERS = 8;
+/* TV screens join a lobby as display-only peers. They take no player seat,
+   so they have their own cap, and each TV also listens on its own broker id
+   (TV_PREFIX + its 4-letter TV code) so a phone in the lobby can point it at
+   the room without anyone typing on a remote. */
+const MAX_SCREENS = 4;
+const TV_PREFIX = ROOM_PREFIX + 'tv-';
+const isCode = c => typeof c === 'string' && c.length === 4 &&
+  c.split('').every(ch => CODE_ALPHABET.indexOf(ch) >= 0);
 
 /* ---------------------------------------------------------------------
    ICE servers, shared by both transports.
@@ -2970,14 +3367,27 @@ const Cloud = (() => {
     Diag.watch(pc);
   }
 
-  function destroy() {
+  /** `graceMs`: forget this lobby at once, but give whatever was just sent
+   *  (the host's goodbye) that long to leave before the connections close.
+   *  The state is cleared immediately, so a new lobby opened in the
+   *  meantime is not torn down with the old one. */
+  function destroy(graceMs) {
     clearInterval(hb); hb = 0;
     Diag.unwatch();
-    conns.forEach(c => { try { c.close(); } catch (e) { } });
+    // A join still dialling would otherwise land later and take over
+    // whatever lobby this device has moved on to.
+    if (joinAbort) joinAbort();
+    const p = peer, cs = Array.from(conns.values());
+    if (hostConn) cs.push(hostConn);
+    cs.forEach(c => { c._dead = true; });
     conns.clear();
     hostConn = null;
-    if (peer) { try { peer.destroy(); } catch (e) { } }
     peer = null; open = false; isHost = false; code = '';
+    const kill = () => {
+      cs.forEach(c => { try { c.close(); } catch (e) { } });
+      if (p) { try { p.destroy(); } catch (e) { } }
+    };
+    if (graceMs) setTimeout(kill, graceMs); else kill();
   }
 
   /* ------------------------------- host ------------------------------- */
@@ -3018,18 +3428,31 @@ const Cloud = (() => {
     });
   }
 
+  /** Open connections of one kind: players, or TV screens. */
+  const countOf = tv => { let n = 0; conns.forEach(c => { if (!!c._tv === tv) n++; }); return n; };
+
   function wireHost() {
     peer.on('connection', conn => {
-      if (conns.size >= MAX_PLAYERS - 1) {
-        conn.on('open', () => { try { conn.send({ t: 'full' }); } catch (e) { } setTimeout(() => conn.close(), 400); });
+      // The role rides in the connection metadata so the seat check can run
+      // before a single message is exchanged; screens never take a seat.
+      const tv = !!(conn.metadata && conn.metadata.role === 'tv');
+      if (countOf(tv) >= (tv ? MAX_SCREENS : MAX_PLAYERS - 1)) {
+        conn.on('open', () => { try { conn.send({ t: 'full', tv }); } catch (e) { } setTimeout(() => conn.close(), 400); });
         return;
       }
-      watchConn(conn, 'host<-guest');
+      conn._tv = tv;
+      watchConn(conn, tv ? 'host<-tv' : 'host<-guest');
       conn.on('open', () => {
-        Diag.log('conn', 'host: guest connected');
+        // Two handshakes racing for the last seat: the loser hears "full".
+        if (countOf(tv) >= (tv ? MAX_SCREENS : MAX_PLAYERS - 1)) {
+          try { conn.send({ t: 'full', tv }); } catch (e) { }
+          setTimeout(() => { try { conn.close(); } catch (e) { } }, 400);
+          return;
+        }
+        Diag.log('conn', 'host: ' + (tv ? 'screen' : 'guest') + ' connected');
         conns.set(conn.peer, conn); H.peerOpen(conn.peer);
       });
-      conn.on('data', d => H.msg(conn.peer, d));
+      conn.on('data', d => { if (!conn._dead) H.msg(conn.peer, d); });
       conn.on('close', () => { if (conns.delete(conn.peer)) H.peerClose(conn.peer); });
       conn.on('error', () => { if (conns.delete(conn.peer)) H.peerClose(conn.peer); });
     });
@@ -3043,7 +3466,11 @@ const Cloud = (() => {
   }
 
   /* ------------------------------ guest ------------------------------ */
-  function join(roomCode) {
+  /** `role` is 'tv' for a display-only screen; anything else is a player.
+   *  A newer join (or `destroy`) cancels this one; it then rejects with an
+   *  error marked `superseded`, which callers need not report. */
+  let joinAbort = null;
+  function join(roomCode, role) {
     destroy();
     const target = ROOM_PREFIX + roomCode.toUpperCase();
     return new Promise((resolve, reject) => {
@@ -3052,9 +3479,12 @@ const Cloud = (() => {
       const fail = err => {
         if (settled) return;
         settled = true; clearTimeout(guard);
+        if (joinAbort === abort) joinAbort = null;
         try { p.destroy(); } catch (e) { }
         reject(err);
       };
+      const abort = () => fail(Object.assign(new Error('Cancelled.'), { superseded: true }));
+      joinAbort = abort;
       const guard = setTimeout(() => {
         Diag.log('fail', 'guest: gave up after 20s');
         fail(new Error("Couldn't reach that room. Check the code?"));
@@ -3068,21 +3498,110 @@ const Cloud = (() => {
 
       p.on('open', () => {
         Diag.log('peer', 'guest: broker open, dialling ' + target);
-        const c = p.connect(target, { reliable: true, metadata: { v: 1 } });
+        const c = p.connect(target, { reliable: true, metadata: { v: 1, role: role === 'tv' ? 'tv' : 'player' } });
         watchConn(c, 'guest->host');
         c.on('open', () => {
           Diag.log('conn', 'guest: data channel open');
           if (settled) return;
           settled = true; clearTimeout(guard);
+          if (joinAbort === abort) joinAbort = null;
           peer = p; isHost = false; code = roomCode.toUpperCase(); me = p.id; hostConn = c; open = true;
-          c.on('data', d => H.msg('host', d));
-          c.on('close', () => { if (open) { open = false; H.hostGone(); } });
-          c.on('error', () => { if (open) { open = false; H.hostGone(); } });
+          c.on('data', d => { if (hostConn === c) H.msg('host', d); });
+          // Only the current connection may report the host gone. Switching
+          // lobbies (a TV being sent somewhere new) closes the old one, and
+          // its close event can land after the new one is already open.
+          c.on('close', () => { if (open && hostConn === c) { open = false; H.hostGone(); } });
+          c.on('error', () => { if (open && hostConn === c) { open = false; H.hostGone(); } });
           p.on('disconnected', () => { try { p.reconnect(); } catch (e) { } });
           resolve();
         });
         c.on('error', () => fail(new Error("Couldn't connect to the host.")));
       });
+    });
+  }
+
+  /* -------------------------- TV pairing ----------------------------- */
+  /* A TV keeps a second, long-lived broker id just for being found. It is
+     separate from the room connection so a phone can re-point a TV that is
+     already in a lobby (say, at the host's next lobby). */
+  let tvPeer = null;
+
+  function listenTv(code, onPair, onDrop, attempt) {
+    attempt = attempt || 0;
+    stopTv();
+    return new Promise((resolve, reject) => {
+      const c = isCode(code) ? code : newCode();
+      const p = makePeer(TV_PREFIX + c);
+      let settled = false;
+      const guard = setTimeout(() => fail(new Error('Timed out reaching the matchmaking server.')), 15000);
+      function fail(err) {
+        if (settled) return;
+        settled = true; clearTimeout(guard);
+        try { p.destroy(); } catch (e) { }
+        if (err && err.type === 'unavailable-id' && attempt < 5) { resolve(listenTv(newCode(), onPair, onDrop, attempt + 1)); return; }
+        Diag.log('fail', 'tv: broker ' + ((err && (err.type || err.message)) || 'failed'));
+        reject(err || new Error('Could not reach the matchmaking server.'));
+      }
+      p.on('open', () => {
+        if (settled) return;
+        settled = true; clearTimeout(guard);
+        tvPeer = p;
+        Diag.log('peer', 'tv: listening as ' + c);
+        resolve(c);
+      });
+      p.on('error', e => {
+        if (!settled) { fail(e); return; }
+        if (e && (e.type === 'peer-unavailable' || e.type === 'network')) return;
+        Diag.log('peer', 'tv: ' + (e && (e.type || e.message)));
+      });
+      p.on('disconnected', () => { if (tvPeer === p) { try { p.reconnect(); } catch (e) { } } });
+      p.on('close', () => { if (tvPeer === p) { tvPeer = null; onDrop && onDrop(); } });
+      p.on('connection', conn => {
+        conn.on('data', d => {
+          if (!d || d.t !== 'pair' || !isCode(String(d.room || '').toUpperCase())) return;
+          try { conn.send({ t: 'paired' }); } catch (e) { }
+          setTimeout(() => { try { conn.close(); } catch (e) { } }, 400);
+          onPair(String(d.room).toUpperCase(), String(d.name || '').slice(0, 14));
+        });
+      });
+    });
+  }
+
+  function stopTv() {
+    if (tvPeer) { const p = tvPeer; tvPeer = null; try { p.destroy(); } catch (e) { } }
+  }
+
+  /** From a phone that is in a lobby: tell the TV showing `tvCode` to join
+      `room`. Uses the peer we already have; no second broker connection. */
+  function pairTv(tvCode, room, name) {
+    return new Promise((resolve, reject) => {
+      if (!peer || !open) { reject(new Error('Join a lobby first.')); return; }
+      const target = TV_PREFIX + tvCode;
+      let done = false;
+      let finish = err => {
+        if (done) return;
+        done = true; clearTimeout(guard);
+        try { peer && peer.off('error', onErr); } catch (e) { }
+        err ? reject(err) : resolve();
+      };
+      // A TV that is not there surfaces as an error on the *peer*, not the
+      // connection, and names the id it could not reach.
+      const onErr = e => {
+        if (e && e.type === 'peer-unavailable' && String(e.message || '').indexOf(target) >= 0) {
+          finish(new Error('No TV is showing ' + tvCode + ' right now.'));
+        }
+      };
+      const guard = setTimeout(() => finish(new Error('The TV did not answer. Check the code on the TV?')), 12000);
+      peer.on('error', onErr);
+      const c = peer.connect(target, { reliable: true, metadata: { v: 1, role: 'pair' } });
+      // A give-up must not be followed by a late "pair" arriving anyway.
+      const done0 = finish;
+      finish = err => { if (err) { try { c.close(); } catch (e) { } } done0(err); };
+      c.on('open', () => { try { c.send({ t: 'pair', room, name }); } catch (e) { finish(e); } });
+      c.on('data', d => {
+        if (d && d.t === 'paired') { finish(); setTimeout(() => { try { c.close(); } catch (e) { } }, 300); }
+      });
+      c.on('error', () => finish(new Error('Could not reach that TV.')));
     });
   }
 
@@ -3103,13 +3622,17 @@ const Cloud = (() => {
   }
 
   return {
-    host, join, destroy, sendTo, broadcast, toHost, kick,
+    host, join, destroy, sendTo, broadcast, toHost, kick, listenTv, stopTv, pairTv,
     handlers: H,
     get isHost() { return isHost; },
     get code() { return code; },
     get me() { return me; },
     get online() { return open; },
     get peerIds() { return Array.from(conns.keys()); },
+    /** This TV's own code is registered with the broker right now. */
+    get tvAlive() { return !!tvPeer && !tvPeer.destroyed && !tvPeer.disconnected; },
+    /** Connected players only -- the ids whose words the host waits for. */
+    get playerIds() { const a = []; conns.forEach((c, id) => { if (!c._tv) a.push(id); }); return a; },
     get count() { return conns.size; },
   };
 })();
@@ -3609,6 +4132,7 @@ const Direct = (() => {
     get me() { return me; },
     get online() { return open; },
     get peerIds() { return Array.from(peers.keys()); },
+    get playerIds() { return Array.from(peers.keys()); },
     get count() { return peers.size; },
     get seats() { return MAX_DIRECT_PLAYERS - 1 - peers.size; },
   };
@@ -3623,17 +4147,23 @@ const Net = (() => {
     get isDirect() { return active === Direct; },
     host: (...a) => { active = Cloud; return Cloud.host(...a); },
     join: (...a) => { active = Cloud; return Cloud.join(...a); },
-    destroy() { Cloud.destroy(); Direct.destroy(); active = Cloud; },
+    destroy(graceMs) { Cloud.destroy(graceMs); Direct.destroy(); active = Cloud; },
     sendTo: (...a) => active.sendTo(...a),
     broadcast: (...a) => active.broadcast(...a),
     toHost: (...a) => active.toHost(...a),
     kick: (...a) => active.kick(...a),
+    // TV screens only ever ride the broker, so these always go to Cloud.
+    listenTv: (...a) => Cloud.listenTv(...a),
+    stopTv: () => Cloud.stopTv(),
+    pairTv: (...a) => Cloud.pairTv(...a),
+    get tvAlive() { return Cloud.tvAlive; },
     get handlers() { return Cloud.handlers; },
     get isHost() { return active.isHost; },
     get code() { return active.code; },
     get me() { return active.me; },
     get online() { return active.online; },
     get peerIds() { return active.peerIds; },
+    get playerIds() { return active.playerIds; },
     get count() { return active.count; },
   };
 })();
@@ -3675,7 +4205,24 @@ const G = {
   sharedOut: false,                   // solo: this round's board was handed to a friend
   screen: '',
   pendingDone: null,                  // host: ids we're still waiting on
+  screens: new Map(),                 // host: TV screens watching this lobby (id -> {id})
+  screenCount: 0,                     // everyone: how many TVs the lobby has
+  phase: 'lobby',                     // host: lobby | round | results -- what a joining TV should show
+  watchHere: false,                   // phone: "Show it here instead" was tapped this session
 };
+
+/** Words this long (or longer) set off the anonymous flash on the TVs. */
+const FLASH_MIN = 7;
+
+/** A phone in a lobby that has a TV: the TV plays the countdown, the timer
+ *  and the results show, so the phones keep quiet rather than all beeping
+ *  half a beat apart. Swipe sounds stay -- they are personal. */
+const tvNearby = () => (G.mode === 'host' || G.mode === 'guest') && G.screenCount > 0;
+
+/** The host's view of the lobby, as every guest and TV needs it. */
+function lobbyMsg() {
+  return { t: 'lobby', players: rosterWire(), settings: G.settings, screens: G.screens.size, phase: G.phase };
+}
 
 /* --------------------------- persistence --------------------------- */
 const store = {
@@ -3687,6 +4234,15 @@ const store = {
 function show(name) {
   if (G.screen === name) return;
   G.screen = name;
+  // Keep the screen awake wherever a game can be going on.
+  if (name === 'home' || name === 'load' || name === 'chal' || name === 'lan') Wake.off(); else Wake.on();
+  // A TV hides its corner hints (sound, full screen) while a game is up.
+  if (G.mode === 'tv') document.body.classList.toggle('tvplay', name === 'game' || name === 'results');
+  // A sheet left open on the lobby must not sit on top of the round.
+  if (name !== 'lobby' && name !== 'home') {
+    $('#tvsheet').classList.remove('on');
+    $('#avsheet').classList.remove('on');
+  }
   $$('.screen').forEach(s => { s.classList.remove('on', 'in'); });
   const s = $('#scr-' + name);
   s.classList.add('on');
@@ -3739,7 +4295,7 @@ function buildSettingsUI() {
         // Decode the other dictionary now, not when the round starts.
         if (key === 'lang') preloadLang();
         renderSettings();
-        if (G.mode === 'host') Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+        if (G.mode === 'host') Net.broadcast(lobbyMsg());
         store.set('set', JSON.stringify(G.settings));
       };
       seg.appendChild(b);
@@ -3775,7 +4331,7 @@ function updateProfile() {
   const me = meP();
   if (me) Object.assign(me, { name: G.me.name, color: G.me.color, av: G.me.av });
   if (G.mode === 'guest') Net.toHost({ t: 'profile', name: G.me.name, color: G.me.color, av: G.me.av });
-  else if (G.mode === 'host') Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+  else if (G.mode === 'host') Net.broadcast(lobbyMsg());
   if (G.screen === 'lobby') renderLobby();
 }
 
@@ -3790,7 +4346,9 @@ function syncSelf() {
 }
 
 function rosterWire() {
-  return roster().map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: !!p.host }));
+  // `found` lets a screen (or phone) that joins mid-round show the live
+  // counts straight away instead of zeros.
+  return roster().map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: !!p.host, found: p.found | 0 }));
 }
 
 function renderLobby() {
@@ -3839,6 +4397,14 @@ function renderLobby() {
   $('#btnInvite').classList.toggle('hide',
     !(lan && G.mode === 'host' && activeCount() < cap));
 
+  // TVs ride the matchmaking server, so they can join any online lobby but
+  // neither solo nor LAN play.
+  const tvBtn = $('#btnTv');
+  tvBtn.classList.toggle('hide', solo || lan);
+  const n = G.screenCount;
+  tvBtn.textContent = !n ? '📺 Show it on a TV'
+    : '📺 ' + n + (n === 1 ? ' TV' : ' TVs') + ' watching' + (n < MAX_SCREENS ? ' · add another' : '');
+
   // Sharing a board up front is a solo-only idea: everyone else in a lobby
   // is already getting the same letters over the wire.
   $('#btnChalLobby').classList.toggle('hide', !solo);
@@ -3886,6 +4452,7 @@ function hostStartRound() {
     // Someone out there is playing these same letters, so the results screen
     // should offer to send them a score rather than a fresh challenge.
     G.sharedOut = !!fits;
+    G.phase = 'round';
     const rid = Date.now();
     const payload = { t: 'start', rid, board, size: s.size, minLen: s.minLen, dur: s.dur,
                       lang: s.lang | 0, total: words.length };
@@ -3907,13 +4474,21 @@ function beginRound(p, spectate) {
     spectate: !!spectate, ended: false, endAt: 0,
   };
   G.results = null;
-  roster().forEach(pl => { pl.found = 0; });
+  // Joining a round already under way keeps the counts the host just sent.
+  if (!spectate) roster().forEach(pl => { pl.found = 0; });
+  // The clock starts after the countdown; know when it will end from the
+  // outset, so a screen joining during the countdown gets the right time.
+  if (!spectate) G.round.endAt = performance.now() + COUNTDOWN_MS + p.dur * 1000;
+  const tv = G.mode === 'tv';
   // Every word check from here on reads the active dictionary. The host has
   // already switched; a guest may still be decoding, which the countdown
-  // below waits for before it unlocks the board.
-  const langReady = useLang(G.round.lang).catch(e => toast(e.message, 'bad'));
+  // below waits for before it unlocks the board. A TV never checks a word,
+  // so it never loads a dictionary at all.
+  const langReady = tv ? Promise.resolve() : useLang(G.round.lang).catch(e => toast(e.message, 'bad'));
 
   show('game');
+  $('#board').classList.remove('done');
+  if (tv) TV.roundStarted();
   Board.mount(p.board, p.size);
   $('#fchips').innerHTML = '';
   $('#foundCt').textContent = '';
@@ -3933,9 +4508,9 @@ function beginRound(p, spectate) {
   if (spectate) {
     wrap.classList.remove('veil');
     Board.lock(true);
-    G.round.endAt = performance.now() + (p.remain || p.dur * 1000);
+    G.round.endAt = performance.now() + (p.remain != null ? p.remain : p.dur * 1000);
     runTimer();
-    toast('Round already started — you\'re in next one!', null, 3200);
+    if (!tv) toast('Round already started — you\'re in next one!', null, 3200);
     return;
   }
   // Peeking at the letters through the countdown overlay is a real advantage,
@@ -3946,13 +4521,18 @@ function beginRound(p, spectate) {
     await langReady;
     wrap.classList.remove('veil');
     Board.mount(p.board, p.size);          // replays the deal animation
-    Board.lock(false);
+    Board.lock(tv);                        // a TV only ever watches
     G.round.endAt = performance.now() + p.dur * 1000;
     runTimer();
   });
 }
 
+/** 3, 2, 1, GO! is five 900 ms beats before the board unlocks. */
+const COUNTDOWN_MS = 3600;
+
 function countdownThen(p, fn) {
+  const R0 = G.round;
+  const old = $('#cd'); if (old) old.remove();
   const ov = el('div'); ov.id = 'cd';
   const box = el('div', 'box');
   const b = el('b');
@@ -3965,8 +4545,11 @@ function countdownThen(p, fn) {
   document.body.appendChild(ov);
   let n = 3;
   const step = () => {
-    if (n > 0) { b.textContent = n; Sound.count(n); }
-    else { b.textContent = 'GO!'; Sound.go(); buzz([12, 40, 26]); }
+    // The lobby closed (or this screen moved on) mid-countdown.
+    if (G.round !== R0 || !ov.isConnected) { ov.remove(); return; }
+    const loud = !tvNearby();
+    if (n > 0) { b.textContent = n; if (loud) Sound.count(n); }
+    else { b.textContent = 'GO!'; if (loud) Sound.go(); buzz([12, 40, 26]); }
     b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
     if (n < 0) { ov.remove(); fn(); return; }
     n--; setTimeout(step, 900);
@@ -3993,7 +4576,7 @@ function runTimer() {
       num.textContent = sec;
       ring.classList.toggle('warn', sec <= 20 && sec > 10);
       ring.classList.toggle('crit', sec <= 10);
-      if (sec <= 5 && sec > 0) { Sound.warn(); buzz(10); }
+      if (sec <= 5 && sec > 0) { if (!tvNearby()) Sound.warn(); buzz(10); }
     }
     if (left <= 0) { endRound(); return; }
     timerRaf = requestAnimationFrame(tick);
@@ -4008,7 +4591,11 @@ function endRound() {
   cancelAnimationFrame(timerRaf);
   Board.lock(true);
   Board.cancel();
-  Sound.end(); buzz([26, 60, 26]);
+  if (!tvNearby()) Sound.end();
+  buzz([26, 60, 26]);
+
+  // A TV has no words to hand in; it just waits for the host's results.
+  if (G.mode === 'tv') { $('#board').classList.add('done'); showWaitingForResults(); return; }
 
   const mine = Array.from(R.words.keys());
 
@@ -4016,7 +4603,9 @@ function endRound() {
     Net.toHost({ t: 'done', rid: R.rid, words: mine });
     showWaitingForResults();
   } else if (G.mode === 'host') {
-    G.pendingDone = new Set(Net.peerIds);
+    // Players only: a TV never sends a word list, and waiting on one would
+    // stall every results screen for the full timeout.
+    G.pendingDone = new Set(Net.playerIds);
     G.doneWords = new Map([[G.me.id, mine]]);
     showWaitingForResults();
     clearTimeout(G.doneTimer);
@@ -4088,6 +4677,7 @@ function finaliseResults() {
     t: 'results', rid: R.rid, players, best, multi, pace: G.settings.pace,
     total: G.hostBoardWords ? G.hostBoardWords.length : R.total,
     board: R.board, size: R.size, minLen: R.minLen, lang: R.lang | 0,
+    screens: G.screens.size,
   };
   if (G.mode === 'host') Net.broadcast(payload);
   applyResults(payload);
@@ -4095,6 +4685,7 @@ function finaliseResults() {
 
 function applyResults(p) {
   G.results = p;
+  if (G.mode === 'host') G.phase = 'results';
   Results.play(p);
 }
 
@@ -4103,11 +4694,13 @@ function applyResults(p) {
    =================================================================== */
 function handleMessage(from, m) {
   if (!m || typeof m !== 'object') return;
+  if (G.mode === 'tv') { TV.onMessage(m); return; }
 
   /* ---------------- messages a HOST receives from guests -------------- */
   if (G.mode === 'host') {
     switch (m.t) {
       case 'hello': {
+        if (m.role === 'tv') { welcomeScreen(from); break; }
         const name = String(m.name || 'Player').slice(0, 14).trim() || 'Player';
         const used = roster().map(p => p.color);
         const color = COLORS.includes(m.color) && !used.includes(m.color)
@@ -4120,13 +4713,14 @@ function handleMessage(from, m) {
         const live = G.round && !G.round.ended;
         Net.sendTo(from, {
           t: 'welcome', you: from, players: rosterWire(), settings: G.settings, color, av,
+          screens: G.screens.size,
           live: live ? {
             rid: G.round.rid, board: G.round.board, size: G.round.size,
             minLen: G.round.minLen, dur: G.round.dur, lang: G.round.lang, total: G.round.total,
             remain: Math.max(0, G.round.endAt - performance.now()),
           } : null,
         });
-        Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings }, from);
+        Net.broadcast(lobbyMsg(), from);
         if (G.screen === 'lobby') renderLobby();
         if (G.screen === 'game') renderPips();
         break;
@@ -4139,15 +4733,19 @@ function handleMessage(from, m) {
         if (COLORS.includes(m.color) && !used.includes(m.color)) p.color = m.color;
         p.av = Av.norm(m.av, from);
         // Everyone, the sender included: its colour may have been refused.
-        Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+        Net.broadcast(lobbyMsg());
         if (G.screen === 'lobby') renderLobby();
         if (G.screen === 'game') renderPips();
         break;
       }
       case 'act': {
         const p = G.players.get(from);
-        if (p) { p.found = m.n | 0; renderPips(from); }
+        if (!p) break;
+        p.found = m.n | 0; renderPips(from);
         Net.broadcast({ t: 'act', id: from, n: m.n | 0 }, from);
+        // Only the length crosses the wire -- the TVs announce that a long
+        // word was found, never by whom or what it was.
+        if ((m.L | 0) >= FLASH_MIN) flashLong(from, m.L | 0);
         break;
       }
       case 'done': {
@@ -4173,6 +4771,7 @@ function handleMessage(from, m) {
       if (m.av) G.me.av = m.av;
       setPlayersFrom(m.players);
       G.settings = m.settings || G.settings;
+      G.screenCount = m.screens | 0;
       preloadLang();
       if (m.live) { beginRound(m.live, true); }
       else { show('lobby'); renderLobby(); }
@@ -4182,6 +4781,7 @@ function handleMessage(from, m) {
       setPlayersFrom(m.players);
       syncSelf();
       G.settings = m.settings || G.settings;
+      noteScreens(m.screens | 0);
       preloadLang();
       if (G.players.size > before) Sound.join(); else if (G.players.size < before) Sound.part();
       if (G.screen === 'lobby') renderLobby();
@@ -4206,17 +4806,86 @@ function handleMessage(from, m) {
       // The host retuned the recap speed mid-reveal; follow along.
       if (OPTS.pace.some(o => o.v === m.v)) { G.settings.pace = m.v; Results.setPace(m.v, true); }
       break;
+    case 'skip':
+      // The host skipped the show on the TVs. Follow along only while ours
+      // is running hidden behind "Watch the TV"; if this phone is showing the
+      // show itself, its own Skip button is in charge.
+      if (Results.watching) Results.skip();
+      break;
     case 'kick':
       leaveRoom("The host removed you from the lobby.");
       break;
     case 'full':
+      // The host closes the connection right after this; say why instead of
+      // the generic "host closed the lobby".
+      G.goneWhy = 'That lobby is full (' + MAX_PLAYERS + ' players).';
+      break;
+    case 'bye':
+      G.goneWhy = 'The host closed the lobby.';
       break;
     case 'hb': break;
   }
 }
 
+/* ------------------------------ TV screens ------------------------------ */
+/** Host: a TV said hello. It gets everything it needs to draw whatever the
+ *  lobby is doing right now: the roster, the settings, a round in progress,
+ *  or the results on screen. */
+function welcomeScreen(id) {
+  G.screens.set(id, { id });
+  G.screenCount = G.screens.size;
+  // In the second or two between "time" and the results the round is over
+  // but there is nothing to show yet: hand over the board with no time left,
+  // so the screen says "TIME!" and waits rather than flashing the lobby.
+  const R = G.round, live = G.phase === 'round' && R;
+  Net.sendTo(id, {
+    t: 'welcome', you: id, screen: true, code: Net.code,
+    players: rosterWire(), settings: G.settings, screens: G.screens.size, phase: G.phase,
+    live: live ? {
+      rid: R.rid, board: R.board, size: R.size, minLen: R.minLen, dur: R.dur, lang: R.lang,
+      total: R.total, remain: R.ended ? 0 : Math.max(0, R.endAt - performance.now()),
+    } : null,
+    results: G.phase === 'results' ? G.results : null,
+  });
+  Net.broadcast(lobbyMsg(), id);
+  noteScreens(G.screens.size, true);
+}
+
+/** Host: a TV went away. */
+function screenGone(id) {
+  if (!G.screens.delete(id)) return false;
+  Net.broadcast(lobbyMsg());
+  noteScreens(G.screens.size, true);
+  return true;
+}
+
+/** Everyone: the lobby's TV count changed. */
+function noteScreens(n, force) {
+  const before = G.screenCount;
+  G.screenCount = n;
+  if (n === before && !force) return;
+  if (n > before) { toast('📺 TV connected', 'good'); Sound.join(); }
+  else if (n < before) toast('📺 TV disconnected');
+  // The last TV went away mid-show: bring the show back to this phone.
+  if (!n && Results.watching) Results.unwatch();
+  if (G.screen === 'lobby') renderLobby();
+  TVSheet.paint();
+}
+
+/** Host: tell the TVs a long word was just found. One flash per player per
+ *  second at most, so a tampered client cannot strobe everyone's TV. */
+function flashLong(id, len) {
+  const R = G.round;
+  if (!R || R.ended || !G.screens.size) return;
+  const now = Date.now(), p = G.players.get(id) || {};
+  if (now - (p.lastFlash || 0) < 1000) return;
+  p.lastFlash = now;
+  Net.broadcast({ t: 'flash', len: Math.min(16, len) });
+}
+
 /* --------------------------- pips (live) ---------------------------- */
 function renderPips(flashId) {
+  if (G.mode === 'tv') { TV.renderPlayers(flashId); return; }
   const box = $('#gpips');
   const others = roster().filter(p => p.id !== G.me.id);
   if (!others.length) { box.innerHTML = ''; return; }
@@ -4278,8 +4947,12 @@ function submitWord(word, cells) {
   if (word.length >= 6) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 26, 6.28, -1.57, 8);
 
   const p = meP(); if (p) p.found = R.words.size;
-  if (G.mode === 'guest') Net.toHost({ t: 'act', n: R.words.size });
-  else if (G.mode === 'host') Net.broadcast({ t: 'act', id: G.me.id, n: R.words.size });
+  const L = word.length >= FLASH_MIN ? word.length : 0;
+  if (G.mode === 'guest') Net.toHost(L ? { t: 'act', n: R.words.size, L } : { t: 'act', n: R.words.size });
+  else if (G.mode === 'host') {
+    Net.broadcast({ t: 'act', id: G.me.id, n: R.words.size });
+    if (L) flashLong(G.me.id, L);
+  }
 
   return 'ok';
 }
@@ -4322,12 +4995,14 @@ async function createRoom() {
   try {
     const code = await Net.host();
     G.mode = 'host';
+    G.screens.clear(); G.screenCount = 0; G.phase = 'lobby'; G.watchHere = false;
     G.me.id = Net.me;
     G.players.clear();
     G.players.set(Net.me, { id: Net.me, name: G.me.name, color: G.me.color, av: G.me.av, host: true, found: 0 });
     history.replaceState(null, '', location.pathname + '?r=' + code);
     show('lobby'); renderLobby();
     toast('Lobby ' + code + ' is live', 'good');
+    CastLink.follow();
   } catch (e) {
     modal('Could not open a lobby', (e && e.message) || 'The peer-to-peer service is unreachable. Check your connection and try again.', [{ label: 'OK', cls: 'grape' }]);
   } finally { btn.disabled = false; btn.innerHTML = '✨ Create a lobby'; }
@@ -4341,20 +5016,29 @@ async function joinRoom(code) {
   try {
     await Net.join(code);
     G.mode = 'guest';
+    G.screenCount = 0; G.watchHere = false; G.goneWhy = '';
     G.players.clear();
     Net.toHost({ t: 'hello', name: G.me.name, color: G.me.color, av: G.me.av });
     history.replaceState(null, '', location.pathname + '?r=' + code);
     $('#lobbyState').textContent = 'Connected';
     show('lobby'); renderLobby();
+    CastLink.follow();
   } catch (e) {
+    // Cancelled by opening a lobby of our own meanwhile: nothing went wrong.
+    if (e && e.superseded) return;
     modal("Couldn't join", (e && e.message) || 'Something went wrong.', [{ label: 'OK', cls: 'grape' }]);
   } finally { btn.disabled = false; btn.textContent = 'Join'; }
 }
 
 function leaveRoom(why) {
-  Net.destroy();
+  // A host that leaves on purpose says so, so guests and TVs can tell a
+  // closed lobby from a dropped connection (a TV retries the latter).
+  if (G.mode === 'host') { Net.broadcast({ t: 'bye' }); Net.destroy(300); }
+  else Net.destroy();
   cancelAnimationFrame(timerRaf);
+  const cd = $('#cd'); if (cd) cd.remove();
   G.mode = 'solo'; G.round = null; G.results = null;
+  G.screens.clear(); G.screenCount = 0; G.phase = 'lobby'; G.watchHere = false;
   G.players.clear();
   Results.stop();
   FX.clear();
@@ -4386,8 +5070,10 @@ const Board = (() => {
     const wrap = $('#boardwrap');
     const w = wrap.clientWidth, h = wrap.clientHeight;
     if (!w || !h) return;
-    // Leave room above the board for the floating word bubble.
-    boxSize = Math.floor(Math.min(w, h - 54, 620));
+    // Leave room above the board for the floating word bubble -- or, on a
+    // TV, for the long-word banner. A TV has no size cap: it is the stage.
+    const tv = G.mode === 'tv';
+    boxSize = Math.floor(tv ? Math.min(w, h - Math.round(h * .13)) : Math.min(w, h - 54, 620));
     const gap = Math.max(4, Math.round(boxSize * (size >= 6 ? .015 : size === 5 ? .019 : .023)));
     cell = (boxSize - gap * (size + 1)) / size;
 
@@ -4691,6 +5377,11 @@ const Board = (() => {
    flip at the end. Bars are scaled to the current leader for the same reason.
 
    6-letter words get a sparkle; 7+ letters get a full-screen fireworks beat.
+
+   With a TV in the lobby the TV is the stage: it runs this same show in a
+   landscape layout, and each phone runs it *hidden* behind "Watch the TV",
+   silent and without effects, so that "Show it here instead" can lift the
+   cover mid-show without falling out of step with the TV.
    ===================================================================== */
 
 const Results = (() => {
@@ -4702,6 +5393,11 @@ const Results = (() => {
   let paceIdx = 1, gap = 700, wordCount = 0;
   let scorers = 0, leader = null;     // live race
   let mini = [], trail = null;        // mini board tiles + trace line
+  let watching = false;               // phone: show running hidden behind "Watch the TV"
+  let finished = false;               // the show reached its last screen
+  const isTV = () => G.mode === 'tv';
+  // A phone in a pocket should not buzz along to a show it is not showing.
+  const vib = ms => { if (!watching) buzz(ms); };
   // Every deferred visual (flights, landings, sparkle cleanup) goes through
   // `later`, so skip/stop can cancel the lot in one go.
   let timers = new Set();
@@ -4735,6 +5431,9 @@ const Results = (() => {
 
   function stop() {
     seq++; skipped = true; flushWaits(); killFx();
+    // Never leave the phone muted (or the confetti off) after the show it
+    // was being quiet for has gone away.
+    if (watching) watch(false);
     const w = $('#rwin'); if (w) w.remove();
     const s = $('#rstage'); if (s) s.remove();
     FX.clear();
@@ -4839,6 +5538,10 @@ const Results = (() => {
     box.innerHTML = '';
     box.classList.remove('done');
     box.classList.toggle('dense', data.players.length > 4);
+    // On a TV the rows share the column's height; everything inside a row is
+    // sized off --rh in CSS.
+    const n = data.players.length;
+    box.style.setProperty('--rh', 'min(14vh, calc((86vh - ' + (n - 1) + ' * 1.6vh) / ' + n + '))');
     const avSz = data.players.length > 4 ? 32 : 38;
     live = new Map();
     data.players.forEach(p => {
@@ -4930,7 +5633,8 @@ const Results = (() => {
   function setPhase(title, sub, kind) {
     const box = $('#rphase');
     // The closing beat has no word to show, so collapse the card to its label.
-    $('#rreveal').classList.toggle('slim', kind === 'final');
+    // A TV keeps its board up the whole time: it is the stage.
+    $('#rreveal').classList.toggle('slim', kind === 'final' && !isTV());
     box.className = kind || '';
     box.innerHTML = '';
     box.appendChild(el('b', null, title));
@@ -4939,7 +5643,8 @@ const Results = (() => {
       { opacity: 0, transform: 'translateY(10px)' },
       { opacity: 1, transform: 'none' },
     ], 420);
-    $('#rword').classList.add('empty');
+    // The TV's closing beat keeps the best word on its pill.
+    if (!(isTV() && kind === 'final' && data && data.best && data.best.w)) $('#rword').classList.add('empty');
   }
 
   /* ----------------------------- mini board ----------------------------- */
@@ -4968,14 +5673,25 @@ const Results = (() => {
     const box = $('#rmini'), rows = $('#rrows');
     if (!data || $('#rreveal').classList.contains('hide')) return;
     const set = sz => {
+      sz = Math.round(sz);
       const n = data.size, g = Math.max(3, Math.round(sz * (n >= 6 ? .014 : .02)));
       const cell = (sz - g * (n + 1)) / n;
       box.style.setProperty('--mb', sz + 'px');
+      // The TV sizes the word pill off the board too, and the pill is a
+      // sibling of the board, not a child: hand it the same number.
+      if (isTV()) $('#rreveal').style.setProperty('--mb', sz + 'px');
       box.style.setProperty('--mg', g + 'px');
       box.style.setProperty('--mf', Math.round(cell * .46) + 'px');
       box.style.setProperty('--mtr', Math.round(cell * .2) + 'px');
       box.style.setProperty('--mtd', Math.max(2, Math.round(cell * .07)) + 'px');
     };
+    if (isTV()) {
+      // The left column belongs to the board: as big as fits under the phase
+      // label and over the word pill (and the finders hanging off it).
+      const col = $('#rreveal'), vh = innerHeight / 100;
+      set(Math.max(120, Math.min(col.clientWidth * .9, col.clientHeight - 36 * vh)));
+      return;
+    }
     // About two thirds of the width: big enough to read, small enough that the
     // pill and the rows get room to breathe.
     const cap = Math.min(Math.round(rows.clientWidth * .66), 270);
@@ -5086,7 +5802,9 @@ const Results = (() => {
       land(L, r, pending === Ls.length, x, y);
       if (--pending === 0) race();
     };
-    if (!CAN_WAAPI || RM || ms <= 0) { Ls.forEach(landed); return; }
+    // Hidden behind "Watch the TV" there is nothing to look at, and a flying
+    // chip is a fixed-position node that would sail right over the cover.
+    if (!CAN_WAAPI || RM || ms <= 0 || watching) { Ls.forEach(landed); return; }
 
     const rng = document.createRange(); rng.selectNodeContents($('#rword .w'));
     const src = rng.getBoundingClientRect();
@@ -5147,7 +5865,7 @@ const Results = (() => {
     // One sound per word, on the first landing.
     if (first) {
       if (r.uniq) Sound.coin(); else Sound.pop(Math.min(9, r.w.length - 2));
-      if (r.uniq && r.pts >= 1200) buzz(12);
+      if (r.uniq && r.pts >= 1200) vib(12);
     }
   }
 
@@ -5188,7 +5906,7 @@ const Results = (() => {
         { opacity: 1, transform: 'none', offset: .82 },
         { opacity: 0, transform: 'translateX(-12px)' },
       ], 1700);
-      Sound.lead(); buzz([8, 30, 8]);
+      Sound.lead(); vib([8, 30, 8]);
     }
   }
 
@@ -5212,6 +5930,9 @@ const Results = (() => {
   }
 
   async function fireworks(r) {
+    // Behind the cover, keep the beat (so this phone stays in step with the
+    // TV) but draw nothing.
+    if (watching) { await wait([2000, 1600, 1100][paceIdx] || 1600); return; }
     if (RM) { sparkle(r); return; }
     const len = r.w.length;
     const ov = el('div'); ov.id = 'rbig';
@@ -5272,11 +5993,11 @@ const Results = (() => {
 
   async function photoFinish(K) {
     setPhase('Photo finish', K === 1 ? 'last word' : 'last ' + K + ' words', 'finish');
-    $('#scr-results').classList.add('tense');
+    if (!watching) $('#scr-results').classList.add('tense');
     mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
     trail.setAttribute('points', '');
     Sound.drumroll(1.25);
-    buzz([6, 60, 6, 50, 6, 40, 6, 30, 12]);
+    vib([6, 60, 6, 50, 6, 40, 6, 30, 12]);
     await wait(1500);
   }
 
@@ -5335,6 +6056,7 @@ const Results = (() => {
     const b = data.best;
     const box = $('#rbest');
     if (!b || !b.w) { box.classList.add('hide'); return; }
+    if (isTV()) { tvBest(true); return; }
     const who = data.players.find(p => p.id === b.id);
     box.innerHTML = '';
     const left = el('div');
@@ -5353,10 +6075,28 @@ const Results = (() => {
     FX.burst(r.left + r.width / 2, r.top + r.height / 2, 30, 3.4, -1.57, 9);
   }
 
+  /** TV: the best word lives on the big board and the gold pill rather than
+   *  in a card, so the stage never goes empty between beats. */
+  function tvBest(loud) {
+    const b = data && data.best;
+    if (!b || !b.w) return;
+    setPhase('Best word', '', b.uniq ? 'uniq' : '');
+    $('#rreveal').classList.remove('slim');
+    showWord({ w: b.w, pts: b.pts, uniq: !!b.uniq, ids: [b.id] });
+    trace({ w: b.w, uniq: !!b.uniq }, loud ? 520 : 0);
+    if (loud) {
+      Sound.coin();
+      const r = $('#rword').getBoundingClientRect();
+      FX.burst(r.left + r.width / 2, r.top + r.height / 2, 30, 3.4, -1.57, 9);
+    }
+  }
+
   /* ---------------------------- winner splash --------------------------- */
   async function winner(token) {
     const scored = data.players.filter(p => !p.spect).sort((a, b) => b.score - a.score);
     if (!scored.length) return;
+    // The TV has the splash; behind the cover just wait it out together.
+    if (watching) { await sleep(skipped ? 1700 : 2500); return; }
     const top = scored[0];
     const tie = scored.filter(p => p.score === top.score && p.score > 0);
     const solo = scored.length === 1;
@@ -5474,9 +6214,21 @@ const Results = (() => {
   /* ------------------------------- finish ------------------------------- */
   function finish() {
     $('#rspeed').classList.add('hide');
+    $('#btnSkip').classList.add('hide');
+    finished = true;
+    if (isTV()) {
+      // The TV holds the final standings, with the best word on the board,
+      // until the host starts the next round or goes back to the lobby.
+      tab = 'rank';
+      reorder(); paintRanks();
+      const host = roster().find(p => p.host);
+      $('#rtvwait').textContent = 'Waiting for ' + (host ? host.name : 'the host') + ' to start the next round…';
+      $('#rtvwait').classList.remove('hide');
+      return;
+    }
+    watch(false);
     $('#rreveal').classList.add('hide');
     $('#rtabs').classList.remove('hide');
-    $('#btnSkip').classList.add('hide');
     tab = 'rank';
     renderTab();
     Chal.paintOutcome();
@@ -5499,7 +6251,9 @@ const Results = (() => {
   }
 
   /* -------------------------------- play -------------------------------- */
-  async function play(p) {
+  /** `instant`: go straight to the final standings -- a TV that turns up
+   *  after the show has run should not replay its tail end. */
+  async function play(p, instant) {
     const token = ++seq;
     skipped = false; resolvers = []; allWords = null; data = p;
 
@@ -5514,9 +6268,13 @@ const Results = (() => {
     $('#btnChalShare').classList.add('hide');
     $('#chalBar').classList.add('hide');
     $('#againMsg').textContent = '';
-    const mine = p.players.find(x => x.id === G.me.id);
+    $('#rtvwait').classList.add('hide');
+    finished = false;
     $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters' +
       (p.lang ? ' · ' + optLabel('lang', p.lang) : '');
+    // A phone in a lobby with a TV runs the show hidden: the TV is the stage.
+    // (After the header text is in, so the cover lines up under it.)
+    watch(!isTV() && (p.screens | 0) > 0 && !G.watchHere && (G.mode === 'host' || G.mode === 'guest'));
 
     killFx();
     leader = null;
@@ -5531,12 +6289,24 @@ const Results = (() => {
     paintSpeed();
     scorers = data.players.filter(x => !x.spect).length;
 
+    if (instant) {
+      skipped = true;
+      applyFinalTotals();
+      if (isTV()) tvBest(false); else showBest();
+      setPhase('Final standings', '', 'final');
+      reorder(); paintRanks();
+      const top = Math.max(0, ...data.players.filter(x => !x.spect).map(x => x.score));
+      live.forEach(L => L.row.classList.toggle('lead', scorers > 1 && !L.p.spect && top > 0 && L.score === top));
+      finish();
+      return;
+    }
+
     setPhase('Time!', wordCount ? '' : 'nobody found a thing', '');
     await wait(1200);
     if (token !== seq) return;
 
     if (scorers <= 1) {
-      await revealPhase(token, plan.shared.concat(plan.unique), 'Your words', '', '');
+      await revealPhase(token, plan.shared.concat(plan.unique), isTV() ? 'Words found' : 'Your words', '', '');
     } else {
       await revealPhase(token, plan.shared, 'Shared words', '', '');
       if (token !== seq) return;
@@ -5568,8 +6338,47 @@ const Results = (() => {
     finish();
   }
 
+  /* ------------------------------ watch the TV ------------------------------
+     The cover hides the stage but not the header, so the host's speed and
+     skip controls stay in reach. `visibility`, not `display`, underneath: the
+     hidden show still lays out, so lifting the cover mid-show just works. */
+  function watch(on) {
+    watching = !!on;
+    const scr = $('#scr-results'), cover = $('#rwatch');
+    scr.classList.toggle('watching', watching);
+    cover.classList.toggle('hide', !watching);
+    Sound.hush(watching);
+    FX.quiet = watching;
+    // Skipping is the host's call while everyone watches the TV; a guest's
+    // own Skip comes back with "Show it here instead".
+    // A guest's speed bar is locked anyway; behind the cover it is just noise.
+    const guest = !canControl();
+    if (watching && guest) { $('#btnSkip').classList.add('hide'); $('#rspeed').classList.add('hide'); }
+    else if (!watching && !finished && data) { $('#btnSkip').classList.remove('hide'); $('#rspeed').classList.remove('hide'); }
+    if (watching) { placeCover(); scr.classList.remove('tense'); }
+  }
+
+  /** Sit just under the header controls, whatever height they end up. */
+  function placeCover() {
+    const sp = $('#rspeed'), anchor = sp.classList.contains('hide') ? $('#rhead') : sp;
+    $('#rwatch').style.top = (anchor.offsetTop + anchor.offsetHeight + 4) + 'px';
+  }
+
+  addEventListener('resize', () => { if (watching) placeCover(); });
+
+  $('#btnWatchHere').onclick = () => {
+    G.watchHere = true;                 // for the rest of this lobby
+    watch(false);
+    Sound.tick(3);
+    fitMini();
+  };
+
   $$('#rtabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; Sound.tick(4); renderTab(); });
-  $('#btnSkip').onclick = () => { skip(); Sound.tick(2); };
+  $('#btnSkip').onclick = () => {
+    skip(); Sound.tick(2);
+    // The TVs (and phones watching them) follow the host's skip.
+    if (G.mode === 'host') Net.broadcast({ t: 'skip' });
+  };
 
   /* ------------------------------- demo ---------------------------------
      Dev mode: jump straight to a results show for a made-up 4-player round
@@ -5577,7 +6386,7 @@ const Results = (() => {
      at without rounding up three other people. Runs as a solo session, so
      "New board" / "Main menu" afterwards behave exactly as after a solo game. */
   async function demo() {
-    if (G.mode === 'host' || G.mode === 'guest') { toast('Leave the lobby first', 'bad'); return; }
+    if (G.mode === 'host' || G.mode === 'guest' || G.mode === 'tv') { toast('Leave the lobby first', 'bad'); return; }
     G.mode = 'solo';
     G.challenge = null;
     const size = pick([4, 5, 6]), minLen = 3, lang = G.settings.lang | 0;
@@ -5626,7 +6435,10 @@ const Results = (() => {
     play(payload);
   }
 
-  return { play, stop, skip, setPace, paintSpeed, demo };
+  /** The TV went away: put the show back on this phone. */
+  function unwatch() { if (watching) { watch(false); fitMini(); } }
+
+  return { play, stop, skip, setPace, paintSpeed, demo, fitMini, unwatch, get watching() { return watching; } };
 })();
 
 /* ==== 55_lan.js ==== */
@@ -5670,8 +6482,9 @@ const Lan = (() => {
   }
 
   /* ------------------------------- QR --------------------------------- */
-  function paintQR(text, sel) {
-    const q = QR.encode(text);
+  /** `asBytes`: encode verbatim (byte mode) -- for URLs a phone's camera opens. */
+  function paintQR(text, sel, asBytes) {
+    const q = QR.encode(text, asBytes);
     const quiet = 4, n = q.size + quiet * 2;
     const cv = $(sel || '#lanQr');
     cv.width = n; cv.height = n;                  // one canvas pixel per module
@@ -5916,6 +6729,888 @@ const Lan = (() => {
            scanInto };
 })();
 
+/* ==== 56_tv.js ==== */
+/* =====================================================================
+   TV — this device as the big screen for someone else's lobby.
+
+   A TV is a display-only peer. It joins an online lobby the same way a
+   phone does, except that it says so in the connection metadata (role
+   'tv'), so it takes no player seat. It hears every broadcast and draws the
+   lobby, the round and the results show in a landscape layout meant to be
+   read from the couch. It never checks a word, so it never loads a
+   dictionary.
+
+   The phone that created the lobby stays the host: it rolls the boards,
+   checks the words and keeps the score. That was a deliberate choice -- the
+   lobby works exactly as it always has with or without a TV, and several
+   TVs (in several houses) can watch the same game.
+
+   Three ways for a TV to find a lobby:
+     - type the room code with the remote (arrows + OK, or any keyboard);
+     - a phone in the lobby enters the TV's own code ("📺 Add a TV"), which
+       reaches the TV through its own broker id (see Cloud.listenTv);
+     - a Cast session (57_cast.js) or a ?tv&r=CODE link hands it the code.
+   ===================================================================== */
+
+const TV_MODE = typeof window !== 'undefined' && (!!window.CAST_RECEIVER ||
+  /(?:^|[?&])tv(?:[=&]|$)/.test(location.search));
+
+const TV = (() => {
+  let room = '';                 // the lobby this screen is showing ('' = none)
+  let tvCode = '';               // this screen's own code, for "Add a TV"
+  let joinSeq = 0, joining = false;
+  let retrying = false;          // reconnecting by itself after a drop
+  let entry = ['', '', '', ''], focusAt = 0;
+  let flashTimer = 0, goneWhy = '';
+  let soundPress = null;         // the OK press that only turned the sound on
+
+  /* ------------------------------ helpers ------------------------------ */
+  // Where the game lives, whichever page this is (index.html?tv, tv.html or
+  // the Cast receiver): the join link for phones points at the plain app.
+  const base = () => location.origin + location.pathname.replace(/[^/]*$/, '');
+  const joinUrl = code => base() + '?r=' + code;
+  const shortUrl = () => (location.host + location.pathname.replace(/[^/]*$/, '')).replace(/\/$/, '');
+  const hostName = () => { const h = roster().find(p => p.host); return h ? h.name : 'the host'; };
+
+  function tiles(box, text, cls) {
+    if (box.dataset.text === text) return;
+    box.dataset.text = text;
+    box.innerHTML = '';
+    text.split('').forEach((ch, i) => {
+      const b = el('b', cls || null, ch);
+      b.style.animationDelay = (i * .07) + 's';
+      box.appendChild(b);
+    });
+  }
+
+  /* ------------------------------- boot -------------------------------- */
+  function boot(params) {
+    document.body.classList.add('tv');
+    G.mode = 'tv';
+    G.me = { id: 'tv', name: 'TV', color: COLORS[0], av: Av.keys[0] };
+    // The phones go quiet when a TV joins; the TV had better not be muted.
+    Sound.forceOn();
+    $('#tvjUrl').textContent = shortUrl();
+    // Opened by mistake on a phone or laptop: one tap back to the game. A
+    // Chromecast has nowhere else to go.
+    $('#tvjExit').classList.toggle('hide', !!window.CAST_RECEIVER);
+    $('#tvjExit').onclick = () => { Net.stopTv(); location.href = location.pathname.replace(/[^/]*$/, ''); };
+    buildEntry();
+    // Sound first: its listener has to see a key press before onKey does.
+    soundAndScreen();
+    addEventListener('keydown', onKey);
+    idleCursor();
+    Wake.on();
+    showJoin();
+    if (navigator.onLine === false) {
+      setStatus('This screen is offline. TV mode needs an internet connection.', true);
+    }
+    listen();
+    const r = String(params.get('r') || '').toUpperCase();
+    if (isCode(r)) join(r);
+    // The TV code has to stay reachable for as long as the TV is on: after a
+    // network drop (or a broker hiccup that reconnecting did not fix), take
+    // the code again.
+    addEventListener('online', () => { if (!Net.tvAlive) listen(); });
+    setInterval(() => { if (!Net.tvAlive && navigator.onLine !== false) listen(); }, 15000);
+  }
+
+  /** Register this screen's own code with the broker so a phone can send it
+   *  a lobby. The code is kept between visits, so a TV that has been paired
+   *  once shows the same code next time. */
+  let listening = false;
+  async function listen() {
+    if (listening) return;
+    listening = true;
+    try {
+      tvCode = await Net.listenTv(store.get('tvcode', ''), (code, who) => {
+        if (code === room) return;
+        toast((who ? who + ' sent' : 'Got') + ' lobby ' + code, 'good');
+        join(code);
+      }, () => {
+        // The broker let go of our code: show that, and take it back.
+        tvCode = '';
+        $('#tvjPair').classList.add('wait');
+        setTimeout(listen, 3000);
+      });
+      store.set('tvcode', tvCode);
+      tiles($('#tvjCode'), tvCode);
+      $('#tvjPair').classList.remove('wait');
+    } catch (e) {
+      tvCode = '';
+      tiles($('#tvjCode'), '····');
+      $('#tvjPair').classList.add('wait');
+      setTimeout(() => { listening = false; listen(); }, 6000);
+      return;
+    }
+    listening = false;
+  }
+
+  /* -------------------------------- join -------------------------------- */
+  let inflight = null, inflightCode = '';
+
+  /** Join `code` as a screen. Resolves true once connected (the host's
+   *  welcome then decides what to draw), false if it could not, and null if
+   *  another join replaced this one before it finished. */
+  function join(code, quiet) {
+    code = String(code || '').toUpperCase();
+    if (!quiet) { retrySeq++; retrying = false; }   // someone chose a lobby: stop any reconnecting
+    if (!isCode(code)) { setStatus('That is not a room code.', true); shake(); return Promise.resolve(false); }
+    if (code === room && Net.online) return Promise.resolve(true);
+    // The same code twice (a Cast sender saying it again) is one join, not a
+    // second one that tears the first down halfway through its handshake.
+    if (joining && inflight && code === inflightCode) return inflight;
+    inflightCode = code;
+    inflight = doJoin(code, quiet);
+    return inflight;
+  }
+
+  async function doJoin(code, quiet) {
+    const my = ++joinSeq;
+    joining = true; goneWhy = '';
+    // Whatever the old lobby had going (a clock, a results show, a pending
+    // countdown) stops here, before it can fire into the new one.
+    reset();
+    entry = code.split(''); focusAt = 3;
+    showJoin(true);
+    setStatus((quiet ? 'Reconnecting to ' : 'Joining ') + code + '…');
+    // Leaving one lobby for another: say nothing about the old one closing.
+    room = '';
+    try {
+      await Net.join(code, 'tv');
+      if (my !== joinSeq) return null;
+      room = code;
+      Net.toHost({ t: 'hello', role: 'tv', name: 'TV' });
+      return true;
+    } catch (e) {
+      if (my !== joinSeq || (e && e.superseded)) return null;
+      entry = ['', '', '', '']; focusAt = 0;
+      setStatus((e && e.message) || "Couldn't reach that lobby.", true);
+      if (!quiet) shake();
+      return false;
+    } finally {
+      if (my === joinSeq) { joining = false; paintEntry(); }
+    }
+  }
+
+  /** Drop everything the last lobby left running. */
+  function reset() {
+    cancelAnimationFrame(timerRaf);
+    Results.stop();
+    FX.clear();
+    clearTimeout(flashTimer);
+    $('#tvflash').classList.remove('on');
+    ['#cd', '#rstage'].forEach(s => { const n = $(s); if (n) n.remove(); });
+    G.round = null; G.results = null;
+    G.players.clear();
+  }
+
+  /** The host went away, or this screen was turned away. */
+  function lost(why) {
+    joinSeq++;
+    joining = false;
+    const code = room;
+    room = '';
+    Net.destroy();
+    reset();
+    entry = ['', '', '', '']; focusAt = 0;
+    showJoin();
+    const reason = goneWhy || why || '';
+    goneWhy = '';
+    // Dropped with no reason given: maybe the host left, maybe the Wi-Fi
+    // blinked. A TV across town should not need someone to re-pair it after
+    // a blip, so try the same lobby again for a little while first.
+    if (!reason && code) { rejoin(code, 1, retrySeq); return; }
+    setStatus(reason, !!reason);
+    // A phone that cast us here is still waiting to hear how it went.
+    if (reason) CastRecv.failed(reason);
+  }
+
+  let retrySeq = 0;
+  async function rejoin(code, n, seq) {
+    if (seq !== retrySeq || room) return;
+    retrying = true;
+    const ok = await join(code, true);
+    if (seq !== retrySeq) return;                      // someone picked another lobby
+    if (ok !== false) { retrying = false; return; }    // back in
+    const gone = /no lobby/i.test($('#tvjStatus').textContent);
+    if (!gone && n < 5) {
+      setStatus('Lost the lobby — trying again…');
+      setTimeout(() => rejoin(code, n + 1, seq), 2500);
+      return;
+    }
+    retrying = false;
+    setStatus('The lobby closed.', true);
+    CastRecv.failed('The lobby closed.');
+  }
+
+  /** Someone started typing a code while the TV was reconnecting: they want
+   *  another lobby, so stop retrying the old one and hand them the boxes. */
+  function stopRetry() {
+    retrySeq++; retrying = false;
+    if (joining) { joinSeq++; joining = false; Net.destroy(); }
+    entry = ['', '', '', '']; focusAt = 0;
+    setStatus('');
+  }
+
+  /* ----------------------------- messages ------------------------------ */
+  function onMessage(m) {
+    switch (m.t) {
+      case 'welcome':
+        // A host on an older version takes a TV for a player (and would wait
+        // for its words every round). Say so rather than sit in its lobby.
+        if (!m.screen) {
+          goneWhy = "The host's app is out of date. Ask them to refresh it, then try again.";
+          Net.destroy();
+          lost();
+          return;
+        }
+        G.me.id = m.you;
+        if (m.code && isCode(m.code)) room = m.code;
+        setPlayersFrom(m.players || []);
+        G.settings = Object.assign({}, G.settings, m.settings || {});
+        G.screenCount = m.screens | 0;
+        setStatus('');
+        if (m.live) beginRound(m.live, true);
+        else if (m.results) { G.results = m.results; Results.play(m.results, true); }
+        else showLobby();
+        CastRecv.joined(room);
+        break;
+      case 'lobby':
+        setPlayersFrom(m.players || []);
+        G.settings = Object.assign({}, G.settings, m.settings || {});
+        G.screenCount = m.screens | 0;
+        if (G.screen === 'tvlobby') renderLobby();
+        else if (m.phase === 'lobby' && (G.screen === 'results' || (G.round && G.round.ended))) showLobby();
+        else if (G.screen === 'game') renderPlayers();
+        break;
+      case 'start':
+        G.results = null;
+        beginRound(m, false);
+        break;
+      case 'act': {
+        const p = G.players.get(m.id);
+        if (p) { p.found = m.n | 0; renderPlayers(m.id); }
+        break;
+      }
+      case 'flash':
+        flash(m.len | 0);
+        break;
+      case 'results':
+        if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); }
+        clearTimeout(flashTimer); $('#tvflash').classList.remove('on');
+        // Keep who the host is: the results roster does not say.
+        setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av })));
+        G.results = m;
+        Results.play(m);
+        break;
+      case 'pace':
+        if (OPTS.pace.some(o => o.v === m.v)) { G.settings.pace = m.v; Results.setPace(m.v, true); }
+        break;
+      case 'skip':
+        Results.skip();
+        break;
+      case 'kick':
+        goneWhy = 'This TV was removed from the lobby.';
+        break;
+      case 'bye':
+        goneWhy = 'The lobby closed.';
+        break;
+      case 'full':
+        goneWhy = m.tv ? 'That lobby already has ' + MAX_SCREENS + ' TVs.' : 'That lobby is full.';
+        break;
+    }
+  }
+
+  /* ------------------------------ screens ------------------------------- */
+  function showJoin(keepStatus) {
+    show('tvjoin');
+    if (!keepStatus) setStatus('');
+    paintEntry();
+  }
+
+  function setStatus(msg, bad) {
+    const n = $('#tvjStatus');
+    n.textContent = msg || '';
+    n.classList.toggle('bad', !!bad);
+    n.classList.toggle('busy', !bad && !!msg);
+  }
+
+  function shake() {
+    const b = $('#tvjBoxes');
+    b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  }
+
+  function showLobby() {
+    // Coming back from the results: stop the show (and its sounds) first.
+    if (G.screen === 'results') Results.stop();
+    show('tvlobby');
+    renderLobby();
+  }
+
+  function renderLobby() {
+    if (G.screen !== 'tvlobby') return;
+    if (room) {
+      tiles($('#tvlCode'), room);
+      const qr = $('#tvlQr');
+      if (qr.dataset.code !== room) { qr.dataset.code = room; Lan.paintQR(joinUrl(room), '#tvlQr', true); }
+    }
+    $('#tvlUrl').textContent = shortUrl();
+
+    const ps = roster().sort((a, b) => (b.host ? 1 : 0) - (a.host ? 1 : 0));
+    const grid = $('#tvlGrid');
+    grid.innerHTML = '';
+    ps.forEach((p, i) => {
+      const c = el('div', 'tvl-p');
+      c.style.animationDelay = (i * .05) + 's';
+      c.appendChild(avatar(p, 0, p.host ? 'crown' : ''));
+      c.appendChild(el('div', 'nm', p.name));
+      if (p.host) c.appendChild(el('span', 'hostb', 'Host'));
+      grid.appendChild(c);
+    });
+    for (let i = ps.length; i < MAX_PLAYERS; i++) {
+      const c = el('div', 'tvl-p empty');
+      c.appendChild(el('div', 'slot'));
+      c.appendChild(el('div', 'nm', 'Waiting…'));
+      grid.appendChild(c);
+    }
+    $('#tvlCount').textContent = ps.length + '/' + MAX_PLAYERS;
+
+    const s = G.settings, set = $('#tvlSet');
+    set.innerHTML = '';
+    [optLabel('size', s.size), optLabel('dur', s.dur), optLabel('minLen', s.minLen) + ' letters', optLabel('lang', s.lang | 0)]
+      .forEach(t => set.appendChild(el('span', null, t)));
+
+    $('#tvlWait').textContent = ps.length < 2
+      ? 'Scan the code to join in — ' + hostName() + ' starts the round'
+      : 'Waiting for ' + hostName() + ' to start the round…';
+    const n = G.screenCount;
+    $('#tvlScreens').textContent = '📺 ' + n + (n === 1 ? ' screen' : ' screens');
+    $('#tvlScreens').classList.toggle('hide', n < 2);
+  }
+
+  /* ------------------------------- round -------------------------------- */
+  function roundStarted() {
+    clearTimeout(flashTimer);
+    $('#tvflash').classList.remove('on');
+    $('#tvplayers').innerHTML = '';
+    renderPlayers();
+  }
+
+  /** The live player cards beside the board: avatar, name, words so far.
+   *  Join order, not ranked -- the counts are there, the drama is saved for
+   *  the results show. */
+  function renderPlayers(flashId) {
+    const box = $('#tvplayers');
+    const ps = roster();
+    const ids = ps.map(p => p.id).join('|');
+    box.classList.toggle('two', ps.length > 5);
+    if (box.dataset.ids !== ids) {
+      box.dataset.ids = ids;
+      box.innerHTML = '';
+      ps.forEach(p => {
+        const c = el('div', 'tvp');
+        c.dataset.id = p.id;
+        c.style.setProperty('--c', p.color);
+        c.appendChild(avatar(p, 0));
+        c.appendChild(el('div', 'nm', p.name));
+        const ct = el('div', 'ct');
+        ct.appendChild(el('b', 'mono', String(p.found || 0)));
+        ct.appendChild(el('small', null, 'words'));
+        c.appendChild(ct);
+        c.appendChild(el('i', 'plus', '+1'));
+        box.appendChild(c);
+      });
+    }
+    ps.forEach(p => {
+      const c = box.querySelector('.tvp[data-id="' + CSS.escape(p.id) + '"]');
+      if (!c) return;
+      const n = p.found || 0;
+      $('b', c).textContent = n;
+      $('small', c).textContent = n === 1 ? 'word' : 'words';
+    });
+    if (flashId) {
+      const c = box.querySelector('.tvp[data-id="' + CSS.escape(flashId) + '"]');
+      if (c && c.animate) {
+        $('.plus', c).animate([
+          { opacity: 0, transform: 'translateY(.6vh) scale(.6)' },
+          { opacity: 1, transform: 'translateY(-.4vh) scale(1.15)', offset: .25 },
+          { opacity: 1, transform: 'translateY(-1vh) scale(1)', offset: .7 },
+          { opacity: 0, transform: 'translateY(-2.2vh) scale(.95)' },
+        ], { duration: 900, easing: 'cubic-bezier(.22,1,.36,1)' });
+        $('b', c).animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .35 }, { transform: 'scale(1)' }],
+          { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      }
+    }
+  }
+
+  /** "Someone just found a 7-letter word!" -- never who, never what. */
+  function flash(len) {
+    if (G.screen !== 'game' || !G.round || G.round.ended || len < FLASH_MIN) return;
+    const box = $('#tvflash');
+    // A longer word outranks a shorter one still on screen, not vice versa.
+    if (box.classList.contains('on') && len < (+box.dataset.len || 0)) return;
+    box.dataset.len = len;
+    $('b', box).textContent = 'Someone just found ' + (len === 8 || len === 11 ? 'an ' : 'a ') + len + '-letter word!';
+    box.classList.add('on');
+    box.classList.toggle('huge', len >= 9);
+    if (box.animate) {
+      box.animate([
+        { opacity: 0, transform: 'translateX(-50%) translateY(-2vh) scale(.6) rotate(-3deg)' },
+        { opacity: 1, transform: 'translateX(-50%) scale(1.08) rotate(1deg)', offset: .55 },
+        { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0)' },
+      ], { duration: 560, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    }
+    Sound.sparkle();
+    if (len >= 9) Sound.firework(.1);
+    const r = box.getBoundingClientRect();
+    FX.burst(r.left + r.width * .1, r.top + r.height / 2, 22, 2.4, -2.4, 8, ['#ffd23f', '#fff4c2', '#ff9f43']);
+    FX.burst(r.right - r.width * .1, r.top + r.height / 2, 22, 2.4, -.7, 8, ['#ffd23f', '#fff4c2', '#3ddc97']);
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => box.classList.remove('on'), 3400);
+  }
+
+  /* --------------------------- the code entry ---------------------------
+     Four boxes driven by the remote: up/down cycles the letter in the
+     focused box, left/right moves, OK joins. A keyboard (real or on-screen)
+     types straight in; tapping the boxes focuses a hidden input so touch
+     screens and TV browsers bring up their own keyboard. */
+  function buildEntry() {
+    const box = $('#tvjBoxes');
+    box.innerHTML = '';
+    for (let i = 0; i < 4; i++) box.appendChild(el('b', 'empty'));
+    box.addEventListener('click', () => { const i = $('#tvjIn'); i.value = entry.join(''); i.focus(); });
+    $('#tvjIn').addEventListener('input', e => {
+      if (retrying) stopRetry();
+      const v = e.target.value.toUpperCase().split('').filter(c => CODE_ALPHABET.indexOf(c) >= 0).join('').slice(0, 4);
+      e.target.value = v;
+      entry = [0, 1, 2, 3].map(i => v[i] || '');
+      focusAt = Math.min(v.length, 3);
+      paintEntry();
+      if (v.length === 4) { e.target.blur(); join(v); }
+    });
+    paintEntry();
+  }
+
+  function paintEntry() {
+    $$('#tvjBoxes b').forEach((b, i) => {
+      b.textContent = entry[i] || '';
+      b.classList.toggle('empty', !entry[i]);
+      b.classList.toggle('focus', i === focusAt && !joining);
+    });
+  }
+
+  function cycle(dir) {
+    const A = CODE_ALPHABET, cur = entry[focusAt];
+    const i = cur ? A.indexOf(cur) : (dir > 0 ? -1 : 0);
+    entry[focusAt] = A[(i + dir + A.length) % A.length];
+    for (let k = focusAt + 1; k < 4; k++) if (!entry[k - 1]) entry[k] = '';
+    Sound.tick(2);
+  }
+
+  function onKey(e) {
+    if (G.screen !== 'tvjoin' || e === soundPress) return;
+    // Ctrl/Cmd shortcuts (reload, paste, ...) are the browser's, not letters.
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key, inInput = e.target && e.target.id === 'tvjIn';
+    // Typing wins over reconnecting; OK and left/right do not count, as the
+    // first OK press is often just for the sound.
+    if (retrying && !inInput && /^([a-z0-9]|Backspace|Delete|ArrowUp|ArrowDown)$/i.test(k)) stopRetry();
+    if (joining) return;
+    // While the hidden input has focus, it does the typing itself -- until
+    // the arrows move the cursor box, after which typing must land in that
+    // box, which only this handler knows about.
+    if (inInput && /^Arrow/.test(k)) e.target.blur();
+    else if (inInput && (k.length === 1 || k === 'Backspace' || k === 'Delete')) return;
+    if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); cycle(k === 'ArrowUp' ? 1 : -1); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); focusAt = Math.max(0, focusAt - 1); }
+    else if (k === 'ArrowRight') { e.preventDefault(); if (entry[focusAt]) focusAt = Math.min(3, focusAt + 1); }
+    else if (k === 'Enter' || k === ' ' || k === 'Select') {
+      e.preventDefault();
+      if (entry.every(Boolean)) { join(entry.join('')); return; }
+      if (!entry[focusAt]) { cycle(1); } else focusAt = Math.min(3, focusAt + 1);
+    } else if (k === 'Backspace' || k === 'Delete') {
+      e.preventDefault();
+      if (entry[focusAt]) entry[focusAt] = '';
+      else if (focusAt > 0) { focusAt--; entry[focusAt] = ''; }
+      for (let i = focusAt + 1; i < 4; i++) entry[i] = '';
+    } else if (/^[a-z0-9]$/i.test(k)) {
+      const c = k.toUpperCase();
+      if (CODE_ALPHABET.indexOf(c) < 0) return;
+      e.preventDefault();
+      entry[focusAt] = c;
+      Sound.tick(3);
+      if (focusAt < 3) focusAt++;
+      else if (entry.every(Boolean)) { paintEntry(); join(entry.join('')); return; }
+    } else return;
+    $('#tvjIn').value = entry.join('');
+    paintEntry();
+  }
+
+  /* -------------------- sound, full screen, cursor ---------------------
+     A browser will not play sound before someone presses something, so say
+     so, and use that same press to go full screen. A Cast receiver is
+     allowed to play sound straight away and is always full screen. */
+  function soundAndScreen() {
+    const pill = $('#tvSound'), full = $('#tvFull');
+    const canFull = !window.CAST_RECEIVER && !!document.fullscreenEnabled;
+    const paint = () => {
+      pill.classList.toggle('hide', !Sound.on || Sound.ready);
+      full.classList.toggle('hide', !canFull || !!document.fullscreenElement);
+    };
+    Sound.init();
+    const goFull = () => {
+      if (canFull && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
+    };
+    let first = true;
+    const wake = e => {
+      const locked = Sound.on && !Sound.ready;
+      Sound.init();
+      // Not when the press is on the way out of TV mode, or on the full
+      // screen button (which does it itself).
+      const t = e && e.target, skip = (e && e.key === 'Escape') || (t && t.closest && t.closest('#tvjExit,#tvFull'));
+      if (first && !skip) {
+        first = false; goFull();
+        // The pill says "press OK to turn the sound on": when that is the
+        // very first press, it does just that, rather than also putting an A
+        // in the first code box.
+        if (locked && e.type === 'keydown' && /^(Enter| |Select)$/.test(e.key)) soundPress = e;
+      }
+      setTimeout(paint, 80);
+    };
+    addEventListener('keydown', wake, true);
+    addEventListener('pointerdown', wake, true);
+    document.addEventListener('fullscreenchange', paint);
+    full.onclick = e => { e.stopPropagation(); goFull(); };
+    setTimeout(paint, 400);
+  }
+
+  function idleCursor() {
+    let t = 0;
+    const poke = () => {
+      document.body.classList.remove('idle');
+      clearTimeout(t);
+      t = setTimeout(() => document.body.classList.add('idle'), 2500);
+    };
+    addEventListener('pointermove', poke);
+    poke();
+  }
+
+  /* -------------------------------- demo --------------------------------
+     Dev only: draw the TV screens from made-up data, no lobby needed.
+     TV.demo('lobby' | 'round' | 'results'). */
+  async function demo(kind) {
+    const names = ['Ehsan', 'Priya', 'Bo', 'Mo', 'Ana', 'Jean-Luc', 'Kai', 'Ines'];
+    const n = Math.max(1, Math.min(8, +(new URLSearchParams(location.search).get('n')) || 5));
+    G.players.clear();
+    names.slice(0, n).forEach((nm, i) => G.players.set('d' + i,
+      { id: 'd' + i, name: nm, color: COLORS[i % COLORS.length], av: Av.keys[(i * 3) % Av.keys.length], host: i === 0, found: 0 }));
+    room = 'WXYZ'; G.screenCount = 2;
+    if (kind === 'lobby') { showLobby(); return; }
+    const size = 4, board = rollDice(size);
+    if (kind === 'round') {
+      beginRound({ rid: 1, board, size, minLen: 3, dur: 60, total: 80 }, true);
+      roster().forEach(p => { p.found = 3 + rnd(12); });
+      renderPlayers();
+      setTimeout(() => { const p = pick(roster()); p.found++; renderPlayers(p.id); flash(7); }, 600);
+      return;
+    }
+    // Results: words are random walks on the board -- not real words, but
+    // the show only needs paths it can trace.
+    const adj = adjacency(size), walk = len => {
+      let path = [rnd(size * size)];
+      while (path.length < len) {
+        const next = adj[path[path.length - 1]].filter(i => path.indexOf(i) < 0);
+        if (!next.length) break;
+        path.push(pick(next));
+      }
+      return path.map(i => board[i]).join('');
+    };
+    const pool = new Set();
+    while (pool.size < 40) pool.add(walk(3 + Math.min(5, rnd(6) + (rnd(5) ? 0 : 3))));
+    const all = Array.from(pool), found = new Map(roster().map(p => [p.id, new Set()]));
+    roster().forEach(p => all.forEach(w => { if (Math.random() < .22) found.get(p.id).add(w); }));
+    const seen = new Map();
+    found.forEach(set => set.forEach(w => seen.set(w, (seen.get(w) || 0) + 1)));
+    let best = null;
+    const players = roster().map(p => {
+      const words = Array.from(found.get(p.id)).map(w => {
+        const u = seen.get(w) === 1, pts = wordPoints(w.length) * (u ? UNIQUE_MULT : 1);
+        if (!best || pts > best.pts) best = { w, pts, id: p.id, uniq: u };
+        return { w, p: pts, u: u ? 1 : 0 };
+      });
+      return { id: p.id, name: p.name, color: p.color, av: p.av, score: words.reduce((s, x) => s + x.p, 0), words, spect: false };
+    });
+    const payload = { t: 'results', rid: 'demo', players, best, multi: true, pace: 2, total: all.length, board, size, minLen: 3, lang: 0, screens: 2 };
+    G.results = payload;
+    Results.play(payload);
+  }
+
+  return {
+    boot, join, lost, onMessage, renderPlayers, roundStarted, flash, demo,
+    get room() { return room; },
+    get code() { return tvCode; },
+  };
+})();
+
+/* ==== 57_cast.js ==== */
+/* =====================================================================
+   CAST + the phone's "Show it on a TV" sheet.
+
+   Casting is only a way to hand a TV the room code without a remote. The
+   phone asks a Chromecast / Google TV to open our receiver page (receiver.html,
+   registered as App ID CAST_APP_ID), then sends it the lobby code over the
+   Cast message channel; from there the TV joins over the same peer-to-peer
+   path as any other screen and no longer needs the phone at all. Nothing
+   about the game itself travels over Cast.
+
+   The Cast Web Sender exists only in Chrome on desktop and Android -- every
+   iOS browser is WebKit underneath and cannot cast from a web page -- so
+   the sheet always offers the TV-code and TV-link routes too.
+   ===================================================================== */
+
+const CAST_APP_ID = '385EDE7D';
+const CAST_NS = 'urn:x-cast:com.ehsankia.boggle';
+const CAST_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M2 20h.01"/></svg>';
+
+/* ------------------------------ sender ------------------------------ */
+const CastLink = (() => {
+  // off: never tried · loading · none: no Cast here (or no device on the
+  // network) · ready · connecting · connected
+  let state = 'off', ctx = null, loaded = false;
+  const subs = new Set();
+  const set = s => { if (s === state) return; state = s; subs.forEach(f => { try { f(s); } catch (e) { } }); };
+
+  function possible() {
+    const ua = navigator.userAgent || '';
+    return !TV_MODE && !!window.chrome && !/iPhone|iPad|iPod/i.test(ua) && !!window.isSecureContext;
+  }
+
+  /** Fetch the sender SDK the first time a lobby could use it. It is the one
+   *  thing this app loads from somewhere else, and only in online lobbies. */
+  function load() {
+    if (loaded || !possible() || navigator.onLine === false) return;
+    loaded = true;
+    set('loading');
+    window.__onGCastApiAvailable = ok => { if (ok) init(); else set('none'); };
+    const s = document.createElement('script');
+    s.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
+    s.async = true;
+    s.onerror = () => set('none');
+    document.head.appendChild(s);
+  }
+
+  function init() {
+    try {
+      const F = cast.framework;
+      ctx = F.CastContext.getInstance();
+      ctx.setOptions({ receiverApplicationId: CAST_APP_ID, autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
+      ctx.addEventListener(F.CastContextEventType.CAST_STATE_CHANGED, e => fromCastState(e.castState));
+      ctx.addEventListener(F.CastContextEventType.SESSION_STATE_CHANGED, e => {
+        if (e.sessionState === F.SessionState.SESSION_STARTED || e.sessionState === F.SessionState.SESSION_RESUMED) {
+          hook(e.session);
+          follow();
+        }
+      });
+      fromCastState(ctx.getCastState());
+      const cur = ctx.getCurrentSession();
+      if (cur) { hook(cur); follow(); }
+    } catch (e) {
+      console.warn('cast sender', e);
+      set('none');
+    }
+  }
+
+  function fromCastState(cs) {
+    const C = cast.framework.CastState;
+    set(cs === C.CONNECTED ? 'connected' : cs === C.CONNECTING ? 'connecting'
+      : cs === C.NOT_CONNECTED ? 'ready' : 'none');
+  }
+
+  function hook(session) {
+    if (!session || session._boggle) return;
+    session._boggle = true;
+    session.addMessageListener(CAST_NS, (ns, raw) => {
+      let m = raw;
+      try { if (typeof raw === 'string') m = JSON.parse(raw); } catch (e) { return; }
+      if (!m) return;
+      if (m.t === 'joined') toast('📺 ' + (device() || 'The TV') + ' is showing the lobby', 'good');
+      else if (m.t === 'error') toast(m.msg || 'The TV could not join the lobby', 'bad');
+    });
+  }
+
+  function device() {
+    try { return ctx.getCurrentSession().getCastDevice().friendlyName || ''; } catch (e) { return ''; }
+  }
+
+  /** While casting, the TV follows this phone: whenever we are in an online
+   *  lobby, make sure the TV is showing it. Called on every lobby entry. */
+  function follow() {
+    // Load the sender on lobby entry, not on first opening the sheet: a
+    // session resumed from earlier must hear about this lobby, and the Cast
+    // button should already be there when the sheet opens.
+    load();
+    // The session, not the cast state: SESSION_STARTED can arrive before the
+    // state flips to CONNECTED.
+    const s = ctx && ctx.getCurrentSession();
+    if (!s || Net.isDirect || !Net.code || (G.mode !== 'host' && G.mode !== 'guest')) return;
+    s.sendMessage(CAST_NS, { t: 'join', room: Net.code, from: G.me.name }).catch(() => { });
+  }
+
+  function start() {
+    if (!ctx) return;
+    // SESSION_STARTED sends the lobby; doing it here too would send it twice.
+    ctx.requestSession().catch(err => {
+      if (err && err !== 'cancel') toast("Couldn't start casting", 'bad');
+    });
+  }
+
+  function stop() { try { ctx && ctx.endCurrentSession(true); } catch (e) { } }
+
+  return {
+    load, start, stop, follow,
+    _set: set,                           // tests: pretend a Cast device is around
+    onChange(f) { subs.add(f); },
+    get state() { return state; },
+    get device() { return device(); },
+  };
+})();
+
+/* ------------------------------ receiver -----------------------------
+   Only on receiver.html, which build.py emits with CAST_RECEIVER set and the
+   Cast receiver SDK loaded ahead of this script. */
+const CastRecv = (() => {
+  if (!window.CAST_RECEIVER) return { start() { }, joined() { }, failed() { }, on: false };
+  let ctx = null, lastSender = null, idleT = 0, waiting = false;
+
+  function start() {
+    try {
+      if (!window.cast || !cast.framework) throw new Error('Cast receiver SDK did not load');
+      const F = cast.framework;
+      ctx = F.CastReceiverContext.getInstance();
+      ctx.addCustomMessageListener(CAST_NS, e => onMsg(e.senderId, e.data));
+      // "Stop casting" on the phone: hand the TV back rather than sit on the
+      // join screen. Any other way of losing the sender keeps the game up.
+      ctx.addEventListener(F.system.EventType.SENDER_DISCONNECTED, e => {
+        if (ctx.getSenders().length === 0 && e.reason === F.system.DisconnectReason.REQUESTED_BY_SENDER) ctx.stop();
+      });
+      const opts = new F.CastReceiverOptions();
+      opts.customNamespaces = { [CAST_NS]: F.system.MessageType.JSON };
+      opts.disableIdleTimeout = true;      // no media ever plays; that is not "idle"
+      opts.skipPlayersLoad = true;         // nor do we need the media players
+      opts.statusText = 'Swipe Boggle';
+      ctx.start(opts);
+    } catch (e) {
+      console.warn('cast receiver', e);
+    }
+    idle();
+  }
+
+  async function onMsg(sender, m) {
+    if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
+    if (!m || m.t !== 'join') return;
+    lastSender = sender;
+    waiting = true;
+    const code = String(m.room || '').toUpperCase();
+    // Already showing that lobby (say the phone re-sent it): just confirm.
+    if (code && code === TV.room && G.screen !== 'tvjoin') { joined(code); return; }
+    const ok = await TV.join(code);
+    // null: a newer join took over, which is not a failure worth reporting.
+    if (ok === false) failed($('#tvjStatus').textContent || "The TV couldn't join that lobby.");
+  }
+
+  function joined(room) {
+    if (lastSender) reply(lastSender, { t: 'joined', room });
+    waiting = false;
+    idle();
+  }
+
+  /** The join a phone asked for did not work out (refused, full, closed). */
+  function failed(msg) {
+    if (!waiting || !lastSender) return;
+    waiting = false;
+    reply(lastSender, { t: 'error', msg });
+  }
+
+  function reply(sender, msg) { try { ctx && ctx.sendCustomMessage(CAST_NS, sender, msg); } catch (e) { } }
+
+  // A receiver showing the join screen to nobody for a quarter of an hour
+  // gives the TV back.
+  function idle() {
+    clearTimeout(idleT);
+    idleT = setTimeout(() => { if (!TV.room && ctx) ctx.stop(); else idle(); }, 15 * 60 * 1000);
+  }
+
+  // Dev/test hook: pretend a phone sent a join over the Cast channel.
+  return { start, joined, failed, on: true, _msg: onMsg };
+})();
+
+/* ------------------------- "Show it on a TV" -------------------------- */
+const TVSheet = (() => {
+  const sheet = $('#tvsheet');
+  const appBase = () => location.origin + location.pathname.replace(/[^/]*$/, '');
+
+  function open() {
+    if (!Net.code || Net.isDirect) return;
+    CastLink.load();
+    paint();
+    $('#tvsCode').value = '';
+    sheet.classList.add('on');
+    Sound.init();
+  }
+  const close = () => sheet.classList.remove('on');
+
+  function paint() {
+    const st = CastLink.state, btn = $('#tvsCast');
+    const show = st === 'ready' || st === 'connecting' || st === 'connected';
+    btn.classList.toggle('hide', !show);
+    $('#tvsCastNote').classList.toggle('hide', !show);
+    btn.innerHTML = CAST_ICON + '<span>' + (st === 'connected' ? 'Casting to ' + esc(CastLink.device || 'the TV') + ' · stop'
+      : st === 'connecting' ? 'Connecting…' : 'Cast to a TV') + '</span>';
+    btn.classList.toggle('on', st === 'connected');
+    $('#tvsUrl').textContent = (location.host + location.pathname.replace(/[^/]*$/, '')).replace(/\/$/, '') + '/tv';
+    const n = G.screenCount;
+    $('#tvsCount').textContent = n ? '📺 ' + n + (n === 1 ? ' TV is' : ' TVs are') + ' showing this lobby.' : '';
+  }
+
+  async function pair() {
+    const code = $('#tvsCode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!isCode(code)) { toast('Type the 4-letter code shown on the TV', 'bad'); return; }
+    const btn = $('#tvsGo');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      await Net.pairTv(code, Net.code, G.me.name);
+      toast('📺 Sent the lobby to the TV', 'good');
+      close();
+    } catch (e) {
+      toast((e && e.message) || 'Could not reach that TV', 'bad');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Connect';
+    }
+  }
+
+  async function copyLink() {
+    const url = appBase() + '?tv&r=' + Net.code;
+    try { await navigator.clipboard.writeText(url); toast('TV link copied', 'good'); }
+    catch (e) { modal('TV link', url, [{ label: 'Close', cls: 'grape' }]); }
+  }
+
+  $('#btnTv').onclick = () => { Sound.tick(3); open(); };
+  $('#tvsDone').onclick = close;
+  sheet.onclick = e => { if (e.target === sheet) close(); };
+  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  $('#tvsGo').onclick = pair;
+  $('#tvsCode').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+  });
+  $('#tvsCode').addEventListener('keydown', e => { if (e.key === 'Enter') pair(); });
+  $('#tvsCast').onclick = () => (CastLink.state === 'connected' ? CastLink.stop() : CastLink.start());
+  $('#tvsLink').onclick = copyLink;
+  CastLink.onChange(() => { if (sheet.classList.contains('on')) paint(); });
+
+  return { open, close, paint: () => { if (sheet.classList.contains('on')) paint(); } };
+})();
+
 /* ==== 60_boot.js ==== */
 /* =====================================================================
    BOOT — wiring, dictionary load, url handling
@@ -5930,7 +7625,7 @@ const Lan = (() => {
       node.appendChild(s);
     });
   };
-  make($('#brandload')); make($('#brandhome'));
+  make($('#brandload')); make($('#brandhome')); make($('#brandtv'));
 })();
 
 /* --------------------------- sound buttons --------------------------- */
@@ -6072,6 +7767,8 @@ $('#btnSolo').onclick = () => { Sound.init(); Sound.whoosh(); startSolo(); };
 $('#btnHost').onclick = () => { Sound.init(); createRoom(); };
 $('#btnJoin').onclick = () => { Sound.init(); joinRoom($('#codeIn').value); };
 $('#btnStart').onclick = hostStartRound;
+// A laptop or TV browser becomes a screen for someone else's lobby.
+$('#btnTvMode').onclick = () => { location.href = location.pathname + '?tv'; };
 
 /* ------------------------------- LAN -------------------------------- */
 $('#btnLan').onclick = () => {
@@ -6126,6 +7823,11 @@ $('#btnBack').onclick = () => {
   Sound.back();
   Results.stop();
   if (G.mode === 'solo') { show('home'); return; }
+  if (G.mode === 'host') {
+    // The TVs follow the host back to the lobby, where the join code is.
+    G.phase = 'lobby';
+    Net.broadcast(lobbyMsg());
+  }
   show('lobby'); renderLobby();
 };
 
@@ -6154,18 +7856,24 @@ $('#btnHelp').onclick = () => {
 Net.handlers.msg = handleMessage;
 
 Net.handlers.peerClose = id => {
+  if (screenGone(id)) return;
   const p = G.players.get(id);
   if (!p) return;
   G.players.delete(id);
   Sound.part();
   toast(p.name + ' left');
-  Net.broadcast({ t: 'lobby', players: rosterWire(), settings: G.settings });
+  Net.broadcast(lobbyMsg());
   if (G.screen === 'lobby') renderLobby();
   if (G.screen === 'game') renderPips();
   if (G.pendingDone && G.pendingDone.delete(id) && !G.pendingDone.size) finaliseResults();
 };
 
-Net.handlers.hostGone = () => leaveRoom('The host closed the lobby or lost connection.');
+Net.handlers.hostGone = () => {
+  if (G.mode === 'tv') { TV.lost(); return; }
+  const why = G.goneWhy || 'The host closed the lobby or lost connection.';
+  G.goneWhy = '';
+  leaveRoom(why);
+};
 
 Net.handlers.netError = e => {
   console.warn('net', e);
@@ -6179,7 +7887,9 @@ Net.handlers.statusChange = s => {
   n.classList.toggle('live', s !== 'reconnecting');
 };
 
-addEventListener('pagehide', () => { try { Net.destroy(); } catch (e) { } });
+// Let go of the broker ids at once (the room's, and a TV's own code), or the
+// broker holds them for a minute and a reloading TV comes back with a new code.
+addEventListener('pagehide', () => { try { Net.destroy(); Net.stopTv(); } catch (e) { } });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) Sound.init(); });
 
 /* --------------------------- install / offline ------------------------ */
@@ -6200,6 +7910,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   addEventListener('offline', paintNet);
   paintNet();
 
+  // The Cast receiver is a separate page the Chromecast loads fresh each
+  // time; it has nothing to gain from a worker.
+  if (window.CAST_RECEIVER) return;
   if (!('serviceWorker' in navigator)) return;
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
 
@@ -6216,6 +7929,13 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   let offered = false;
   function offer(reg) {
     if (offered || !reg.waiting) return;
+    // A TV nobody is watching yet just takes the update; there is no one
+    // to ask and it would otherwise run the old version until someone
+    // reloads it by hand.
+    if (TV_MODE) {
+      if (G.screen === 'tvjoin' && !TV.room) { offered = true; reg.waiting.postMessage('skip-waiting'); }
+      return;
+    }
     // Never yank the page out from under a round in progress.
     if (G.screen !== 'home' && G.screen !== 'lobby') return;
     offered = true;
@@ -6248,6 +7968,18 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
 /* ------------------------------- start ------------------------------- */
 (async function boot() {
   const bar = $('#loadbar'), msg = $('#loadmsg');
+  const params = new URLSearchParams(location.search);
+
+  // A screen never checks a word, so it skips the dictionary entirely --
+  // which also makes it start fast on a Chromecast.
+  if (TV_MODE) {
+    bar.style.width = '100%';
+    TV.boot(params);
+    // After the TV is wired up, so a join the phone sends straight away has
+    // somewhere to land -- and still well inside the receiver's start window.
+    CastRecv.start();
+    return;
+  }
   try {
     // French is decoded on first use (picking it in a lobby, or a French
     // round or challenge arriving), so English-only players never pay for it.
@@ -6264,8 +7996,6 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   show('home');
   if (G.settings.lang) preloadLang();
 
-  const params = new URLSearchParams(location.search);
-
   // A challenge link drops straight into the offer, so the letters stay
   // hidden until the player actually starts the clock.
   const c = params.get('c');
@@ -6277,9 +8007,12 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   const r = params.get('r');
   if (r && /^[A-Z0-9]{4}$/i.test(r)) {
     $('#codeIn').value = r.toUpperCase();
+    // Someone who scanned the code on a TV (or tapped an invite link) and
+    // has played before goes straight in; the lobby lets them change their
+    // name or character once they are there.
     if (navigator.onLine === false) toast('Offline — you can still play solo', 'bad');
     else if (!$('#nameIn').value) { $('#nameIn').focus(); toast('Enter a name, then tap Join'); }
-    else toast('Tap Join to enter room ' + r.toUpperCase());
+    else joinRoom(r);
   }
 })();
 
