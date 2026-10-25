@@ -450,6 +450,23 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   16%{opacity:1;transform:scale(1) rotate(-3deg)}
   70%{opacity:1;transform:scale(1) rotate(-3deg)}
   100%{opacity:0;transform:scale(1.5) rotate(-3deg)}}
+/* time's up: a tip while the scores come in */
+#rstage .tip{position:absolute;left:50%;bottom:15%;max-width:min(88vw,520px);padding:10px 18px;border-radius:99px;
+  font-size:14px;font-weight:800;line-height:1.35;color:var(--ink);text-align:center;
+  background:rgba(20,10,46,.88);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14);
+  opacity:0;transform:translateX(-50%);animation:tipIn 2.7s var(--ease-out) forwards}
+@keyframes tipIn{0%,16%{opacity:0;transform:translate(-50%,12px)}28%{opacity:1;transform:translate(-50%,0)}86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,0)}}
+/* the last ten seconds of a round: hazard stripes along the screen edges */
+#hurry{position:fixed;inset:0;z-index:70;pointer-events:none;display:none}
+body.hurry #hurry{display:block}
+#hurry b{position:absolute;opacity:.4;background:repeating-linear-gradient(-45deg,var(--rose) 0 12px,var(--gold) 12px 24px);
+  animation:hurry .5s ease-in-out infinite alternate}
+#hurry b:nth-child(1){left:0;right:0;top:0;height:6px}
+#hurry b:nth-child(2){left:0;right:0;bottom:0;height:6px}
+#hurry b:nth-child(3){top:0;bottom:0;left:0;width:6px}
+#hurry b:nth-child(4){top:0;bottom:0;right:0;width:6px}
+@keyframes hurry{from{opacity:.35}to{opacity:1}}
+#tvqr,#rbanner{display:none}
 
 #rhead{display:flex;align-items:center;gap:10px;padding:2px 4px 10px;flex:0 0 auto}
 #rhead .t{flex:1;min-width:0;font-size:19px;font-weight:900}
@@ -475,10 +492,57 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #rphase b{font-size:12px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
 #rphase span{font-size:11px;font-weight:800;color:var(--ink-faint)}
 #rphase.uniq b{color:var(--gold)}
-#rphase.final b{color:var(--mint)}
+#rphase.final b,#rphase.shared b{color:var(--mint)}
 #rphase.finish b{color:var(--rose)}
+#rphase.miss b{color:#c4b5fd}
+#rphase.award b{color:var(--gold)}
 #rreveal.slim #rphase{margin-bottom:0}
-#rreveal.slim #rword,#rreveal.slim #rmini{display:none}
+#rreveal.slim #rword,#rreveal.slim #rbox,#rreveal.slim #rscore{display:none}
+
+/* points card: a row of chips on a phone (a card in the TV's corner); the
+   chip for the word on screen lights up, and x2 lights for the unique phase */
+#rscore{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin:-4px 0 12px}
+#rscore:empty{display:none}
+#rscore .sr{display:flex;align-items:baseline;gap:3px;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:900;
+  color:var(--ink-faint);background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  opacity:0;transform:translateY(4px);transition:opacity .25s,transform .3s var(--ease-back),background .2s,color .2s,box-shadow .2s}
+#rscore .sr.in{opacity:1;transform:none}
+#rscore .sr b{color:var(--ink-dim);font-weight:900}
+#rscore .sr.on{color:#04331f;background:var(--mint);box-shadow:0 0 12px rgba(61,220,151,.55)}
+#rscore .sr.on b{color:#04331f}
+#rscore .sr.x2 b{color:var(--gold)}
+#rscore.x2on .sr.x2{color:#3a1d00;background:linear-gradient(180deg,#ffe071,var(--gold));box-shadow:0 0 12px rgba(255,210,63,.6)}
+#rscore.x2on .sr.x2 b{color:#3a1d00}
+
+/* the board, with the words meter hanging off its right edge and the phase
+   banner slamming across it */
+#rbox{position:relative;transition:opacity .35s}
+#rbox.dim{opacity:.32}
+#rmeter{position:absolute;top:0;bottom:0;left:calc(100% + 10px);width:40px;display:grid;
+  grid-template-columns:9px auto;grid-template-rows:auto 1fr auto;column-gap:5px;pointer-events:none}
+#rmeter.hide{display:none}
+#rmeter .track{grid-column:1;grid-row:1/4;position:relative;border-radius:99px;overflow:hidden;
+  background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.1)}
+#rmeter .fs,#rmeter .fu{position:absolute;left:0;right:0;transform-origin:50% 100%;transform:scaleY(0);
+  transition:transform .4s var(--ease-out)}
+#rmeter .fs{bottom:0;height:var(--sh);background:linear-gradient(180deg,#a5ffd6,var(--mint))}
+#rmeter .fu{bottom:var(--sh);height:var(--uh);background:repeating-linear-gradient(135deg,var(--gold) 0 5px,#ffe58a 5px 10px)}
+#rmeter .tl,#rmeter .bl{grid-column:2;line-height:1}
+#rmeter .tl{grid-row:1}
+#rmeter .bl{grid-row:3;align-self:end}
+#rmeter small{display:none}
+#rmeter b{display:block;font-size:12px;font-weight:900;color:var(--ink-faint)}
+#rmeter .cnt{color:var(--ink)}
+#rmeter.full .track{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.1),0 0 14px rgba(255,210,63,.7)}
+#rmeter.full .tot{color:var(--gold)}
+#rribbon{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none;opacity:0;white-space:nowrap;
+  transform:translate(-50%,-50%) rotate(-7deg);padding:8px 22px;border-radius:12px;
+  background:linear-gradient(180deg,#3a2577,#21124a);
+  box-shadow:0 5px 0 #120a2a,0 14px 30px -10px rgba(0,0,0,.85),inset 0 0 0 2px rgba(255,255,255,.12)}
+#rribbon span{display:block;font-size:24px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+#rribbon.shared span{color:var(--mint)}
+#rribbon.uniq span{color:var(--gold)}
+#rribbon.finish span{color:#ff8fa3}
 
 #rmini{--mb:260px;position:relative;width:var(--mb);height:var(--mb);display:grid;gap:var(--mg,6px);padding:var(--mg,6px);
   border-radius:calc(var(--mtr,12px) + 8px);background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.16));
@@ -506,7 +570,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #rword.empty{visibility:hidden}
 #rword.hot{box-shadow:0 5px 0 #9c6b00,0 0 0 3px rgba(255,255,255,.7),0 0 34px 6px rgba(255,210,63,.85),inset 0 1px 0 rgba(255,255,255,.6)}
 #rword .w{flex:1 1 auto;min-width:0;font-size:clamp(24px,8vw,36px);font-weight:900;letter-spacing:.06em;
-  line-height:1.1;overflow:hidden;white-space:nowrap}
+  line-height:1.1;overflow:hidden;white-space:nowrap;text-align:center}
 #rword .p{flex:0 0 auto;font-size:clamp(20px,6vw,28px);font-weight:900;white-space:nowrap;opacity:.85}
 #rword .finders{position:absolute;right:-4px;bottom:-18px;display:flex;align-items:center;gap:0}
 #rword .finders .av{margin-left:-7px;box-shadow:0 0 0 2.5px #2a1a55}
@@ -515,12 +579,38 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;color:#fff;background:var(--rose);
   box-shadow:0 3px 0 #a3203a,0 0 16px rgba(255,87,115,.6);transform:rotate(-8deg)}
 #rword .stamp.me{background:var(--mint);color:#04331f;box-shadow:0 3px 0 #0c7d4c,0 0 16px rgba(61,220,151,.7)}
+/* the word spells itself in, centred so it grows from the middle; the points
+   and the stamp wait for the last letter (the finders come in with the word) */
+#rword.typing .p,#rword.typing .stamp{visibility:hidden}
+/* under the 7+ letter card, which shows the same word */
+#rword.under{visibility:hidden}
+/* a word nobody found */
+#rword.ghost{color:#ece6ff;background:linear-gradient(180deg,#3a2577,#2a1a55);
+  box-shadow:0 5px 0 #150b30,inset 0 0 0 2px rgba(196,181,253,.55)}
+#rword.ghost .p{font-size:clamp(14px,4.2vw,19px);opacity:.75}
+/* an award */
+#rword.award{color:var(--ink);background:linear-gradient(180deg,#6d4ad8,#3f2690);
+  box-shadow:0 5px 0 #1d1240,0 16px 30px -12px rgba(139,92,246,.6),inset 0 1px 0 rgba(255,255,255,.3)}
+#rword.award .w{letter-spacing:.02em}
+#rword.award .p{font-size:clamp(14px,4.2vw,19px);color:var(--gold);opacity:1}
+#rmini.miss i.on{background:linear-gradient(168deg,#ece6ff,#a78bfa 48%,#7c5ce0);color:#1d1240;
+  box-shadow:0 var(--mtd,4px) 0 #4c35a0,0 0 22px 2px rgba(167,139,250,.6),inset 0 2px 0 rgba(255,255,255,.5)}
+#rmini.miss polyline{stroke-dasharray:.25 .2!important}
 
 #rrows{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 4px 8px}
 .rrow{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:8px;border-radius:var(--r-m);
   background:rgba(255,255,255,.055);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);overflow:hidden;
   transition:box-shadow .3s,background .3s}
 #rrows.dense .rrow{padding:6px 10px;margin-bottom:6px;gap:8px}
+#rrows.dense2 .rrow{padding:4px 10px;margin-bottom:4px}
+#rrows.dense2 .rrow .nm{font-size:15px}
+#rrows.dense2 .rrow .sc{font-size:18px}
+/* short phones: tighter spacing around the stage, so more rows stay in view */
+@media (max-height:700px){
+  #rreveal{margin-bottom:14px}
+  #rphase{margin-bottom:8px}
+  #rword{margin-top:14px;min-height:46px;padding:6px 20px}
+}
 .rrow.moving{will-change:transform;z-index:2}
 .rrow .fill{position:absolute;inset:0;width:0%;border-radius:inherit;
   background:rgba(255,255,255,.14);box-shadow:inset 0 -3px 0 var(--c);
@@ -533,6 +623,9 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 .rrow .sub{font-size:11px;color:var(--ink-faint);font-weight:800;white-space:nowrap;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis}
 #rrows:not(.done) .rrow .sub{display:none}
+/* a big lobby keeps the rows one line tall while the stage is still up, or the
+   last rows would scroll out of sight for the last beats of the show */
+#rreveal:not(.hide)~#rrows.dense .rrow .sub{display:none}
 .rrow .sc{flex:0 0 auto;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);min-width:66px;text-align:right}
 .rrow .rk{width:22px;text-align:center;font-size:15px;font-weight:900;color:var(--ink-faint)}
 .rrow.p1{background:linear-gradient(100deg,rgba(255,210,63,.2),rgba(255,255,255,.05));box-shadow:inset 0 0 0 2px rgba(255,210,63,.5)}
@@ -551,6 +644,27 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 .rfly{position:fixed;left:0;top:0;z-index:60;pointer-events:none;font-size:13px;padding:4px 10px;line-height:17px;
   box-shadow:0 3px 0 #b0a488,0 10px 22px -6px rgba(0,0,0,.6)}
 .rfly.u{box-shadow:0 3px 0 #9c6b00,0 0 20px rgba(255,210,63,.8)}
+/* the "+points" bubble flying from the pill to a finder's score */
+.pfly{position:fixed;left:0;top:0;z-index:60;pointer-events:none;white-space:nowrap;padding:4px 11px;border-radius:99px;
+  font-size:15px;font-weight:900;line-height:18px;color:#04331f;background:linear-gradient(180deg,#a5ffd6,var(--mint));
+  box-shadow:0 3px 0 #0c7d4c,0 10px 22px -6px rgba(0,0,0,.6)}
+.pfly.u{color:#3a1d00;background:linear-gradient(180deg,#ffe58a,var(--gold));box-shadow:0 3px 0 #9c6b00,0 0 20px rgba(255,210,63,.8)}
+.pfly b{position:absolute;right:-12px;top:-11px;padding:1px 6px;border-radius:99px;font-size:11px;line-height:15px;
+  color:#fff;background:var(--tang);box-shadow:0 2px 0 #b3600f}
+/* words landed so far, and award badges, beside the name */
+.rrow .wl{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+.rrow.out .wl{opacity:.45}
+#rrows.done .rrow .wl{display:none}
+.rrow .aw{flex:0 0 auto;display:flex;gap:1px;font-size:14px;line-height:1}
+.rrow .aw:empty{display:none}
+/* emoji reactions: a pad under the show (and a bigger one on the cover) */
+#rreact{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
+#rreact.hide{display:none}
+.rxb{flex:0 0 auto;width:44px;height:44px;padding:0;border:0;border-radius:14px;font-size:22px;line-height:1;display:grid;place-items:center;
+  color:inherit;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.12);cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.rxb:active{background:rgba(255,255,255,.16)}
+.rx{position:fixed;left:0;top:0;z-index:62;pointer-events:none;font-size:34px;line-height:1;transform:translate(-50%,-50%)}
 /* live race furniture: crown on the current leader, movement badge, callout */
 .rrow .avw{position:relative;flex:0 0 auto}
 .rrow .crown{position:absolute;left:50%;top:-12px;font-size:17px;line-height:1;pointer-events:none;
@@ -570,11 +684,16 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   box-shadow:0 0 0 1.5px rgba(255,255,255,.18);opacity:0}
 .wpop.uniq{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#3a1d00;box-shadow:0 0 16px rgba(255,210,63,.8)}
 
-/* E2: the full-screen moment for 7+ letter words */
+/* E2: the full-screen moment for 7+ letter words. The word is on a card of
+   its own, so the gold pill showing through the dimmer never doubles it. */
 #rbig{position:fixed;inset:0;z-index:77;display:grid;place-items:center;pointer-events:none;
   background:radial-gradient(60% 40% at 50% 46%,rgba(61,220,151,.22),transparent 70%),rgba(8,4,20,.78)}
 #rbig.u{background:radial-gradient(60% 40% at 50% 46%,rgba(255,210,63,.26),transparent 70%),rgba(8,4,20,.78)}
-#rbig .box{text-align:center;padding:0 16px;max-width:100%}
+#rbig .box{text-align:center;padding:16px 22px 14px;max-width:calc(100% - 24px);border-radius:24px;
+  background:radial-gradient(70% 90% at 50% 38%,rgba(61,220,151,.2),transparent 75%),rgba(18,9,42,.96);
+  box-shadow:0 6px 0 #0b0520,0 18px 44px -12px rgba(0,0,0,.85),inset 0 0 0 2px rgba(61,220,151,.45)}
+#rbig.u .box{background:radial-gradient(70% 90% at 50% 38%,rgba(255,210,63,.22),transparent 75%),rgba(18,9,42,.96);
+  box-shadow:0 6px 0 #0b0520,0 18px 44px -12px rgba(0,0,0,.85),inset 0 0 0 2px rgba(255,210,63,.5)}
 #rbig .k{font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:900;color:var(--mint)}
 #rbig.u .k{color:var(--gold)}
 #rbig .w{font-size:clamp(34px,12vw,78px);font-weight:900;letter-spacing:.08em;line-height:1.1;margin:6px 0;
@@ -584,10 +703,13 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 #rbig .p{font-size:clamp(20px,6vw,32px);font-weight:900;color:var(--gold)}
 #rbig .who{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px;font-size:13px;font-weight:800;color:var(--ink-dim)}
 
-/* E3: photo finish -- a vignette, not a blur, so it costs nothing to composite */
-#scr-results::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s;
+/* E3: photo finish -- a vignette, not a blur, so it costs nothing to composite.
+   It only exists while the finish is on: even at opacity 0 a fixed full-screen
+   box is a whole-screen layer, for the entire show. */
+#scr-results::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;display:none;
   background:radial-gradient(75% 60% at 50% 45%,transparent 45%,rgba(0,0,0,.72))}
-#scr-results.tense::after{opacity:1}
+#scr-results.tense::after{display:block;animation:vigIn .6s ease-out both}
+@keyframes vigIn{from{opacity:0}}
 
 #rbest{flex:0 0 auto;margin:0 4px 10px;padding:13px 16px;border-radius:var(--r-m);display:flex;align-items:center;gap:13px;
   background:linear-gradient(100deg,rgba(255,210,63,.26),rgba(255,120,180,.12));
@@ -740,7 +862,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 
 /* "Watch the TV": covers the stage while the hidden show runs underneath */
 #scr-results{position:relative}
-#scr-results.watching #rreveal,#scr-results.watching #rrows,#scr-results.watching #rbest{visibility:hidden}
+#scr-results.watching #rreveal,#scr-results.watching #rrows,#scr-results.watching #rbest,#scr-results.watching #rreact{visibility:hidden}
 #rwatch{position:absolute;left:10px;right:10px;bottom:calc(var(--safe-b) + 10px);z-index:7;display:flex;
   flex-direction:column;align-items:center;gap:12px;text-align:center;animation:scrIn .42s var(--ease-out) both}
 #rwatch.hide{display:none}
@@ -757,6 +879,9 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
 @keyframes twinkle{0%,100%{transform:scale(.55);opacity:.5}50%{transform:scale(1.15);opacity:1}}
 #rwatch h3{font-size:30px;font-weight:900;letter-spacing:-.01em}
 #rwatch p{font-size:15px;font-weight:700;color:var(--ink-dim);margin-top:-4px}
+#rwatch #rwmine{min-height:20px;margin-top:2px;font-size:15px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums}
+#rwatch .rpad{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:4px}
+#rwatch .rpad .rxb{width:56px;height:56px;font-size:28px;border-radius:18px}
 #rwatch .btn{margin-top:auto;max-width:520px}
 
 /* ============================ TV MODE (the big screen) ============================
@@ -858,12 +983,18 @@ body.tv.tvplay .tvj-exit{display:none}
 /* ---- round ---- */
 body.tv #scr-game.on{display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
   gap:0 3.4vw;width:100%;max-width:none;margin:0}
-body.tv #gtop{grid-column:2;grid-row:1;justify-content:center;padding:0 0 3.6vh}
+body.tv #gtop{grid-column:2;grid-row:1;justify-content:flex-start;padding:0 0 3.6vh 1vh}
 body.tv #gscore,body.tv #gpips,body.tv #found{display:none}
 body.tv #boardwrap{grid-column:1;grid-row:1/3;position:relative;align-items:flex-end;padding:0}
-body.tv #board.locked{filter:none}
-body.tv #board.locked.done{filter:saturate(.45) brightness(.72)}
-body.tv .ring{width:21vh;height:21vh}
+/* No desaturating filter at time's up on a TV: the tiles fall away anyway, and a
+   filter over 25-36 animating tiles is an offscreen pass every frame. Nobody
+   swipes a TV, so its swipe trail and word bubble never need a layer. And the
+   timer ring keeps its paint to itself, with no pulse: at 10 updates a second
+   a pulsing ring re-rasterised and dragged its neighbours onto layers. */
+body.tv #board.locked,body.tv #board.locked.done{filter:none}
+body.tv #trail,body.tv #bubble{display:none}
+body.tv .ring{width:21vh;height:21vh;contain:layout style paint}
+body.tv .ring.crit{animation:none}
 body.tv .ring b{font-size:8.6vh}
 body.tv #tvplayers{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:1.5vh;min-height:0;align-content:start}
 body.tv #tvplayers.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -898,53 +1029,148 @@ body.tv #cd .set span{font-size:2.4vh;padding:1.2vh 2.6vh}
 body.tv #cd b{font-size:42vh}
 body.tv #rstage .slam{font-size:22vh}
 
-/* ---- results show ---- */
-body.tv #scr-results.on{display:grid;grid-template-columns:minmax(0,43fr) minmax(0,57fr);grid-template-rows:minmax(0,1fr);
-  gap:0 3.4vw;align-items:stretch;max-width:none;margin:0;padding:5vh 4.5vw}
+/* ---- results show ----
+   Layout A: the stage (board, meter, word pill) across the top, the points
+   card in the top-left corner, the players standing along the bottom edge as
+   columns that grow with their scores. */
+body.tv #scr-results.on{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) var(--colh);
+  --colh:40vh;gap:2vh 0;align-items:stretch;max-width:none;margin:0;padding:4vh 4.5vw 0}
 body.tv #rhead,body.tv #rspeed,body.tv #rtabs,body.tv #rbest,body.tv #rwatch,body.tv #scr-results>.wrap{display:none!important}
-body.tv #rreveal{grid-column:1;grid-row:1;margin:0;justify-content:center;min-height:0;min-width:0}
-body.tv #rphase{margin-bottom:2.8vh;min-height:3vh}
+body.tv #rreveal{grid-column:1;grid-row:1;margin:0;justify-content:flex-start;min-height:0;min-width:0;
+  transition:opacity .45s,transform .5s var(--ease-out)}
+body.tv #rreveal.away{opacity:0;transform:translateY(-3vh)}
+body.tv #rphase{margin-bottom:2vh;min-height:3vh}
 body.tv #rphase b{font-size:2.6vh;letter-spacing:.24em}
 body.tv #rphase span{font-size:2.2vh}
-body.tv #rword{margin-top:4.4vh;min-height:10vh;gap:2.4vh;padding:1.4vh 4.4vh;width:min(100%,calc(var(--mb) + 14vh));
+/* points card */
+body.tv #rscore{position:absolute;left:0;top:0;width:min(25vw,44vh);margin:0;display:flex;flex-direction:column;align-items:stretch;gap:.8vh;
+  padding:1.8vh 2vh;border-radius:2.2vh;background:rgba(20,10,46,.62);box-shadow:inset 0 0 0 .2vh rgba(255,255,255,.1);
+  transition:opacity .45s,transform .5s var(--ease-out)}
+body.tv #rscore.gone{opacity:0;transform:translateX(-4vh)}
+body.tv #rscore .sr{justify-content:space-between;padding:.7vh 1.6vh;border-radius:1.2vh;font-size:2.2vh;gap:1vh;transform:translateX(-2vh)}
+body.tv #rscore .sr.in{transform:none}
+body.tv #rscore .sr.on{box-shadow:0 0 2.4vh rgba(61,220,151,.55)}
+body.tv #rscore.x2on .sr.x2{box-shadow:0 0 2.4vh rgba(255,210,63,.6)}
+/* words meter */
+body.tv #rmeter{left:calc(100% + 3vh);width:16vh;grid-template-columns:2.4vh auto;column-gap:1.6vh}
+body.tv #rmeter small{display:block;font-size:1.7vh;font-weight:900;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:.4vh}
+body.tv #rmeter b{font-size:4.4vh}
+body.tv #rmeter.full .track{box-shadow:inset 0 0 0 .2vh rgba(255,255,255,.1),0 0 3vh rgba(255,210,63,.7)}
+body.tv #rribbon{padding:1.4vh 4.4vh;border-radius:2vh;box-shadow:0 .9vh 0 #120a2a,0 2.6vh 5vh -2vh rgba(0,0,0,.85),inset 0 0 0 .3vh rgba(255,255,255,.12)}
+body.tv #rribbon span{font-size:6vh}
+/* word pill */
+body.tv #rword{margin-top:3.4vh;min-height:9vh;gap:2.4vh;padding:1.2vh 4.4vh;width:min(100%,calc(var(--mb) + 34vh));
   box-shadow:0 .8vh 0 #9c6b00,0 2.4vh 5vh -2vh rgba(255,180,0,.55),inset 0 .2vh 0 rgba(255,255,255,.6)}
 body.tv #rword.hot{box-shadow:0 .8vh 0 #9c6b00,0 0 0 .5vh rgba(255,255,255,.7),0 0 7vh 1vh rgba(255,210,63,.85)}
-body.tv #rword .w{font-size:6.4vh}
-body.tv #rword .p{font-size:4.6vh}
+body.tv #rword.ghost{box-shadow:0 .8vh 0 #150b30,inset 0 0 0 .3vh rgba(196,181,253,.55)}
+body.tv #rword.award{box-shadow:0 .8vh 0 #1d1240,0 2.4vh 5vh -2vh rgba(139,92,246,.6),inset 0 .2vh 0 rgba(255,255,255,.3)}
+body.tv #rword .w{font-size:6vh}
+body.tv #rword .p{font-size:4.4vh}
+body.tv #rword.ghost .p,body.tv #rword.award .p{font-size:3.2vh}
 body.tv #rword .finders{right:-1vh;bottom:-3.4vh}
 body.tv #rword .finders .av{--sz:6.4vh!important;margin-left:-1.4vh;box-shadow:0 0 0 .45vh #2a1a55}
 body.tv #rword .stamp{left:-1.4vh;top:-2.8vh;padding:.6vh 1.8vh;font-size:2.2vh;border-radius:1.2vh}
-body.tv #rtvwait{margin-top:4.6vh;font-size:2.5vh;font-weight:900;color:var(--ink-dim);text-align:center;line-height:1.35}
+/* lined up under the corner QR (both fixed to the screen edge) */
+body.tv #rtvwait{position:fixed;right:3vw;top:19.5vh;max-width:24vw;font-size:2.2vh;font-weight:900;color:var(--ink-dim);text-align:right;line-height:1.35}
 #rtvwait{display:none}
 body.tv #rtvwait:not(.hide){display:block}
-body.tv #rrows{grid-column:2;grid-row:1;display:flex;flex-direction:column;justify-content:center;gap:1.6vh;overflow:visible;padding:0}
-body.tv .rrow,body.tv #rrows.dense .rrow{flex:0 0 auto;height:var(--rh);margin:0;padding:0 2.8vh 0 2vh;gap:2vh;border-radius:2.2vh}
-body.tv .rrow .av{--sz:calc(var(--rh) * .64)!important}
-body.tv .rrow .rk{width:5vh;font-size:calc(var(--rh) * .3)}
-body.tv .rrow.p1 .rk{font-size:calc(var(--rh) * .38)}
-body.tv .rrow .top{gap:2vh}
-body.tv .rrow .nm{font-size:calc(var(--rh) * .3);max-width:56%}
-body.tv .rrow .lane{height:calc(var(--rh) * .42);gap:.8vh}
-body.tv .lw{font-size:calc(var(--rh) * .2);line-height:1.4;padding:.12em .6em;border-radius:.55em;box-shadow:0 .35vh 0 #b0a488}
-body.tv .lw.u{box-shadow:0 .35vh 0 #9c6b00}
-body.tv .lw.big{box-shadow:0 .35vh 0 #b0a488,inset 0 0 0 .3vh var(--mint)}
-body.tv .rrow .sub{font-size:calc(var(--rh) * .17)}
-body.tv .rrow .sc{font-size:calc(var(--rh) * .4);min-width:18vh}
-body.tv .rrow .crown{font-size:calc(var(--rh) * .3);top:calc(var(--rh) * -.16)}
-body.tv .rrow .mv{left:.8vh;top:.6vh;font-size:1.7vh;padding:.3vh .7vh;border-radius:.7vh}
-body.tv .rrow .call,body.tv .rrow .wstream{right:21vh}
-body.tv .rrow .call{top:.6vh;font-size:1.7vh;padding:.3vh 1.2vh}
-body.tv .rfly{font-size:2.6vh;padding:.6vh 1.6vh;line-height:1.3;border-radius:1vh}
+/* the players: one column each, standing on the bottom edge. Nothing clips
+   them: the screen's own edge hides a column's lower part, and a rank stamp
+   or a callout on the tallest column can reach up past the box. (Clipping
+   made the whole strip one big layer, re-composited on every frame by the
+   word pill animating above it.) */
+body.tv #rrows.cols{grid-column:1;grid-row:2;display:flex;justify-content:center;align-items:stretch;gap:1.4vw;
+  overflow:visible;padding:0;min-height:0}
+/* --k (0..1, how far the column has risen) is set on the moving body itself,
+   and registered as not inherited, so changing it restyles one box rather
+   than every avatar and label inside it */
+@property --k{syntax:'<number>';inherits:false;initial-value:0}
+.rcol{position:relative;flex:0 1 26vh;min-width:0;height:100%}
+.rcol .cb{--minh:20vh;position:absolute;left:0;right:0;bottom:0;height:100%;display:flex;flex-direction:column;align-items:center;
+  gap:.6vh;padding:2.2vh 1vh 0;border-radius:2.6vh 2.6vh 0 0;
+  /* plain fallbacks first: an older Cast receiver may not know color-mix() */
+  background:rgba(42,26,85,.9);box-shadow:inset 0 .45vh 0 var(--c);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 36%,#2a1a55),rgba(42,26,85,.92) 32%,rgba(22,12,48,.95));
+  transform:translateY(calc((1 - var(--k)) * (100% - var(--minh))));
+  transition:transform .6s cubic-bezier(.34,1.25,.64,1)}
+.rcol.p1 .cb{box-shadow:inset 0 .45vh 0 var(--gold),0 0 4vh rgba(255,210,63,.35)}
+.rcol .avw{position:relative;flex:0 0 auto}
+.rcol .av{--sz:8vh!important}
+.rcol .crown{position:absolute;left:50%;top:-2.6vh;font-size:3.4vh;line-height:1;pointer-events:none;
+  transform:translateX(-50%) scale(0) rotate(-30deg);opacity:0;transition:transform .42s var(--ease-back),opacity .2s}
+.rcol.lead .crown{transform:translateX(-50%) scale(1) rotate(-12deg);opacity:1}
+/* a fixed box, so the number rolling inside it never lays out anything else */
+.rcol .sc{align-self:stretch;height:4.7vh;contain:size layout style;text-align:center;
+  font-size:4.4vh;font-weight:900;line-height:1.05;color:var(--gold);font-variant-numeric:tabular-nums}
+.rcol .nm{max-width:100%;font-size:2.6vh;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcol .sub{max-width:100%;font-size:1.8vh;font-weight:900;color:var(--ink-dim);white-space:nowrap;font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis}
+/* seven or eight narrow columns */
+#rrows.cols.many .rcol .sub{font-size:1.45vh}
+#rrows.cols.many .rcol .nm{font-size:2.2vh}
+#rrows.cols.many .rcol .call{font-size:1.45vh;padding:.3vh 1vh}
+.rcol.out .sub{color:var(--ink-faint)}
+.rcol .aw{position:absolute;left:1.1vh;top:1.4vh;display:flex;flex-direction:column;gap:.5vh;font-size:2.8vh;line-height:1}
+/* rank stamps sit on the column's top edge, centred like a podium sign, where
+   even the shortest column shows them; they take over from the crown */
+.rcol .rk{position:absolute;left:50%;top:-3.6vh;font-size:5.4vh;font-weight:900;line-height:1;opacity:0;
+  transform:translateX(-50%) rotate(-8deg);color:var(--ink-dim);text-shadow:0 .45vh 0 rgba(0,0,0,.5);white-space:nowrap}
+.rcol .rk.on{opacity:1}
+.rcol.ranked .crown{opacity:0}
+.rcol .rk.r1{color:var(--gold)}
+.rcol .rk.r2{color:#dfe6f3}
+.rcol .rk.r3{color:#f0a868}
+/* above the crown, so the two never collide */
+.rcol .call{position:absolute;left:50%;top:-4.6vh;transform:translateX(-50%);white-space:nowrap;padding:.4vh 1.4vh;border-radius:99px;
+  font-size:1.8vh;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#3a1d00;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffe071,var(--gold));box-shadow:0 0 2vh rgba(255,210,63,.7)}
+.rcol.spect .cb{opacity:.6}
+body.tv .pfly{font-size:3vh;padding:.7vh 2vh;line-height:1.25;box-shadow:0 .5vh 0 #0c7d4c,0 1.6vh 3vh -1vh rgba(0,0,0,.6)}
+body.tv .pfly.u{box-shadow:0 .5vh 0 #9c6b00,0 0 3vh rgba(255,210,63,.8)}
+body.tv .pfly b{right:-2vh;top:-2vh;padding:.2vh 1vh;font-size:2vh;line-height:1.3}
+body.tv .rx{font-size:6vh}
+/* the winner banner: big over the stage, then tucked into the top-left corner */
+body.tv #rbanner{display:flex;position:absolute;left:50%;top:26vh;z-index:6;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:0 2vh;width:max-content;max-width:84vw;padding:2.2vh 6vh 2vh;border-radius:2.8vh;transform:translate(-50%,-50%);text-align:center;
+  background:linear-gradient(180deg,#ffe58a,var(--gold) 55%,var(--gold-deep));
+  box-shadow:0 1vh 0 #9c6b00,0 3vh 7vh -2vh rgba(0,0,0,.7),inset 0 .3vh 0 rgba(255,255,255,.7);
+  transition:left .6s var(--ease-out),top .6s var(--ease-out),transform .6s var(--ease-out),padding .6s,max-width .6s}
+body.tv #rbanner.hide{display:none}
+body.tv #rbanner b{font-size:9vh;font-weight:900;line-height:1.05;color:#3a1d00;letter-spacing:-.01em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:70vw}
+body.tv #rbanner .st{font-size:6vh;color:#fff8d6}
+body.tv #rbanner small{flex:1 0 100%;font-size:3vh;font-weight:900;color:#5a3a00;letter-spacing:.06em}
+body.tv #rbanner.small{left:0;top:0;transform:none;max-width:30vw;padding:1.4vh 2.6vh 1.2vh;gap:0 1vh}
+body.tv #rbanner.small b{font-size:3.6vh;max-width:24vw}
+body.tv #rbanner.small .st{font-size:2.6vh}
+body.tv #rbanner.small small{font-size:1.9vh}
+/* a corner QR so late arrivals can join the next round */
+body.tv #tvqr{display:flex;position:fixed;top:4vh;right:3vw;z-index:8;align-items:center;gap:1.4vh;padding:1vh 1.6vh 1vh 1vh;border-radius:1.8vh;
+  background:rgba(20,10,46,.7);box-shadow:inset 0 0 0 .2vh rgba(255,255,255,.12)}
+body.tv #tvqr.hide{display:none}
+#tvqr canvas{width:12vh;height:12vh;border-radius:1vh;image-rendering:pixelated;background:#fff}
+#tvqr .t{display:flex;flex-direction:column;gap:.6vh}
+#tvqr small{font-size:1.7vh;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim)}
+#tvqr b{font-size:4vh;font-weight:900;letter-spacing:.18em;color:var(--gold);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+body.tv #hurry b:nth-child(1),body.tv #hurry b:nth-child(2){height:1.3vh}
+body.tv #hurry b:nth-child(3),body.tv #hurry b:nth-child(4){width:1.3vh}
+body.tv #rstage .tip{font-size:3vh;padding:1.6vh 4vh;max-width:70vw;bottom:auto;top:66vh}
+/* round: a player on a roll gets a flame */
+.tvp .fl{position:absolute;left:-.8vh;top:-1.8vh;font-size:3.6vh;line-height:1;opacity:0;transform:scale(.4) rotate(-20deg);
+  transition:opacity .25s,transform .35s var(--ease-back);pointer-events:none}
+.tvp.hot .fl{opacity:1;transform:none}
+.tvp.hot{box-shadow:inset 0 0 0 .3vh var(--tang),0 0 3vh rgba(255,159,67,.45)}
 body.tv #rbig .k{font-size:2.6vh}
 body.tv #rbig .w{font-size:14vh}
 body.tv #rbig .p{font-size:6vh}
 body.tv #rbig .who{font-size:3vh;gap:1.4vh;margin-top:2.4vh}
 body.tv #rbig .who .av{--sz:6vh!important}
-body.tv #rwin .av{--sz:24vh!important;margin-bottom:3vh}
-body.tv #rwin .row .av{--sz:18vh!important}
-body.tv #rwin .nm{font-size:11vh}
-body.tv #rwin .k{font-size:2.8vh;margin-top:1vh}
-body.tv #rwin .sc{font-size:6vh;margin-top:2.4vh}
+/* TV: no full-screen dimmer (one more 1080p layer for the GPU); the card
+   carries the moment on its own */
+body.tv #rbig{background:none}
+body.tv #rbig .box{max-width:80vw;padding:3.4vh 7vh 3.2vh;border-radius:4vh;
+  box-shadow:0 1vh 0 #0b0520,0 3vh 8vh -2vh rgba(0,0,0,.85),inset 0 0 0 .3vh rgba(61,220,151,.45)}
+body.tv #rbig.u .box{box-shadow:0 1vh 0 #0b0520,0 3vh 8vh -2vh rgba(0,0,0,.85),inset 0 0 0 .3vh rgba(255,210,63,.5)}
 
 /* TV performance. A TV's GPU is phone-class but has to redraw every
    composited layer, every frame, at 1080p. Measured at 1920x1080, the
@@ -975,15 +1201,45 @@ body.tv #app{position:absolute}
 body.tv #rmini svg{overflow:hidden}
 body.tv #cd b,body.tv #rstage .slam,body.tv #rbig .w,body.tv .av.crown::after,body.tv .rrow .crown,
 body.tv #rmini svg,body.tv #rmini.u svg{filter:none}
+/* Results show, measured (tvprof/layers at 1080p):
+   - tiles and points-card rows snap between states: their background/colour/
+     glow transitions repainted 5-8 tiles for 160 ms on every word (45% of all
+     paints in a show); the WAAPI pop still gives the motion;
+   - the 7+ letter card is a box the size of its content, not a fixed
+     full-screen overlay (a 1080p layer once it overlapped the confetti);
+   - glows are tighter: a big blur is paid on every repaint of its layer. */
+body.tv #rmini i{transition:none}
+body.tv #rscore .sr{transition:opacity .25s,transform .3s var(--ease-back)}
+body.tv #rbig{inset:auto;left:50%;top:46%;transform:translate(-50%,-50%);display:block;width:max-content}
+body.tv #rbig .box,body.tv #rbig.u .box{box-shadow:0 1vh 0 #0b0520,0 2vh 3vh -1vh rgba(0,0,0,.85),inset 0 0 0 .3vh rgba(61,220,151,.45)}
+body.tv #rbig.u .box{box-shadow:0 1vh 0 #0b0520,0 2vh 3vh -1vh rgba(0,0,0,.85),inset 0 0 0 .3vh rgba(255,210,63,.5)}
+body.tv #rbanner{box-shadow:0 1vh 0 #9c6b00,0 2vh 3vh -1vh rgba(0,0,0,.7),inset 0 .3vh 0 rgba(255,255,255,.7);
+  transition:none}
+body.tv #rword{transition:none}
+body.tv #rword.hot{box-shadow:0 .8vh 0 #9c6b00,0 0 0 .4vh rgba(255,255,255,.7),0 0 2.5vh rgba(255,210,63,.75)}
+body.tv .pfly{box-shadow:0 .5vh 0 #0c7d4c,0 1vh 1.5vh -1vh rgba(0,0,0,.5)}
+body.tv .pfly.u{box-shadow:0 .5vh 0 #9c6b00,0 0 1.5vh rgba(255,210,63,.7)}
+body.tv .rcol.p1 .cb{box-shadow:inset 0 .45vh 0 var(--gold),0 0 1.8vh rgba(255,210,63,.35)}
+/* The round's player cards: a streak keeps its orange ring, without a halo. */
+body.tv .tvp .plus{box-shadow:none}
+body.tv .tvp.hot{box-shadow:inset 0 0 0 .35vh var(--tang)}
+/* The photo-finish vignette is a full-screen translucent layer: not on a TV. */
+body.tv #scr-results.tense::after{display:none}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  /* these two end invisible: without the motion, just show them for the beat */
+  #rstage .slam,#rstage .tip{animation:none!important;opacity:1}
 }
 </style>
 </head>
 <body>
 <div id="bg"></div>
 <canvas id="fx"></canvas>
+<!-- the last ten seconds of a round: hazard stripes along the screen edges -->
+<div id="hurry" aria-hidden="true"><b></b><b></b><b></b><b></b></div>
+<!-- TV: a small "scan to join" in the corner through rounds and results -->
+<div id="tvqr" class="hide" aria-hidden="true"><canvas id="tvqrCode"></canvas><div class="t"><small>Scan to join</small><b id="tvqrRoom"></b></div></div>
 
 <main id="app">
 
@@ -1228,7 +1484,16 @@ body.tv #rmini svg,body.tv #rmini.u svg{filter:none}
     </div>
     <div id="rreveal">
       <div id="rphase"></div>
-      <div id="rmini"><svg><polyline></polyline></svg></div>
+      <div id="rscore"></div>
+      <div id="rbox">
+        <div id="rmini"><svg><polyline></polyline></svg></div>
+        <div id="rmeter" class="hide">
+          <div class="tl"><small>Total words</small><b class="tot mono">0</b></div>
+          <div class="track"><span class="fs"></span><span class="fu"></span></div>
+          <div class="bl"><small>Counted</small><b class="cnt mono">0</b></div>
+        </div>
+        <div id="rribbon"><span></span></div>
+      </div>
       <div id="rword" class="empty">
         <div class="w"></div>
         <div class="p"></div>
@@ -1236,6 +1501,7 @@ body.tv #rmini svg,body.tv #rmini.u svg{filter:none}
       </div>
       <div id="rtvwait" class="hide"></div>
     </div>
+    <div id="rbanner" class="hide"><span class="st">★</span><b></b><span class="st">★</span><small></small></div>
     <div id="rbest" class="hide"></div>
     <div id="rtabs" class="hide">
       <button data-t="rank" class="sel">Ranking</button>
@@ -1256,9 +1522,12 @@ body.tv #rmini svg,body.tv #rmini.u svg{filter:none}
       </svg>
       <h3>Watch the TV 📺</h3>
       <p>The results are playing on the big screen.</p>
+      <div id="rwmine"></div>
+      <div class="rpad"></div>
       <button class="btn ghost" id="btnWatchHere">Show it here instead</button>
     </div>
     <div class="wrap" style="flex:0 0 auto;padding-top:10px">
+      <div id="rreact" class="hide"></div>
       <div id="chalBar" class="chalbar hide"></div>
       <button class="btn primary" id="btnAgain"><span class="shine"></span>Play again</button>
       <button class="btn ghost sm hide" id="btnChalShare" style="margin-top:10px;width:100%">🎯 Challenge a friend</button>
@@ -1736,7 +2005,9 @@ const Diag = (() => {
     ].join('\n');
   }
 
-  /** Poll one peer connection's ICE candidate pairs once a second.
+  /** Poll one peer connection's ICE candidate pairs once a second (every
+      five on a TV, which has no log screen and little CPU to spare; the log
+      is still there for a remote debugger).
 
       This lives here rather than in either transport because it is the
       same question for both of them: LAN mode and lobby mode fail on a
@@ -1744,6 +2015,7 @@ const Diag = (() => {
       LAN side could say so. */
   function watch(pc) {
     let last = '', stamped = 0;
+    const every = typeof TV_MODE !== 'undefined' && TV_MODE ? 5000 : 1000;
     const iv = setInterval(() => {
       if (!pc || pc.signalingState === 'closed') { clearInterval(iv); return; }
       pc.getStats().then(s => {
@@ -1776,7 +2048,7 @@ const Diag = (() => {
           rows.forEach(r => log('pair', r));
         }
       }, () => { });
-    }, 1000);
+    }, every);
     probes.push(iv);
     return iv;
   }
@@ -2233,10 +2505,13 @@ const Sound = (() => {
   // mute the game sets itself (a phone sitting next to a TV that is already
   // playing the same show) and is never saved.
   let ctx = null, master = null, on = true, hush = false;
+  // Tests render sound effects offline (see _offline): OFF shifts their start
+  // time, and `offline` skips the checks that only make sense live.
+  let OFF = 0, offline = false;
   try { on = localStorage.getItem('sb.sound') !== '0'; } catch (e) { }
 
   function init() {
-    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    if (ctx) { if (ctx.state === 'suspended' && !offline) ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ctx = new AC();
@@ -2244,10 +2519,15 @@ const Sound = (() => {
     master.gain.value = .3;
     master.connect(ctx.destination);
   }
-  const t0 = () => ctx.currentTime;
+  const t0 = () => ctx.currentTime + OFF;
+  // A context the browser has not let start yet (no tap or key press so far)
+  // keeps its clock frozen: everything scheduled meanwhile would go off at
+  // once on the first tap. During a gesture a resume is on its way, so a
+  // sound played from that very tap still counts.
+  const live = () => offline || ctx.state === 'running' || !!(navigator.userActivation && navigator.userActivation.isActive);
 
   function tone(f, dur, { type = 'sine', vol = 1, at = 0, to = null, atk = .006 } = {}) {
-    if (!on || hush || !ctx) return;
+    if (!on || hush || !ctx || !live()) return;
     const t = t0() + at;
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t);
@@ -2258,54 +2538,187 @@ const Sound = (() => {
     o.connect(g); g.connect(master);
     o.start(t); o.stop(t + dur + .04);
   }
+  /** One second of white noise. Every hiss, slam and drumroll plays a slice
+   *  of the same buffer: filling a fresh one per sound meant a drumroll ran
+   *  88,000 Math.random() calls in a single frame. */
+  let nbuf = null;
+  function noiseBuf(c) {
+    const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return b;
+  }
   function noise(dur, { vol = .5, at = 0, hp = 700 } = {}) {
-    if (!on || hush || !ctx) return;
-    const t = t0() + at, n = Math.floor(ctx.sampleRate * dur);
-    const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-    const s = ctx.createBufferSource(); s.buffer = b;
+    if (!on || hush || !ctx || !live()) return;
+    const t = t0() + at;
+    dur = Math.min(dur, 1);
+    if (!nbuf) nbuf = noiseBuf(ctx);
+    const s = ctx.createBufferSource(); s.buffer = nbuf;
     const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
-    const g = ctx.createGain(); g.gain.value = vol;
-    s.connect(f); f.connect(g); g.connect(master); s.start(t);
+    // Fades out linearly over its length, as the per-sound buffers did.
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t, Math.random() * (1 - dur), dur);
+  }
+
+  /* --------------------------- character voices ---------------------------
+     On the TV, every word found plays its finder's character: a little pop
+     ("a word!") and a short cartoon voice ("whose"), never which word.
+     Each voice is one or a few pitch-gliding notes. Per part: wave `w`, pitch
+     contour `f` = [start, peak at 40%, end] in Hz, length `d` and delay `at`
+     in seconds, level `v`, attack `a`, an optional formant band-pass `bp` =
+     [Hz, Q], vibrato `vib` = [rate Hz, depth Hz] and a breath of noise `n`. */
+  const VOICES = {
+    cat:     [{ w: 'sawtooth', f: [700, 1150, 780], d: .24, bp: [1500, 2.5], vib: [7, 18], v: 0.7 }],
+    dog:     [{ w: 'sawtooth', f: [380, 560, 420], d: .09, bp: [900, 3], v: 0.87, n: 0.28 },
+              { w: 'sawtooth', f: [400, 600, 430], d: .1, at: .13, bp: [950, 3], v: 0.87, n: 0.28 }],
+    panda:   [{ w: 'triangle', f: [280, 440, 320], d: .11, v: .3, n: .08 },
+              { w: 'triangle', f: [360, 540, 390], d: .14, at: .11, vib: [10, 16], v: .28 }],
+    bunny:   [{ w: 'sine', f: [1700, 2300, 2000], d: .06, v: 0.25 }, { w: 'sine', f: [1800, 2500, 2100], d: .07, at: .09, v: 0.25 }],
+    fox:     [{ w: 'sawtooth', f: [780, 1380, 960], d: .07, bp: [1650, 3], v: .85, n: .12 },
+              { w: 'sawtooth', f: [960, 1720, 1120], d: .11, at: .08, bp: [1850, 3], v: .95, n: .12 }],
+    frog:    [{ w: 'sawtooth', f: [220, 540, 380], d: .075, bp: [1100, 4], vib: [28, 35], v: 1.1 },
+              { w: 'sawtooth', f: [300, 860, 620], d: .095, at: .09, bp: [1450, 4.5], vib: [30, 40], v: 1.2 }],
+    penguin: [{ w: 'sawtooth', f: [540, 680, 580], d: .08, bp: [1250, 3.8], vib: [18, 20], v: .85 },
+              { w: 'sawtooth', f: [580, 780, 520], d: .12, at: .095, bp: [1350, 3.8], vib: [18, 22], v: .9 }],
+    chick:   [{ w: 'sine', f: [2300, 2700, 2400], d: .05, v: 0.26 }, { w: 'sine', f: [2400, 2900, 2500], d: .05, at: .08, v: 0.26 }],
+    owl:     [{ w: 'sine', f: [540, 560, 480], d: .13, v: 0.23, a: .03 }, { w: 'sine', f: [520, 540, 460], d: .17, at: .18, v: 0.21, a: .03 }],
+    pig:     [{ w: 'sawtooth', f: [210, 460, 280], d: .09, bp: [900, 4], vib: [26, 45], v: 1.15, n: .3 },
+              { w: 'sawtooth', f: [240, 580, 320], d: .11, at: .1, bp: [1050, 4], vib: [28, 50], v: 1.2, n: .3 }],
+    koala:   [{ w: 'triangle', f: [420, 520, 330], d: .18, vib: [14, 30], v: 0.31 }],
+    unicorn: [{ w: 'sine', f: [1047, 1047, 1047], d: .18, v: 0.13 }, { w: 'sine', f: [1319, 1319, 1319], d: .18, at: .06, v: 0.13 },
+              { w: 'sine', f: [1568, 1568, 1568], d: .3, at: .12, v: 0.14 }],
+    axolotl: [{ w: 'sine', f: [380, 700, 1050], d: .1, v: 0.34 }],
+    octopus: [{ w: 'sine', f: [280, 450, 620], d: .07, v: 0.3 }, { w: 'sine', f: [320, 520, 700], d: .08, at: .1, v: 0.28 }],
+    dino:    [{ w: 'sawtooth', f: [220, 520, 190], d: .22, bp: [1050, 2.5], vib: [24, 38], v: 1.05, n: .35 }],
+    ghost:   [{ w: 'triangle', f: [560, 880, 660], d: .32, vib: [6, 40], v: 0.25, a: .05 }],
+    alien:   [{ w: 'sine', f: [800, 1500, 1200], d: .16, vib: [30, 60], v: 0.26 }],
+    robot:   [{ w: 'square', f: [980, 980, 980], d: .06, v: 0.26 }, { w: 'square', f: [660, 660, 660], d: .07, at: .08, v: 0.26 }],
+  };
+  let vNext = 0;                        // the earliest the next voice may start
+  function voiceAt(c, out, t, parts) {
+    const po = c.createOscillator(), pg = c.createGain();
+    po.type = 'sine';
+    po.frequency.setValueAtTime(500, t);
+    po.frequency.exponentialRampToValueAtTime(950, t + .03);
+    pg.gain.setValueAtTime(0, t);
+    pg.gain.linearRampToValueAtTime(.18, t + .003);
+    pg.gain.exponentialRampToValueAtTime(.001, t + .04);
+    po.connect(pg); pg.connect(out); po.start(t); po.stop(t + .06);
+    parts.forEach(p => {
+      const st = t + .045 + (p.at || 0), d = p.d;
+      const o = c.createOscillator();
+      o.type = p.w;
+      o.frequency.setValueAtTime(p.f[0], st);
+      o.frequency.exponentialRampToValueAtTime(p.f[1], st + d * .4);
+      o.frequency.exponentialRampToValueAtTime(p.f[2], st + d);
+      if (p.vib) {
+        const l = c.createOscillator(), lg = c.createGain();
+        l.frequency.value = p.vib[0]; lg.gain.value = p.vib[1];
+        l.connect(lg); lg.connect(o.frequency); l.start(st); l.stop(st + d + .05);
+      }
+      const g = c.createGain();
+      g.gain.setValueAtTime(0, st);
+      g.gain.linearRampToValueAtTime(p.v, st + (p.a || .008));
+      g.gain.setValueAtTime(p.v, st + d * .55);
+      g.gain.exponentialRampToValueAtTime(.001, st + d);
+      let src = o;
+      if (p.bp) {
+        const f = c.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = p.bp[0]; f.Q.value = p.bp[1];
+        o.connect(f); src = f;
+      }
+      src.connect(g); g.connect(out);
+      o.start(st); o.stop(st + d + .05);
+      if (p.n) {
+        const b = c.createBufferSource(), hp = c.createBiquadFilter(), ng = c.createGain();
+        b.buffer = nbuf || (nbuf = noiseBuf(c));
+        hp.type = 'highpass'; hp.frequency.value = 1200;
+        ng.gain.setValueAtTime(p.n, st);
+        ng.gain.exponentialRampToValueAtTime(.001, st + .03);
+        b.connect(hp); hp.connect(ng); ng.connect(out);
+        b.start(st, Math.random() * .9, .04);
+      }
+    });
+  }
+
+  /** A room clapping: dozens of short claps at random moments, swelling in
+   *  and dying away over `dur` seconds. */
+  function applause(dur, at, vol) {
+    if (!on || hush || !ctx || !live()) return;
+    if (!nbuf) nbuf = noiseBuf(ctx);
+    const T = t0() + at;
+    const bus = ctx.createGain(), bp1 = ctx.createBiquadFilter(), bp2 = ctx.createBiquadFilter();
+    bus.gain.value = vol; bus.connect(master);
+    bp1.type = 'bandpass'; bp1.frequency.value = 950; bp1.Q.value = .9; bp1.connect(bus);
+    bp2.type = 'bandpass'; bp2.frequency.value = 1750; bp2.Q.value = 1.1; bp2.connect(bus);
+    const n = Math.round(dur * 55);
+    for (let i = 0; i < n; i++) {
+      const u = Math.pow(Math.random(), 1.25), t = T + u * dur;
+      const lvl = Math.min(1, u / .12) * Math.pow(Math.max(0, 1 - u), 1.4) * (.4 + Math.random() * .6);
+      if (lvl < .02) continue;
+      const g = ctx.createGain(), b = ctx.createBufferSource();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(lvl, t + .008);
+      g.gain.exponentialRampToValueAtTime(.001, t + .045 + Math.random() * .035);
+      b.buffer = nbuf; b.connect(g); g.connect(i & 1 ? bp1 : bp2);
+      b.start(t, Math.random() * .88, .09);
+    }
   }
 
   const SC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31];   // pentatonic ladder
   const hz = semi => 261.63 * Math.pow(2, semi / 12);
 
   /* ----------------------------- round music -----------------------------
-     An original bouncy lounge groove for the round: swung eighths at 116 BPM,
-     I-vi-ii-V in F with a D7 for colour, a marimba hook, a bass that pops up
-     an octave and walks into each chord -- and up a key for the last ten
-     seconds. Synthesised like everything else and scheduled a little ahead
-     on the audio clock. Every device counts its beats from the round's own
-     start, so phones in one room play in step, and a TV that joins halfway
-     picks the tune up mid-bar. */
-  const BPM = 116, BEAT = 60 / BPM, BAR = 4 * BEAT, SWING = .6;
+     An original funk-pop groove for the round, written after Gemini Pro Next
+     listened to Netflix Boggle Party's round music next to our first jingle
+     (a polite F major lounge loop with a noisy clap and a melody that never
+     paused). This one:
+       - 126 BPM with a light swing, A minor / C major, so it agrees with
+         the C pentatonic chimes of every swipe;
+       - a call-and-response hook: a short call, then whole beats of rest
+         that a muted brass answers -- and that leave room for the game's
+         own sounds;
+       - a plucky bass with an octave harmonic, so phone speakers (nothing
+         much under 200 Hz) still hear every note, and a sub for TVs;
+       - a dry rim snap on 2 and 4 instead of a burst of noise;
+       - for the last ten seconds: up a minor third with sixteenth shakers
+         (the clock ticks over it: see Sound.clock).
+     Synthesised like everything else and scheduled a little ahead on the
+     audio clock. Every device counts its beats from the round's own start,
+     so phones in one room play in step, and a TV that joins halfway picks
+     the tune up mid-bar. */
+  const BPM = 126, BEAT = 60 / BPM, BAR = 4 * BEAT, SWING = .57;
   /** Seconds from the top of the loop to eighth-note step k (swung). */
   const stepAt = k => Math.floor(k / 2) * BEAT + (k % 2 ? SWING * BEAT : 0);
   const mhz = m => 440 * Math.pow(2, (m - 69) / 12);
   const PC = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, Bb: 10, B: 11 };
   const midi = n => { const m = /^([A-G][#b]?)(\d)$/.exec(n); return 12 * (+m[2] + 1) + PC[m[1]]; };
-  // One bar each: bass root and a three-note voicing; bar 7 changes chord on beat 3.
+  // One bar each: bass root and a three-note voicing; r2/c2 take over on beat 3.
   const SONG = [
-    { r: 41, c: [57, 60, 64] },                               // Fmaj7
-    { r: 38, c: [57, 60, 65] },                               // Dm7
-    { r: 43, c: [58, 62, 65] },                               // Gm7
-    { r: 36, c: [58, 64, 67] },                               // C7
-    { r: 41, c: [57, 60, 64] },                               // Fmaj7
-    { r: 38, c: [57, 60, 66] },                               // D7
-    { r: 43, c: [58, 62, 65], r2: 36, c2: [58, 64, 67] },     // Gm7 | C7
-    { r: 41, c: [57, 62, 65] },                               // F6
+    { r: 45, c: [60, 64, 67] },                               // Am7
+    { r: 50, c: [60, 65, 69] },                               // Dm7
+    { r: 43, c: [59, 62, 65] },                               // G7
+    { r: 48, c: [59, 64, 67], r2: 52, c2: [59, 62, 68] },     // Cmaj7 | E7
+    { r: 45, c: [60, 64, 67] },                               // Am7
+    { r: 50, c: [60, 66, 69] },                               // D7 (the Dorian lift)
+    { r: 50, c: [60, 65, 69], r2: 43, c2: [59, 62, 65] },     // Dm7 | G7
+    { r: 48, c: [60, 64, 69], r2: 52, c2: [59, 64, 68] },     // C6 | E7
   ];
-  // The hook, one token per swung eighth; the last bar climbs back into the top.
-  const HOOK = ('C5 . A4 C5 . F5 E5 .   D5 . . C5 A4 . F4 .   Bb4 . D5 F5 . D5 . Bb4   C5 . . . G4 A4 Bb4 . ' +
-                'C5 . A4 C5 . F5 E5 .   D5 . A4 D5 . F#5 . A5   G5 . F5 D5 . E5 . C5   F5 . . . . A4 Bb4 B4')
+  // The hook, one token per swung eighth: a call in bars 1, 3, 5 and 7, with
+  // a syncopated hole after its first note; room to breathe (and for the
+  // brass to answer) in bars 2, 4, 6 and 8; a climb back into the top.
+  const HOOK = ('A4 . C5 D5 E5 . G5 E5   D5 . C5 A4 . . . .   G4 . A4 B4 D5 . E5 B4   C5 . E5 G5 . . E5 G#4 ' +
+                'A4 . C5 D5 E5 . A5 G5   F#5 . D5 A4 . . D5 F#5   G5 . F5 D5 . E5 D5 B4   C5 . . . B4 D5 E5 G#5')
     .trim().split(/\s+/).map(x => (x === '.' ? 0 : midi(x)));
 
   /** The band, playing into `out` on context `c` (live, or offline for tests). */
   function band(c, out) {
-    const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), nd = nb.getChannelData(0);
-    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const nb = c === ctx ? (nbuf || (nbuf = noiseBuf(c))) : noiseBuf(c);
+    // One filter per drum for the whole band rather than a new one per hit
+    // (some 350 a round): their settings never change, so it sounds the same.
+    let hatF = null, clapF = null;
     const gain = (dest, v) => { const g = c.createGain(); if (v != null) g.gain.value = v; g.connect(dest); return g; };
     const env = (g, t, peak, dec, atk) => {
       g.gain.setValueAtTime(0, t);
@@ -2322,74 +2735,127 @@ const Sound = (() => {
     const hiss = (t, dur, dest) => { const s = c.createBufferSource(); s.buffer = nb; s.connect(dest); s.start(t, Math.random() * .5, dur); };
     return {
       kick(t, v) {
-        const g = gain(out); env(g, t, v, .26, .002);
-        osc('sine', 130, t, .3, g).frequency.exponentialRampToValueAtTime(42, t + .14);
+        // Starts at 160 Hz so the punch reads on a phone, falls to 48 Hz for a TV.
+        const g = gain(out); env(g, t, v, .22, .002);
+        osc('sine', 160, t, .24, g).frequency.exponentialRampToValueAtTime(48, t + .12);
       },
       clap(t, v) {
-        // Three quick slaps and a short tail: a hand clap, not a snare.
-        const g = gain(filt('bandpass', 1500, out, .9));
-        g.gain.setValueAtTime(0, t);
-        [0, .011, .022].forEach(d => { g.gain.setValueAtTime(v, t + d); g.gain.exponentialRampToValueAtTime(v * .2, t + d + .009); });
-        g.gain.setValueAtTime(v * .6, t + .031);
-        g.gain.exponentialRampToValueAtTime(.0004, t + .17);
-        hiss(t, .19, g);
+        // A dry rim snap: a short band of noise over a quick falling knock.
+        const g = gain(clapF || (clapF = filt('bandpass', 1800, out, 1.8)));
+        env(g, t, v * .55, .075, .001);
+        hiss(t, .085, g);
+        const body = gain(out); env(body, t, v * .22, .035, .001);
+        osc('triangle', 380, t, .04, body).frequency.exponentialRampToValueAtTime(190, t + .035);
       },
       hat(t, v, open) {
-        const g = gain(filt('highpass', 7200, out)); env(g, t, v, open ? .2 : .04, .001);
-        hiss(t, open ? .24 : .06, g);
+        const g = gain(hatF || (hatF = filt('highpass', 7600, out))); env(g, t, v, open ? .16 : .035, .001);
+        hiss(t, open ? .2 : .05, g);
       },
       bass(t, m, dur, v) {
+        // A funk pluck: the filter snaps shut on every note. The octave
+        // harmonic carries the line on phone speakers; the sub fills a TV.
+        const f = filt('lowpass', 1800, out, 3.2);
+        f.frequency.setValueAtTime(1800, t);
+        f.frequency.exponentialRampToValueAtTime(480, t + dur);
+        const g = gain(f); env(g, t, v, dur, .004);
+        osc('sawtooth', mhz(m), t, dur, g);
+        osc('triangle', mhz(m + 12), t, dur, gain(g, .45));
+        osc('sine', mhz(m - 12), t, dur, gain(g, .55));
+      },
+      softBass(t, m, dur, v) {
+        // The results bed's bass: rounder and further back than the round's
+        // funk pluck (no octave harmonic, and the filter closes lower), so it
+        // stays under the show instead of acting like a lead.
         const f = filt('lowpass', 1400, out, 3);
         f.frequency.setValueAtTime(1400, t);
         f.frequency.exponentialRampToValueAtTime(360, t + dur);
         const g = gain(f); env(g, t, v, dur, .006);
         osc('sawtooth', mhz(m), t, dur, g);
-        osc('sine', mhz(m - 12), t, dur, gain(g, .7));     // weight, for a TV's speakers
+        osc('sine', mhz(m - 12), t, dur, gain(g, .7));
       },
       stab(t, notes, dur, v) {
         // A soft electric-piano chord: triangle bodies with a quiet bell an octave up.
-        const g = gain(out); env(g, t, v, dur, .008);
-        const bell = gain(g, .22);
+        const g = gain(out); env(g, t, v, dur, .006);
+        const bell = gain(g, .3);
         notes.forEach(m => { osc('triangle', mhz(m), t, dur, g); osc('sine', mhz(m) * 2.003, t, dur, bell); });
       },
       mallet(t, m, v) {
+        // Short enough that a run of eighths stays a riff rather than a smear;
+        // the triangle body keeps the high notes from whistling.
         const f0 = mhz(m);
-        const g = gain(out); env(g, t, v, .42, .002);
-        osc('sine', f0, t, .45, g);
-        osc('triangle', f0, t, .45, gain(g, .25));
-        const tok = gain(out); env(tok, t, v * .4, .06, .001);
-        osc('sine', f0 * 4, t, .08, tok);                    // the woody "tok" of a marimba bar
+        const g = gain(out); env(g, t, v, .2, .002);
+        osc('sine', f0, t, .23, g);
+        osc('triangle', f0, t, .23, gain(g, .55));
+        const tok = gain(out); env(tok, t, v * .55, .035, .001);
+        osc('sine', f0 * 3, t, .05, tok);                    // the woody "tok" of a marimba bar
+      },
+      brass(t, m, dur, v) {
+        // A muted funk horn, "wah-bap": a saw and a slightly detuned square
+        // through a resonant low-pass that opens on the attack.
+        const f0 = mhz(m);
+        const f = filt('lowpass', f0 * 1.4, out, 4.2);
+        f.frequency.setValueAtTime(f0 * 1.3, t);
+        f.frequency.exponentialRampToValueAtTime(f0 * 5.2, t + .04);
+        f.frequency.exponentialRampToValueAtTime(f0 * 1.9, t + dur);
+        const g = gain(f); env(g, t, v, dur, .006);
+        osc('sawtooth', f0, t, dur, g);
+        osc('square', f0 * 1.005, t, dur, gain(g, .45));
       },
     };
   }
 
   /** Everything the band plays on loop step k, at audio time t. */
   function playStep(B, k, t, hurry, tNext) {
-    const bar = Math.floor(k / 8) % 8, s = k % 8, C = SONG[bar], up = hurry ? 2 : 0;
-    const pickup = bar === 3 || bar === 7;
-    // Drums: kick on 1 and 3 (and a push into bars 5 and 1), claps on 2 and 4.
-    if (s === 0 || s === 4 || (s === 7 && pickup)) B.kick(t, .64);
-    if (s === 2 || s === 6) B.clap(t, 1.6);
-    B.hat(t, s % 2 ? .17 : .1, s === 7 && bar % 2 === 1 && !pickup);
-    // Sixteenths once the clock is running out.
-    if (hurry) B.hat(t + (tNext - t) / 2, .1, false);
-    // Bass: root, octave pop on the "and" of 2, fifth (or the new chord) on 3,
-    // then a chromatic step into the next bar's root.
+    const bar = Math.floor(k / 8) % 8, s = k % 8, C = SONG[bar], up = hurry ? 3 : 0;
+    const turn = bar === 3 || bar === 7;
+    // Drums: kick on 1 and 3, the "and" of 2 in every other bar and a push
+    // into each turnaround; rim snap on 2 and 4, with a ruff before bars 5 and 1.
+    if (s === 0 || (s === 3 && bar % 2 === 0) || s === 4 || (s === 7 && turn)) B.kick(t, .62);
+    if (s === 2 || s === 6) B.clap(t, 1.7);
+    if (turn && s === 7) B.clap(t + (tNext - t) * .5, .9);
+    B.hat(t, s % 2 ? .15 : .09, s === 5 && bar % 2 === 1);
+    // The last ten seconds: sixteenth shakers (the clock ticks over them).
+    if (hurry) B.hat(t + (tNext - t) / 2, .09, false);
+    // Bass: root, octave pops on the "and" of 2 and on 4, the fifth (or the
+    // new chord) on 3, then a chromatic step into the next bar's root.
     const r = s >= 4 && C.r2 ? C.r2 : C.r;
-    if (s === 0) B.bass(t, r + up, .3, .38);
-    else if (s === 3) B.bass(t, r + 12 + up, .15, .28);
-    else if (s === 4) B.bass(t, (C.r2 ? r : r + 7) + up, .3, .34);
-    else if (s === 7) B.bass(t, SONG[(bar + 1) % 8].r - 1 + up, .15, .28);
-    // Chords: Charleston stabs on 1 and the "and" of 2 (on 3 when the chord moves there).
+    if (s === 0) B.bass(t, r + up, .24, .42);
+    else if (s === 3) B.bass(t, r + 12 + up, .13, .32);
+    else if (s === 4) B.bass(t, (C.r2 ? r : r + 7) + up, .24, .36);
+    else if (s === 6 && !turn) B.bass(t, r + 12 + up, .11, .24);
+    else if (s === 7) B.bass(t, SONG[(bar + 1) % 8].r - 1 + up, .13, .3);
+    // Chords: short off-beat stabs on the "and" of 1 and on 3, so the
+    // downbeat belongs to the hook.
     const v = notes => notes.map(m => m + up);
-    if (s === 0) B.stab(t, v(C.c), .2, .15);
-    if (s === 3 && !C.c2) B.stab(t, v(C.c), .38, .13);
-    if (s === 4 && C.c2) B.stab(t, v(C.c2), .38, .13);
+    if (s === 1) B.stab(t, v(C.c), .16, .22);
+    if (s === 4) B.stab(t, v(C.c2 || C.c), .26, .2);
+    // The call (marimba), and the brass answering in the gaps it leaves.
     const m = HOOK[k % HOOK.length];
-    if (m) B.mallet(t, m + up, .22);
+    if (m) B.mallet(t, m + up, .27);
+    if (bar === 1 && (s === 5 || s === 6)) B.brass(t, (s === 5 ? 72 : 69) + up, .22, .35);
+    if (bar === 3 && (s === 4 || s === 5)) B.brass(t, (s === 4 ? 71 : 68) + up, .22, .35);
+    if (bar === 5 && (s === 4 || s === 5)) B.brass(t, (s === 4 ? 74 : 69) + up, .2, .32);
+    if (bar === 7 && (s === 1 || s === 2)) B.brass(t, (s === 1 ? 76 : 72) + up, .22, .37);
   }
 
+  // Notes go onto the audio clock up to 0.7 s ahead, topped up every 250 ms:
+  // a third of the wake-ups of a 90 ms timer, and a main thread that stalls
+  // for half a second (a weak TV mid-animation) no longer drops any.
+  const AHEAD = .7, TICK = 250;
   let bus = null, pumpT = 0, mk = 0, mt0 = 0, mEnd = 0, mUp = Infinity, mBand = null, mKey = null;
+  let mFrom = 0, mTo = 0, mWait = false;
+
+  /** Pin the round's start and end (performance.now() ms) to the audio clock. */
+  function anchor() {
+    const nowP = performance.now(), nowA = ctx.currentTime;
+    mt0 = nowA + (mFrom - nowP) / 1000;
+    mEnd = nowA + (mTo - nowP) / 1000;
+    // Up a key for the last ten seconds, from the bar line nearest that mark.
+    mUp = mt0 + Math.max(0, Math.round((mEnd - 10 - mt0) / BAR)) * BAR;
+    // Joining late: begin at the first step still ahead of us.
+    mk = Math.max(0, Math.floor((nowA - mt0) / BEAT) * 2);
+    while (mt0 + stepAt(mk) < nowA + .04) mk++;
+  }
 
   /** Start the round music. fromMs/toMs are the round's start and end on the
    *  performance.now() clock -- the same numbers this device's timer uses.
@@ -2400,35 +2866,46 @@ const Sound = (() => {
     if (!on || hush) return;
     init();
     if (!ctx) return;
-    const nowP = performance.now(), nowA = ctx.currentTime;
-    mt0 = nowA + (fromMs - nowP) / 1000;
-    mEnd = nowA + (toMs - nowP) / 1000;
-    // Up a key for the last ten seconds, from the bar line nearest that mark.
-    mUp = mt0 + Math.max(0, Math.round((mEnd - 10 - mt0) / BAR)) * BAR;
-    // Joining late: begin at the first step still ahead of us.
-    mk = Math.max(0, Math.floor((nowA - mt0) / BEAT) * 2);
-    while (mt0 + stepAt(mk) < nowA + .04) mk++;
+    mFrom = fromMs; mTo = toMs;
+    anchor();
     bus = ctx.createGain();
     bus.gain.value = TV_MODE ? .62 : .46;
     bus.connect(master);
     mBand = band(ctx, bus);
     mKey = key;
+    mWait = false;
     pump();
   }
 
   function pump() {
     if (!bus) return;
+    // Not allowed to play yet: wait, then pick the groove up wherever the
+    // round has got to (the audio clock stood still meanwhile).
+    if (ctx.state !== 'running') { mWait = true; pumpT = setTimeout(pump, TICK); return; }
+    if (mWait) { mWait = false; anchor(); }
     const now = ctx.currentTime;
     for (;;) {
       const t = mt0 + stepAt(mk);
       if (t > mEnd - .03) return;                       // time's up: the end sting takes over
-      if (t > now + .3) break;
+      if (t > now + AHEAD) break;
       // After a stall (a backgrounded tab), skip what is gone rather than
       // playing it all at once.
       if (t >= now - .05) playStep(mBand, mk, t, t >= mUp - .001, mt0 + stepAt(mk + 1));
       mk++;
     }
-    pumpT = setTimeout(pump, 90);
+    pumpT = setTimeout(pump, TICK);
+  }
+
+  /** Fade a bus out and let it go. */
+  function fadeBus(b, f) {
+    try {
+      // Read the level before cancelling: the cancel drops any ramp in flight.
+      const t = ctx.currentTime, v = b.gain.value;
+      b.gain.cancelScheduledValues(t);
+      b.gain.setValueAtTime(v, t);
+      b.gain.linearRampToValueAtTime(0, t + Math.max(.01, f));
+    } catch (e) { }
+    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, (f + .5) * 1000);
   }
 
   function stopMusic(fade) {
@@ -2436,14 +2913,86 @@ const Sound = (() => {
     mKey = null;
     if (!bus) return;
     const b = bus; bus = null;
-    const f = fade == null ? .25 : fade;
+    fadeBus(b, fade == null ? .25 : fade);
+  }
+
+  /* ------------------------------ results bed ------------------------------
+     A laid-back loop under the scoring show: the round band's voices, played
+     softer and sparser, in C so the scoring notes (a C pentatonic ladder) sit
+     on top of it. No hook: the reveal's own plucks and dings are the tune. */
+  const BED_BPM = 96, BED_BEAT = 60 / BED_BPM, BED_SWING = .56;
+  const bedAt = k => Math.floor(k / 2) * BED_BEAT + (k % 2 ? BED_SWING * BED_BEAT : 0);
+  const BED = [
+    { r: 48, c: [64, 67, 71] },                               // Cmaj7
+    { r: 45, c: [64, 67, 72] },                               // Am7
+    { r: 50, c: [65, 69, 72] },                               // Dm7
+    { r: 43, c: [65, 71, 74] },                               // G7
+    { r: 52, c: [67, 71, 74] },                               // Em7
+    { r: 45, c: [67, 73, 76] },                               // A7
+    { r: 50, c: [65, 69, 72], r2: 43, c2: [65, 71, 74] },     // Dm7 | G7
+    { r: 48, c: [64, 67, 69] },                               // C6
+  ];
+  function bedStep(B, k, t) {
+    const bar = Math.floor(k / 8) % 8, s = k % 8, C = BED[bar];
+    if (s === 0) B.kick(t, .34);
+    if (s === 4) B.kick(t, .22);
+    B.hat(t, s % 2 ? .07 : .035, false);
+    const r = s >= 4 && C.r2 ? C.r2 : C.r;
+    if (s === 0) B.softBass(t, r, .5, .26);
+    else if (s === 4) B.softBass(t, C.r2 ? r : r + 7, .4, .2);
+    else if (s === 7) B.softBass(t, BED[(bar + 1) % 8].r - 1, .16, .16);
+    if (s === 0) B.stab(t, C.c, .7, .085);
+    if (s === 3 && !C.c2) B.stab(t, C.c, .26, .06);
+    if (s === 4 && C.c2) B.stab(t, C.c2, .5, .07);
+    // A two-note bell answer every other bar, high and quiet.
+    if (bar % 2 === 1 && (s === 2 || s === 5)) B.mallet(t, C.c[s === 2 ? 2 : 1] + 12, .07);
+  }
+  let bBus = null, bT = 0, bK = 0, bT0 = 0, bBand = null, bVol = 0, bWait = false;
+  function bed() {
+    if (bBus || !on || hush) return;
+    init();
+    if (!ctx) return;
+    bVol = TV_MODE ? .34 : .26;
+    bBus = ctx.createGain();
+    const t = ctx.currentTime;
+    bBus.gain.setValueAtTime(0, t);
+    bBus.gain.linearRampToValueAtTime(bVol, t + 1.6);
+    bBus.connect(master);
+    bBand = band(ctx, bBus);
+    bT0 = t + .08; bK = 0; bWait = false;
+    bedPump();
+  }
+  function bedPump() {
+    if (!bBus) return;
+    // Not allowed to play yet: wait, then start the loop from the top.
+    if (ctx.state !== 'running') { bWait = true; bT = setTimeout(bedPump, TICK); return; }
+    if (bWait) { bWait = false; bT0 = ctx.currentTime + .08; bK = 0; }
+    const now = ctx.currentTime;
+    for (;;) {
+      const t = bT0 + bedAt(bK);
+      if (t > now + AHEAD) break;
+      if (t >= now - .05) bedStep(bBand, bK, t);
+      bK++;
+    }
+    bT = setTimeout(bedPump, TICK);
+  }
+  function stopBed(fade) {
+    clearTimeout(bT); bT = 0;
+    if (!bBus) return;
+    const b = bBus; bBus = null;
+    fadeBus(b, fade == null ? 1 : fade);
+  }
+  /** Sink the bed under a big moment, then bring it back. */
+  function duck(sec) {
+    if (!bBus) return;
     try {
-      const t = ctx.currentTime;
-      b.gain.cancelScheduledValues(t);
-      b.gain.setValueAtTime(b.gain.value, t);
-      b.gain.linearRampToValueAtTime(0, t + Math.max(.01, f));
+      const t = ctx.currentTime, g = bBus.gain, v = g.value;
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(v, t);
+      g.linearRampToValueAtTime(bVol * .3, t + .12);
+      g.setValueAtTime(bVol * .3, t + sec);
+      g.linearRampToValueAtTime(bVol, t + sec + .8);
     } catch (e) { }
-    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, (f + .5) * 1000);
   }
 
   return {
@@ -2451,17 +3000,30 @@ const Sound = (() => {
     get on() { return on; },
     /** False until the browser lets audio play (usually after a tap or key). */
     get ready() { return !!ctx && ctx.state === 'running'; },
-    hush(v) { hush = !!v; if (hush) stopMusic(.2); },
+    hush(v) { hush = !!v; if (hush) { stopMusic(.2); stopBed(.2); } },
     toggle() {
       on = !on;
       try { localStorage.setItem('sb.sound', on ? '1' : '0'); } catch (e) { }
-      if (on) { init(); this.tick(2); } else stopMusic(.15);
+      if (on) { init(); this.tick(2); } else { stopMusic(.15); stopBed(.15); }
       return on;
     },
     music, stopMusic,
+    /** The results show's background loop: `bed(true)` starts it (no-op if
+     *  it is already playing), `bed(false)` fades it out. */
+    bed(v, fade) { if (v) bed(); else stopBed(fade); },
+    duck,
     get playing() { return !!bus; },
+    get bedPlaying() { return !!bBus; },
     /** Tests: the band and score, to render offline. */
-    _jingle: { band, playStep, stepAt, BAR, steps: HOOK.length },
+    _jingle: { band, playStep, stepAt, BAR, steps: HOOK.length, bedStep, bedAt },
+    /** Tests: run `fn(at)` with every sound going into `out` on the offline
+     *  context `oc`; `at(sec)` sets where the next sounds start. */
+    _offline(oc, out, fn) {
+      const keep = [ctx, master, on, hush, nbuf, vNext];
+      ctx = oc; master = out; on = true; hush = false; nbuf = null; vNext = 0; offline = true;
+      try { fn(sec => { OFF = sec; }); } finally { [ctx, master, on, hush, nbuf, vNext] = keep; OFF = 0; offline = false; }
+    },
+    _voices: () => Object.keys(VOICES),
     /** Switch on for this page only. A TV has no mute button, and a phone
      *  muted on this same browser some other day must not leave it silent. */
     forceOn() { on = true; },
@@ -2477,15 +3039,102 @@ const Sound = (() => {
     dup() { init(); tone(420, .09, { type: 'square', vol: .13 }); tone(340, .11, { type: 'square', vol: .1, at: .07 }); },
     count(n) { init(); tone(n <= 0 ? 880 : 520, n <= 0 ? .5 : .16, { type: 'triangle', vol: .4 }); },
     go() { init();[0, 4, 7, 12].forEach((s, i) => tone(hz(s + 12), .6, { type: 'triangle', vol: .3, at: i * .05 })); },
-    warn() { init(); tone(700, .09, { type: 'square', vol: .18 }); },
-    end() { init();[0, -5].forEach((s, i) => tone(hz(s), 1.1, { type: 'sawtooth', vol: .16, at: i * .12, to: hz(s - 12) })); noise(.5, { vol: .12, hp: 200 }); },
+    // The last ten seconds: a woodblock tick-tock on every second; the last
+    // five double up and climb a semitone a second. `at` puts the tick on
+    // the audio clock ahead of time, exactly on the second.
+    clock(n, at = 0) {
+      init();
+      const hot = n <= 5, f = (n % 2 ? 980 : 735) * (hot ? Math.pow(2, (6 - n) / 12) : 1);
+      const knock = (f0, t, v) => {
+        tone(f0 * 1.15, .07, { type: 'triangle', vol: v, at: t, to: f0, atk: .001 });
+        tone(f0, .08, { type: 'sine', vol: v * .55, at: t, atk: .001 });
+        noise(.014, { vol: v * .45, hp: 3000, at: t });      // the click that cuts through the music
+      };
+      knock(f, at, hot ? .46 : .38);
+      if (hot) knock(f * .8, at + .5, .32);
+    },
+    // Time's up, "pencils down!": a referee's double bell, then the card
+    // swooshes in and slams (it lands 240 ms in).
+    end() {
+      init();
+      [0, .12].forEach(t => {
+        // a ringside bell: inharmonic partials, not a polite chime
+        [[1046.5, .24, .45], [1661, .14, .32], [2489, .1, .22], [3620, .06, .14]].forEach(([f, v, d]) =>
+          tone(f, d, { type: 'sine', vol: v, at: t, atk: .001 }));
+      });
+      noise(.18, { vol: .08, hp: 1400, at: .06 });
+      tone(135, .32, { type: 'triangle', vol: .36, at: .24, to: 44, atk: .002 });
+      noise(.14, { vol: .15, hp: 450, at: .24 });
+    },
+    // The tiles dealing in at GO!: dice clattering into the tray, in step
+    // with the wave of tiles landing.
+    deal(n = 4) {
+      init();
+      const k = 2 * n + 2;
+      for (let i = 0; i < k; i++) {
+        const at = .1 + i * (.28 / k) + Math.random() * .014, f0 = 850 + Math.random() * 750;
+        noise(.014, { vol: .16 + Math.random() * .08, hp: 1800 + Math.random() * 1400, at });
+        tone(f0, .022, { type: 'triangle', vol: .18, at, to: f0 * .42, atk: .001 });
+      }
+    },
+    /** TV: someone found a word -- their character's voice. Close calls are
+     *  spaced out a little; a real pile-up drops some rather than queueing. */
+    voice(key) {
+      init();
+      if (!on || hush || !ctx || !live()) return;
+      const now = t0(), t = Math.max(now, vNext);
+      if (t - now > .45) return;
+      vNext = t + .15;
+      voiceAt(ctx, master, t, VOICES[key] || VOICES.cat);
+    },
     pop(i) { init(); tone(hz(SC[Math.min(i, 9)] + 24), .09, { type: 'sine', vol: .22 }); },
-    coin() { init(); tone(1180, .07, { type: 'square', vol: .16 }); tone(1560, .18, { type: 'square', vol: .14, at: .06 }); },
+    // A word cashing in: the "ka" of a till drawer, then the "ching".
+    coin() {
+      init();
+      tone(820, .025, { type: 'triangle', vol: .18, to: 420, atk: .001 });
+      noise(.03, { vol: .15, hp: 2200 });
+      [[1975.5, .18, .28], [3951, .07, .18]].forEach(([f, v, d]) => tone(f, d, { type: 'sine', vol: v, at: .04, atk: .001 }));
+      [[2637, .2, .55], [5274, .08, .35]].forEach(([f, v, d]) => tone(f, d, { type: 'sine', vol: v, at: .105, atk: .001 }));
+    },
+    // "Only you!": a rubber stamp hitting the card.
+    ink(at = 0) {
+      init();
+      tone(150, .1, { type: 'triangle', vol: .3, at, to: 58, atk: .002 });
+      noise(.05, { vol: .16, hp: 1800, at });
+    },
     whoosh() { init(); noise(.34, { vol: .1, hp: 1200 }); },
     // Results show: a rising three-note sting when someone takes the lead.
     lead() { init();[12, 19, 24].forEach((st, i) => tone(hz(st + 12), .26, { type: 'triangle', vol: .28, at: i * .085 })); },
     // One rising pluck per letter while a word is traced on the results board.
     trace(k) { init(); tone(hz(SC[Math.min(k, 12)] + 12), .12, { type: 'triangle', vol: .2 }); },
+    // Results show: each counted word rings a note one rung higher up the
+    // ladder, so the whole tally climbs as the meter fills; unique words
+    // ring a step up with a bell on top.
+    step(frac, bright) {
+      init();
+      const s = SC[Math.round(clamp(frac, 0, 1) * 12)] + 12 + (bright ? 2 : 0);
+      tone(hz(s), .2, { type: 'triangle', vol: .2 });
+      tone(hz(s + 12), .14, { type: 'sine', vol: bright ? .12 : .05, at: .004 });
+    },
+    // The meter tops out: a quick run all the way up.
+    gliss() {
+      init();
+      for (let i = 0; i < 10; i++) tone(hz(SC[i + 3] + 12), .16, { type: 'triangle', vol: .16, at: i * .034 });
+      tone(hz(SC[13] + 12), .6, { type: 'sine', vol: .16, at: .36 });
+    },
+    // A banner slamming down over the board.
+    slam() { init(); tone(118, .24, { type: 'triangle', vol: .3, to: 48 }); noise(.16, { vol: .1, hp: 600 }); },
+    // A rank stamp hitting a player's column.
+    stamp() { init(); tone(170, .14, { type: 'square', vol: .1, to: 70 }); noise(.08, { vol: .14, hp: 320 }); },
+    // "Nobody found it": a little descending wah-wah.
+    miss() {
+      init();
+      [7, 6, 5, 4].forEach((s, i) => tone(hz(s + 12), i === 3 ? .5 : .22, { type: 'triangle', vol: .17, at: i * .17, to: hz(s + 11.6) }));
+    },
+    // An award card.
+    award() { init();[0, 4, 7, 12].forEach((s, i) => tone(hz(s + 24), .3, { type: 'sine', vol: .12, at: i * .06 })); },
+    // Somebody's emoji reaction floating up.
+    react() { init(); tone(hz(SC[5 + rnd(5)] + 24), .08, { type: 'sine', vol: .07 }); },
     // A sprinkle of high notes for a 6-letter word.
     sparkle() { init();[5, 7, 9, 11, 13].forEach((k, i) => tone(hz(SC[k] + 24), .16, { type: 'sine', vol: .13, at: i * .04 })); },
     // Whistle up, then a bang with a low thump under it.
@@ -2507,6 +3156,9 @@ const Sound = (() => {
       [[0, 0], [4, .12], [7, .24], [12, .36], [7, .5], [12, .58], [16, .7], [19, .82]]
         .forEach(([s, t]) => { tone(hz(s + 12), .55, { type: 'triangle', vol: .3, at: t }); tone(hz(s), .55, { type: 'sine', vol: .18, at: t }); });
       noise(.8, { vol: .07, hp: 2200, at: .36 });
+      // Confetti cannons, and the room applauding.
+      [0, .16].forEach(t => { tone(190, .22, { type: 'triangle', vol: .28, at: t, to: 55 }); noise(.22, { vol: .13, hp: 450, at: t }); });
+      applause(2.8, .3, .5);
     },
     join() { init(); tone(hz(7), .16, { type: 'triangle', vol: .26 }); tone(hz(12), .3, { type: 'triangle', vol: .22, at: .1 }); },
     part() { init(); tone(hz(7), .16, { type: 'triangle', vol: .2 }); tone(hz(0), .3, { type: 'triangle', vol: .16, at: .1 }); },
@@ -2547,7 +3199,10 @@ const LOW_END = (() => {
 
 const FX = (() => {
   const cv = $('#fx'), cx = cv.getContext('2d');
-  const CAP = LOW_END ? 110 : 300, SCALE = LOW_END ? .45 : 1;
+  // A TV is a phone-class GPU at 1080p: fewer pieces, and rectangles only
+  // (a round piece is an arc path to build and fill, per piece, per frame).
+  const CAP = LOW_END ? 110 : TV_MODE ? 140 : 300, SCALE = LOW_END ? .45 : TV_MODE ? .6 : 1;
+  const ROUND = !TV_MODE;
   // A TV's canvas would be a full 1080p layer redrawn every frame: draw it at
   // half resolution (CSS stretches it back), and take it off the screen
   // altogether between bursts so the compositor has nothing to draw.
@@ -2579,7 +3234,7 @@ const FX = (() => {
       cx.setTransform(cs, sn, -sn, cs, p.x * RES, p.y * RES);
       cx.globalAlpha = p.life < 34 ? p.life / 34 : 1;
       cx.fillStyle = p.c;
-      if (p.sh) cx.fillRect(p.s * -.5, p.s * -.22, p.s, p.s * .44);
+      if (p.sh || !ROUND) cx.fillRect(p.s * -.5, p.s * -.22, p.s, p.s * .44);
       else { cx.beginPath(); cx.arc(0, 0, p.s * .42, 0, 6.283); cx.fill(); }
     }
     cx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2704,18 +3359,23 @@ function floatText(txt, x, y, color) {
 const odometer = (() => {
   const jobs = new Map();               // node -> job
   let raf = 0;
+  // A TV shows a new number at most every 48 ms (about 20 a second): each one
+  // is a text change, a layout and a repaint, and from the couch a count
+  // rolling at 20 fps reads the same as one at 60.
+  const GAP = TV_MODE ? 48 : 0;
   function tick(now) {
     jobs.forEach((j, node) => {
       const p = j.ms <= 0 ? 1 : clamp((now - j.t0) / j.ms, 0, 1);
+      if (p < 1 && now - j.at < GAP) return;
       const v = Math.round(j.from + (j.to - j.from) * (1 - Math.pow(1 - p, 3)));
-      if (v !== j.last) { j.last = v; node.textContent = v.toLocaleString(); }
+      if (v !== j.last) { j.last = v; j.at = now; node.textContent = v.toLocaleString(); }
       if (p >= 1) { jobs.delete(node); j.done && j.done(); }
     });
     raf = jobs.size ? requestAnimationFrame(tick) : 0;
   }
   return function odometer(node, from, to, ms, done) {
     if (from === to) { jobs.delete(node); node.textContent = to.toLocaleString(); done && done(); return; }
-    jobs.set(node, { from, to, t0: performance.now(), ms, done, last: null });
+    jobs.set(node, { from, to, t0: performance.now(), ms, done, last: null, at: -1e9 });
     if (!raf) raf = requestAnimationFrame(tick);
   };
 })();
@@ -4513,6 +5173,8 @@ function syncMusic() {
   const live = !!R && !R.ended && G.screen === 'game' && R.endAt > performance.now();
   if (live && (G.mode === 'tv' || !tvNearby())) Sound.music(R.endAt - R.dur * 1000, R.endAt, R);
   else Sound.stopMusic();
+  // The results show has music of its own (the sound button stops it).
+  if (G.screen === 'results') Results.syncSound();
 }
 
 /** The host's view of the lobby, as every guest and TV needs it. */
@@ -4528,12 +5190,18 @@ const store = {
 
 /* ------------------------------ screens ----------------------------- */
 function show(name) {
+  // A TV's "scan to join" corner follows the room even when the screen stays
+  // the same (a new lobby, straight into the same kind of screen).
+  if (G.mode === 'tv') TV.corner(name === 'game' || name === 'results');
   if (G.screen === name) return;
   G.screen = name;
   // Keep the screen awake wherever a game can be going on.
   if (name === 'home' || name === 'load' || name === 'chal' || name === 'lan') Wake.off(); else Wake.on();
-  // A TV hides its corner hints (sound, full screen) while a game is up.
+  // A TV hides its corner hints (sound, full screen) while a game is up, and
+  // shows its "scan to join" corner instead (above).
   if (G.mode === 'tv') document.body.classList.toggle('tvplay', name === 'game' || name === 'results');
+  // The edge stripes belong to the last seconds of a live round only.
+  if (name !== 'game') document.body.classList.remove('hurry');
   // A sheet left open on the lobby must not sit on top of the round.
   if (name !== 'lobby' && name !== 'home') {
     $('#tvsheet').classList.remove('on');
@@ -4764,7 +5432,12 @@ function beginRound(p, spectate) {
   Results.stop();
   FX.clear();
   Sound.stopMusic(0);
-  cancelAnimationFrame(timerRaf);
+  stopTimer();
+  // The last round's ending must not bleed into this one's countdown (show()
+  // skips its own cleanup when we are already on the game screen).
+  document.body.classList.remove('hurry');
+  $('#ring').classList.remove('warn', 'crit');
+  $('#ringBar').style.strokeDashoffset = '0';
   G.round = {
     rid: p.rid, board: p.board, size: p.size, minLen: p.minLen, dur: p.dur, lang: p.lang | 0,
     total: p.total || 0, words: new Map(), score: 0,
@@ -4819,6 +5492,7 @@ function beginRound(p, spectate) {
     await langReady;
     wrap.classList.remove('veil');
     Board.mount(p.board, p.size);          // replays the deal animation
+    if (!tvNearby()) Sound.deal(p.size);
     Board.lock(tv);                        // a TV only ever watches
     G.round.endAt = performance.now() + p.dur * 1000;
     runTimer();
@@ -4856,36 +5530,50 @@ function countdownThen(p, fn) {
   step();
 }
 
-let timerRaf = 0;
+let timerRaf = 0, timerTo = 0;
+/** Stop the round clock, whichever way it is being driven. */
+function stopTimer() {
+  cancelAnimationFrame(timerRaf); timerRaf = 0;
+  clearTimeout(timerTo); timerTo = 0;
+}
 function runTimer() {
   const R = G.round, ring = $('#ring'), bar = $('#ringBar'), num = $('#ringNum');
   const C = 2 * Math.PI * 25;
   bar.style.strokeDasharray = C;
-  let lastSec = -1, drawn = 0;
+  let lastSec = -1;
   // A TV moves the ring 10 times a second rather than every frame: on a TV
   // every repaint is a full-screen recomposite, and at that size a tenth of
-  // a second of arc is still a smooth sweep.
+  // a second of arc is still a smooth sweep. It runs off a timer, too: a
+  // frame callback wakes the page 60 times a second even when it draws
+  // nothing.
   const every = G.mode === 'tv' ? 100 : 0;
-  cancelAnimationFrame(timerRaf);
+  stopTimer();
 
   const tick = () => {
     if (!G.round || G.round !== R || R.ended) return;
     const now = performance.now();
     const left = Math.max(0, R.endAt - now);
     const sec = Math.ceil(left / 1000);
-    if (now - drawn >= every || sec !== lastSec) {
-      drawn = now;
-      bar.style.strokeDashoffset = C * (1 - clamp(left / (R.dur * 1000), 0, 1));
-    }
+    // Every tick draws: a phone ticks every frame, a TV every 100 ms (a
+    // "100 ms since the last draw" check would skip the ticks that fire a
+    // hair early and halve the TV's rate).
+    bar.style.strokeDashoffset = C * (1 - clamp(left / (R.dur * 1000), 0, 1));
     if (sec !== lastSec) {
       lastSec = sec;
       num.textContent = sec;
       ring.classList.toggle('warn', sec <= 20 && sec > 10);
       ring.classList.toggle('crit', sec <= 10);
-      if (sec <= 5 && sec > 0) { if (!tvNearby()) Sound.warn(); buzz(10); }
+      // The last ten seconds: hazard stripes along the edges of the screen.
+      document.body.classList.toggle('hurry', sec <= 10 && sec > 0 && G.screen === 'game');
+      // The last ten seconds tick. Each tick goes onto the audio clock a
+      // second ahead, exactly on its second, so a TV's 100 ms timer can't
+      // make the clock limp.
+      if (sec >= 2 && sec <= 11 && !tvNearby()) Sound.clock(sec - 1, Math.max(0, (R.endAt - (sec - 1) * 1000 - now) / 1000));
+      if (sec <= 5 && sec > 0) buzz(10);
     }
     if (left <= 0) { endRound(); return; }
-    timerRaf = requestAnimationFrame(tick);
+    if (every) timerTo = setTimeout(tick, every);
+    else timerRaf = requestAnimationFrame(tick);
   };
   tick();
 }
@@ -4894,7 +5582,8 @@ function endRound() {
   const R = G.round;
   if (!R || R.ended) return;
   R.ended = true;
-  cancelAnimationFrame(timerRaf);
+  stopTimer();
+  document.body.classList.remove('hurry');
   Sound.stopMusic(.2);
   Board.lock(true);
   Board.cancel();
@@ -4920,15 +5609,50 @@ function endRound() {
     if (!G.pendingDone.size) finaliseResults();
   } else {
     G.doneWords = new Map([[G.me.id, mine]]);
-    finaliseResults();
+    // Solo has nobody to wait for, but the tiles still get their moment to
+    // fall away under "Time's up!" before the results take over.
+    showWaitingForResults();
+    setTimeout(() => { if (G.round === R) finaliseResults(); }, 900);
   }
 }
 
+/** Time's up: the board's tiles drop away in a diagonal wave, "Time's up!"
+ *  slams in, and a tip sits underneath while the scores come in. */
+const TIPS = [
+  'Plurals count — add an S to the words you already have.',
+  'Look for endings like -ING, -ED and -ER hiding in the corners.',
+  'Small words inside big ones score too: STARE gives STAR, TAR, ARE…',
+  'A word only you found is worth double.',
+  'Qu counts as two letters, so QUIT is a 4-letter word.',
+  'Long words climb fast: 7 letters is worth fifteen 3-letter words.',
+  'Swap one letter to find a new word: CART, CARE, CORE…',
+  'Re- and un- in front of a word often make another one.',
+  'Spot a pair like TH, SH or CH and build out from there.',
+  'Paths can bend and cross, but each tile only once per word.',
+];
+
 function showWaitingForResults() {
-  const slam = el('div', 'slam', "TIME!");
-  const st = el('div'); st.id = 'rstage'; st.appendChild(slam);
+  const old = $('#rstage'); if (old) old.remove();
+  // Results.play() holds the show until this beat has had its moment.
+  G.timeUpAt = performance.now();
+  const st = el('div'); st.id = 'rstage';
+  st.appendChild(el('div', 'slam', "Time's up!"));
+  // "Only you found it" means nothing in a game of one.
+  const tips = G.mode === 'solo' ? TIPS.filter(t => !/double/.test(t)) : TIPS;
+  st.appendChild(el('div', 'tip', '💡 ' + pick(tips)));
   document.body.appendChild(st);
-  setTimeout(() => st.remove(), 1500);
+  setTimeout(() => st.remove(), 2700);
+  // Tiles fall away corner to corner. Transform and opacity only, so a TV's
+  // GPU does it without a single repaint.
+  const tiles = $$('#board .tile');
+  const n = Math.round(Math.sqrt(tiles.length)) || 1;
+  const RMo = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!tiles.length || RMo || !tiles[0].animate) return;
+  tiles.forEach((t, i) => t.animate([
+    { transform: 'none', opacity: 1 },
+    { transform: 'translateY(-6%) scale(1.06)', opacity: 1, offset: .25 },
+    { transform: 'translateY(40%) scale(.4) rotate(' + (i % 2 ? 14 : -14) + 'deg)', opacity: 0 },
+  ], { duration: 520, delay: ((i % n) + ((i / n) | 0)) * 45, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }));
 }
 
 /* --------------------------- host: scoring -------------------------- */
@@ -4985,6 +5709,9 @@ function finaliseResults() {
     total: G.hostBoardWords ? G.hostBoardWords.length : R.total,
     board: R.board, size: R.size, minLen: R.minLen, lang: R.lang | 0,
     screens: G.screens.size,
+    // The best words on the board that nobody found, for the show's
+    // "Nobody found" beat (only the host knows the full word list).
+    missed: missedWords(G.hostBoardWords, seenBy),
   };
   if (G.mode === 'host') Net.broadcast(payload);
   applyResults(payload);
@@ -5065,6 +5792,16 @@ function handleMessage(from, m) {
         }
         break;
       }
+      case 'react': {
+        // An emoji from a guest during the results: show it here and pass it
+        // on to everyone else (TVs included). A few a second at most each.
+        const p = G.players.get(from), now = performance.now(), e = m.e | 0;
+        if (!p || G.phase !== 'results' || e < 0 || e > 4 || now - (p.reactAt || 0) < 250) break;
+        p.reactAt = now;
+        Results.react(from, e);
+        Net.broadcast({ t: 'react', id: from, e }, from);
+        break;
+      }
       case 'hb': break;
     }
     return;
@@ -5105,7 +5842,11 @@ function handleMessage(from, m) {
       break;
     }
     case 'results':
-      if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); Sound.stopMusic(.2); }
+      // The host's clock runs a hair ahead of ours (it started the round
+      // first), so results can beat our own time-up: end the round properly
+      // anyway, so the "Time's up!" beat (and the hold in Results.play) runs
+      // in step with everyone else.
+      if (G.round && !G.round.ended) endRound();
       setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: false })));
       applyResults(m);
       break;
@@ -5118,6 +5859,9 @@ function handleMessage(from, m) {
       // is running hidden behind "Watch the TV"; if this phone is showing the
       // show itself, its own Skip button is in charge.
       if (Results.watching) Results.skip();
+      break;
+    case 'react':
+      if (m.id !== G.me.id) Results.react(m.id, m.e | 0);
       break;
     case 'kick':
       leaveRoom("The host removed you from the lobby.");
@@ -5459,7 +6203,7 @@ function leaveRoom(why) {
   // closed lobby from a dropped connection (a TV retries the latter).
   if (G.mode === 'host') { Net.broadcast({ t: 'bye' }); Net.destroy(300); }
   else Net.destroy();
-  cancelAnimationFrame(timerRaf);
+  stopTimer();
   Sound.stopMusic();
   const cd = $('#cd'); if (cd) cd.remove();
   G.mode = 'solo'; G.round = null; G.results = null;
@@ -5789,40 +6533,60 @@ const Board = (() => {
 
    Staged as a race whose ending stays open until the last few words:
 
+     0. SCORING: how many words the room found, and -- the first time in a
+        session -- the points card building up row by row.
      1. SHARED words, shortest first — everyone who found the word scores
-        together. Cheap words, small gains, nobody pulls away.
-     2. UNIQUE words, shortest first — double points, and this is where the
-        standings actually get decided. If the finish is close, the last few
-        are introduced with a "photo finish" drumroll.
-     3. Best word.
-     4. Medals, then the winner splash.
+        together. Short words rattle past; nobody pulls away.
+     2. UNIQUE words, shortest first — a banner slams in, double points, and
+        this is where the standings actually get decided. If the finish is
+        close, the last few are introduced with a "photo finish".
+     3. Best word, the best words nobody found, a few awards.
+     4. Final standings, then the winner.
 
-   Each word is traced on a mini board, then a copy flies from the word card
-   into the lane of every player who found it; their score ticks up as it
-   lands and the rows re-sort live (▲/▼ badges, a crown on the leader, and a
-   callout when the lead changes). The *current* leader is visible, the final
-   one is not: unique words — worth double — come last, so the order can still
-   flip at the end. Bars are scaled to the current leader for the same reason.
+   Each word types itself into the pill as its path lights up on the board,
+   then "+points" bubbles fly to everyone who found it; a score only changes
+   when its bubble lands. A meter beside the board counts the words (shared,
+   then unique stacked on top), and every counted word rings a note one rung
+   higher, so the whole tally climbs as the meter fills.
+
+   Phones show the players as rows that re-sort live (▲/▼ badges, a crown on
+   the leader, a callout when the lead changes); bars are scaled to the
+   *current* leader. The TV stands them up as columns that grow toward the
+   final top score and stamps 1st/2nd/3rd on them at the end. Either way the
+   current leader is visible and the final one is not: unique words, worth
+   double, come last.
 
    6-letter words get a sparkle; 7+ letters get a full-screen fireworks beat.
 
-   With a TV in the lobby the TV is the stage: it runs this same show in a
-   landscape layout, and each phone runs it *hidden* behind "Watch the TV",
-   silent and without effects, so that "Show it here instead" can lift the
-   cover mid-show without falling out of step with the TV.
+   With a TV in the lobby the TV is the stage: it runs this same show in its
+   own layout, and each phone runs it *hidden* behind "Watch the TV", silent
+   and without effects, so that "Show it here instead" can lift the cover
+   mid-show without falling out of step with the TV. The cover carries an
+   emoji pad -- reactions float up from the sender's avatar on every screen --
+   and a live line about your own words.
    ===================================================================== */
 
 const Results = (() => {
   let seq = 0, skipped = false, resolvers = [], data = null, tab = 'rank';
-  let live = new Map();       // id -> row bookkeeping
+  let live = new Map();       // id -> row (phone) or column (TV) bookkeeping
   let allWords = null;
   // Pacing is live: the host can retune it mid-reveal, so the loop reads `gap`
   // fresh on every word rather than closing over a value computed up front.
-  let paceIdx = 1, gap = 700, wordCount = 0;
+  let paceIdx = 1, gap = 700, wordCount = 0, weightSum = 0;
   let scorers = 0, leader = null;     // live race
   let mini = [], trail = null;        // mini board tiles + trace line
   let watching = false;               // phone: show running hidden behind "Watch the TV"
   let finished = false;               // the show reached its last screen
+  let topFinal = 1;                   // TV: the columns grow toward the final top score
+  let meter = null;                   // the words meter
+  let scoreRows = new Map();          // points card rows by word length ('x2' = unique)
+  let rulesSeen = false;              // the card builds up row by row once a session
+  let awardsList = [];
+  let hiTimer = 0;                    // TV: the highlight loop after the show
+  let floats = 0;                     // emoji reactions in the air
+  let pinned = false;                 // final totals are in: a late bubble must not add to them
+  let inFinale = false;               // the closing beat has begun: Skip is moot, nothing restarts
+  const flights = new Set();          // "+points" bubbles in the air (their animations)
   const isTV = () => G.mode === 'tv';
   // A phone in a pocket should not buzz along to a show it is not showing.
   const vib = ms => { if (!watching) buzz(ms); };
@@ -5837,8 +6601,12 @@ const Results = (() => {
   }
   function killFx() {
     timers.forEach(clearTimeout); timers.clear();
-    document.querySelectorAll('.rfly').forEach(n => n.remove());
+    // Cancel, not just remove: a removed node's animation still finishes,
+    // and its landing would add points after the totals are pinned.
+    flights.forEach(a => a.cancel()); flights.clear();
+    document.querySelectorAll('.pfly').forEach(n => n.remove());
     const b = $('#rbig'); if (b) b.remove();
+    $('#rword').classList.remove('under');
     $('#scr-results').classList.remove('tense');
     $('#rword').classList.remove('hot');
   }
@@ -5855,15 +6623,27 @@ const Results = (() => {
     const r = resolvers; resolvers = [];
     r.forEach(x => { clearTimeout(x.t); x.res(); });
   }
-  function skip() { skipped = true; flushWaits(); killFx(); }
+  // Skipping is about getting past the word-by-word recap; once the closing
+  // beat has begun there is nothing left to skip (and a TV following the
+  // host's Skip would lose its rank stamps).
+  function skip() { if (inFinale) return; skipped = true; flushWaits(); killFx(); }
 
   function stop() {
-    seq++; skipped = true; flushWaits(); killFx();
+    seq++; traceSeq++; skipped = true; flushWaits(); killFx();
+    clearTimeout(hiTimer); hiTimer = 0;
     // Never leave the phone muted (or the confetti off) after the show it
     // was being quiet for has gone away.
     if (watching) watch(false);
+    Sound.bed(false, .4);
     const w = $('#rwin'); if (w) w.remove();
     const s = $('#rstage'); if (s) s.remove();
+    document.querySelectorAll('.rx').forEach(n => n.remove());
+    floats = 0;
+    $('#rbanner').className = 'hide';
+    // The rows (avatars and all) would otherwise sit hidden behind the next
+    // round for its whole length.
+    $('#rrows').innerHTML = '';
+    live = new Map();
     FX.clear();
   }
 
@@ -5881,17 +6661,26 @@ const Results = (() => {
     node.style.animation = 'none'; void node.offsetWidth; node.style.animation = '';
   }
 
+  const BACK = 'cubic-bezier(.34,1.56,.64,1)';
   const pulse = (node, big) => replay(node,
     [{ transform: 'scale(1)' }, { transform: 'scale(' + (big ? 1.055 : 1.03) + ')', offset: .38 }, { transform: 'scale(1)' }],
-    big ? 460 : 320, 'cubic-bezier(.34,1.56,.64,1)');
+    big ? 460 : 320, BACK);
 
   /* --------------------------- recap speed ------------------------------ */
+  /** How long a word holds the stage, relative to `gap`. Short shared words
+   *  rattle past; long words and unique ones get room to land. */
+  function weightOf(r) {
+    const n = r.w.length;
+    const w = n <= 3 ? .55 : n === 4 ? .72 : n === 5 ? 1 : n === 6 ? 1.25 : 1.4;
+    return r.uniq ? w * 1.2 : w;
+  }
+
   function recomputeGap() {
     const P = paceOf(paceIdx);
     // Honour the chosen pace, but compress it to fit the budget: a 6x6 board
     // with eight players yields hundreds of distinct words and a flat
     // per-word delay would run for minutes.
-    gap = wordCount ? clamp(Math.min(P.per, P.budget / wordCount), P.min, P.per) : P.per;
+    gap = weightSum ? clamp(Math.min(P.per, P.budget / weightSum), P.min, P.per) : P.per;
   }
 
   function paintSpeed() {
@@ -5912,9 +6701,9 @@ const Results = (() => {
       store.set('set', JSON.stringify(G.settings));
       if (G.mode === 'host') Net.broadcast({ t: 'pace', v });
     }
-    // Cut the dwell we are sitting in short, so the change is felt on this
-    // word rather than the next one.
-    flushWaits();
+    // The new pace takes over from the next word. Cutting the current dwell
+    // short (as this used to) let the word being spelled finish on top of
+    // the next one, and its bubbles land after the totals were pinned.
   }
 
   (function buildSpeedUI() {
@@ -5958,19 +6747,20 @@ const Results = (() => {
     });
   }
 
-  /* ------------------------------- rows -------------------------------- */
+  /* --------------------------- rows (phone) ----------------------------- */
   const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1);
+  const ordinal = n => n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n] || 'th');
 
   function buildRows() {
+    if (isTV()) { buildCols(); return; }
     const box = $('#rrows');
     box.innerHTML = '';
-    box.classList.remove('done');
-    box.classList.toggle('dense', data.players.length > 4);
-    // On a TV the rows share the column's height; everything inside a row is
-    // sized off --rh in CSS.
+    box.classList.remove('done', 'cols');
+    // Tighter rows for bigger lobbies, so all eight fit without scrolling.
     const n = data.players.length;
-    box.style.setProperty('--rh', 'min(14vh, calc((86vh - ' + (n - 1) + ' * 1.6vh) / ' + n + '))');
-    const avSz = data.players.length > 4 ? 32 : 38;
+    box.classList.toggle('dense', n > 4);
+    box.classList.toggle('dense2', n > 6);
+    const avSz = n > 6 ? 28 : n > 4 ? 32 : 38;
     live = new Map();
     data.players.forEach(p => {
       const row = el('div', 'rrow' + (p.id === G.me.id ? ' mine' : ''));
@@ -5982,28 +6772,92 @@ const Results = (() => {
       const avw = el('div', 'avw');
       avw.append(avatar(p, avSz), el('span', 'crown', '👑'));
       const info = el('div', 'info');
-      // Name and word lane share a line, as in the mockup; the word/unique
-      // summary only appears under the name once the show is over.
+      // Name, awards, how many of their words have landed, then the lane of
+      // words they have been credited with. The word/unique summary only
+      // appears under the name once the show is over.
       const top = el('div', 'top');
       const sub = el('div', 'sub', p.spect ? 'spectating' : '0 words');
+      const aw = el('span', 'aw');
+      const wl = el('span', 'wl', p.spect ? '' : '0/' + p.words.length);
       const lane = el('div', 'lane');
-      top.append(el('div', 'nm', p.name), lane);
+      top.append(el('div', 'nm', p.name), aw, wl, lane);
       info.append(top, sub);
-      const stream = el('div', 'wstream');
-      // One reusable pop node per row, animated on demand.
-      const pop = el('div', 'wpop');
-      stream.appendChild(pop);
       const call = el('div', 'call', 'Takes the lead!');
       const sc = el('div', 'sc mono', '0');
-      row.append(fill, mv, rk, avw, info, stream, call, sc);
+      row.append(fill, mv, rk, avw, info, call, sc);
       box.appendChild(row);
-      live.set(p.id, { row, sc, sub, fill, rk, pop, lane, mv, call, score: 0, shown: 0, p });
+      live.set(p.id, { row, sc, sub, fill, rk, lane, mv, call, avw, wl, aw, score: 0, shown: 0, p });
     });
   }
 
+  /* -------------------------- columns (TV) -----------------------------
+     Each player is a column standing on the bottom edge: avatar, score,
+     name, words so far. A column is always full height and slides up out
+     of the floor as its score grows (a transform, so the compositor does
+     the work), toward the final top score -- which nobody can see coming,
+     because nobody knows whose column will reach the top. */
+  function buildCols() {
+    const box = $('#rrows');
+    box.innerHTML = '';
+    box.classList.remove('done', 'dense');
+    box.classList.add('cols');
+    box.classList.toggle('many', data.players.length > 6);
+    box.style.setProperty('--n', data.players.length);
+    live = new Map();
+    data.players.forEach((p, i) => {
+      const col = el('div', 'rcol' + (p.spect ? ' spect' : ''));
+      col.dataset.id = p.id;
+      col.style.setProperty('--c', p.color);
+      // --k lives on the body it moves, not the column: set on the column it
+      // restyled every avatar and label inside on every landing.
+      const body = el('div', 'cb');
+      body.style.setProperty('--k', '0');
+      const avw = el('div', 'avw');
+      avw.append(avatar(p, 0), el('span', 'crown', '👑'));
+      const sc = el('div', 'sc mono', '0');
+      const sub = el('div', 'sub', p.spect ? 'spectating' : '0 / ' + p.words.length + (p.words.length === 1 ? ' word' : ' words'));
+      const aw = el('div', 'aw');
+      const rk = el('div', 'rk');
+      const call = el('div', 'call', 'Takes the lead!');
+      body.append(call, avw, sc, el('div', 'nm', p.name), sub, aw, rk);
+      col.appendChild(body);
+      box.appendChild(col);
+      live.set(p.id, { row: col, body, sc, sub, fill: null, rk, lane: null, mv: null, call, avw, wl: null, aw, score: 0, shown: 0, p, k: '0' });
+      // The players rise from the bottom edge one after another.
+      if (CAN_WAAPI && !RM) col.animate([{ transform: 'translateY(105%)' }, { transform: 'none' }],
+        { duration: 560, delay: 150 + i * 90, easing: 'cubic-bezier(.34,1.3,.64,1)', fill: 'backwards' });
+    });
+  }
+
+  /** "3/14": how many of this player's words have landed so far. */
+  function paintLeft(L) {
+    if (L.p.spect) return;
+    const n = L.p.words.length;
+    if (L.wl) L.wl.textContent = L.shown + '/' + n;
+    else L.sub.textContent = L.shown + ' / ' + n + (n === 1 ? ' word' : ' words');
+    L.row.classList.toggle('out', L.shown >= n);
+  }
+
+  /** Bars: rows are scaled to the current leader, columns grow toward the
+   *  final top score. */
+  function paintBars() {
+    if (isTV()) {
+      // Only the columns whose height changed: each write restyles one.
+      live.forEach(X => {
+        const k = Math.min(1, X.score / topFinal).toFixed(3);
+        if (k !== X.k) { X.k = k; X.body.style.setProperty('--k', k); }
+      });
+      return;
+    }
+    let max = 1;
+    live.forEach(X => { if (X.score > max) max = X.score; });
+    live.forEach(X => { X.fill.style.width = (100 * X.score / max) + '%'; });
+  }
+
   /** Sort rows by score. Ties keep their current order, so a tie never makes
-   *  rows swap places for no visible reason mid-race. */
+   *  rows swap places for no visible reason mid-race. Columns never move. */
   function reorder() {
+    if (isTV()) return;
     const box = $('#rrows');
     const cur = Array.from(box.children);
     const at = new Map(cur.map((r, i) => [r, i]));
@@ -6020,6 +6874,7 @@ const Results = (() => {
 
   /** Plain position numbers while the race is on; medals come at the end. */
   function paintPositions() {
+    if (isTV()) return;
     let rank = 0, prev = null;
     Array.from($('#rrows').children).forEach((r, i) => {
       const L = live.get(r.dataset.id);
@@ -6030,15 +6885,51 @@ const Results = (() => {
   }
 
   function paintRanks() {
+    if (isTV()) { stampCols(false); return; }
     const box = $('#rrows');
     let rank = 0, prev = null;
     Array.from(box.children).forEach((r, i) => {
       const L = live.get(r.dataset.id);
       if (L.p.spect) { L.rk.textContent = '·'; r.classList.remove('p1'); return; }
       if (L.score !== prev) { rank = i; prev = L.score; }
-      L.rk.textContent = medal(rank);
+      // No medal for a round without a single point.
+      L.rk.textContent = L.score ? medal(rank) : '·';
       r.classList.toggle('p1', rank === 0 && L.score > 0);
     });
+  }
+
+  /** TV: 1st / 2nd / 3rd stamped on the columns. Loud: slammed on one at a
+   *  time, last place first, so the winner's lands last. Returns how long
+   *  the stamping takes. Nobody without a point gets a stamp. */
+  function stampCols(loud) {
+    const ranked = Array.from(live.values()).filter(X => !X.p.spect).sort((a, b) => b.score - a.score);
+    let rank = 0, prev = null;
+    ranked.forEach((X, i) => {
+      if (X.score !== prev) { rank = i; prev = X.score; }
+      X.rk.textContent = X.score ? ordinal(rank + 1) : '';
+      X.rk.className = 'rk r' + Math.min(rank + 1, 4);
+      X.row.classList.toggle('p1', rank === 0 && X.score > 0);
+    });
+    const stamped = ranked.filter(X => X.score > 0);
+    if (!loud || RM) { stamped.forEach(X => { X.rk.classList.add('on'); X.row.classList.add('ranked'); }); return 0; }
+    stamped.slice().reverse().forEach((X, i) => later(() => {
+      X.rk.classList.add('on');
+      X.row.classList.add('ranked');
+      replay(X.rk, [
+        { opacity: 0, transform: 'translateX(-50%) rotate(-8deg) scale(2.6)' },
+        { opacity: 1, transform: 'translateX(-50%) rotate(-8deg) scale(.92)', offset: .6 },
+        { opacity: 1, transform: 'translateX(-50%) rotate(-8deg) scale(1)' },
+      ], 380, 'cubic-bezier(.2,.9,.3,1.2)');
+      Sound.stamp();
+    }, i * 280));
+    return stamped.length * 280;
+  }
+
+  /** How long the TV's finale runs (see tvFinale), so that a phone showing
+   *  it hidden behind the cover lifts the cover when the TV is done. */
+  function finaleMs() {
+    const n = data.players.filter(p => !p.spect && p.score > 0).length;
+    return (skipped ? 200 : 450) + n * 280 + 300 + (skipped ? 1700 : 2800) + 450;
   }
 
   /* --------------------------- the reveal ------------------------------ */
@@ -6077,6 +6968,120 @@ const Results = (() => {
     if (!(isTV() && kind === 'final' && data && data.best && data.best.w)) $('#rword').classList.add('empty');
   }
 
+  /** A slanted banner slams down across the board at the start of a phase. */
+  function ribbon(text, kind) {
+    const r = $('#rribbon');
+    r.className = kind || '';
+    $('span', r).textContent = text;
+    if (RM || !CAN_WAAPI) return;
+    const T = (x, s) => 'translate(' + x + ',-50%) rotate(-7deg) scale(' + s + ')';
+    r.animate([
+      { opacity: 0, transform: T('-50%', 2.3) },
+      { opacity: 1, transform: T('-50%', .94), offset: .2 },
+      { opacity: 1, transform: T('-50%', 1), offset: .28 },
+      { opacity: 1, transform: T('-50%', 1), offset: .8 },
+      { opacity: 0, transform: T('-34%', 1) },
+    ], { duration: 1300, easing: 'cubic-bezier(.2,.9,.3,1)' });
+    Sound.slam();
+  }
+
+  /* ---------------------------- points card ------------------------------
+     What a word is worth, by length, plus the x2 for a word only you found.
+     The row for the word on screen lights up, so the scale teaches itself;
+     the x2 row lights for the whole unique phase. */
+  const kfmt = p => p >= 1000 ? (p / 1000).toFixed(p % 1000 ? 1 : 0) + 'k' : String(p);
+
+  function buildScore() {
+    const box = $('#rscore'), tv = isTV();
+    box.innerHTML = '';
+    box.classList.remove('x2on', 'gone');
+    scoreRows = new Map();
+    const rows = [];
+    for (let n = Math.max(3, data.minLen | 0); n <= 7; n++) rows.push([String(n), tv ? n + ' letters' : String(n), wordPoints(n)]);
+    rows.push(['8', tv ? '8+ letters' : '8+', wordPoints(8), true]);
+    if (scorers > 1) rows.push(['x2', tv ? 'Only you found it' : 'only you', 0]);
+    rows.forEach(([k, label, pts, plus]) => {
+      const n = el('div', 'sr' + (k === 'x2' ? ' x2' : ''));
+      n.appendChild(el('span', null, label));
+      n.appendChild(el('b', null, k === 'x2' ? '×2' : (tv ? pts.toLocaleString() : kfmt(pts)) + (plus && tv ? '+' : '')));
+      box.appendChild(n);
+      scoreRows.set(k, n);
+    });
+  }
+
+  /** First show of the session: the rows arrive one by one. After that the
+   *  card is simply there. */
+  async function introScore(token) {
+    const rows = Array.from($('#rscore').children);
+    if (rulesSeen || RM || skipped) { rows.forEach(r => r.classList.add('in')); return false; }
+    rulesSeen = true;
+    for (let i = 0; i < rows.length; i++) {
+      if (token !== seq) return true;
+      if (skipped) break;
+      rows[i].classList.add('in');
+      Sound.tick(2 + i);
+      await wait(isTV() ? 200 : 90);
+    }
+    rows.forEach(r => r.classList.add('in'));
+    return true;
+  }
+
+  function litScore(len) {
+    const k = len >= 8 ? '8' : String(len);
+    scoreRows.forEach((n, key) => { if (key !== 'x2') n.classList.toggle('on', key === k); });
+  }
+
+  /* ----------------------------- words meter -----------------------------
+     Beside the board: every word the room found, counted off as it is
+     revealed. Shared words fill from the bottom; unique words stack on top in
+     gold. Both fills are scaleY transforms on fixed boxes, so a tick costs
+     the compositor a frame and the layout nothing. */
+  function buildMeter(plan) {
+    const m = $('#rmeter');
+    const s = plan.shared.length, u = plan.unique.length, tot = s + u;
+    meter = { s, u, tot, cs: 0, cu: 0, fs: $('.fs', m), fu: $('.fu', m), cnt: $('.cnt', m), full: false };
+    m.classList.remove('full');
+    m.classList.toggle('hide', !tot);
+    $('.tot', m).textContent = tot;
+    meter.cnt.textContent = '0';
+    m.style.setProperty('--sh', tot ? (100 * s / tot) + '%' : '0%');
+    m.style.setProperty('--uh', tot ? (100 * u / tot) + '%' : '0%');
+    meter.fs.style.transform = 'scaleY(0)';
+    meter.fu.style.transform = 'scaleY(0)';
+  }
+
+  function paintMeter() {
+    meter.fs.style.transform = 'scaleY(' + (meter.s ? meter.cs / meter.s : 0) + ')';
+    meter.fu.style.transform = 'scaleY(' + (meter.u ? meter.cu / meter.u : 0) + ')';
+    meter.cnt.textContent = meter.cs + meter.cu;
+  }
+
+  /** One more word counted. Rings the next rung of the scoring ladder. */
+  function meterTick(r) {
+    if (!meter || !meter.tot) return;
+    if (r.uniq && meter.cu < meter.u) meter.cu++;
+    else if (meter.cs < meter.s) meter.cs++;
+    paintMeter();
+    replay(meter.cnt, [{ transform: 'scale(1)' }, { transform: 'scale(1.35)', offset: .35 }, { transform: 'scale(1)' }], 300, BACK);
+    const n = meter.cs + meter.cu;
+    Sound.step(n / meter.tot, r.uniq);
+    if (n === meter.tot) meterFull(true);
+  }
+
+  function meterFull(loud) {
+    if (!meter || meter.full || !meter.tot) return;
+    meter.cs = meter.s; meter.cu = meter.u; meter.full = true;
+    paintMeter();
+    $('#rmeter').classList.add('full');
+    if (!loud) return;
+    later(() => {
+      Sound.gliss();
+      if (RM || watching) return;
+      const r = $('#rmeter .track').getBoundingClientRect();
+      FX.burst(r.left + r.width / 2, r.top + 6, isTV() ? 26 : 20, 2.6, -1.57, 7, PALETTES[0]);
+    }, 260);
+  }
+
   /* ----------------------------- mini board ----------------------------- */
   function buildMini() {
     const box = $('#rmini'), n = data.size;
@@ -6094,7 +7099,13 @@ const Results = (() => {
     trail = $('polyline', box);
     trail.setAttribute('points', '');
     trail.setAttribute('stroke-width', '.2');
-    box.classList.remove('u');
+    box.classList.remove('u', 'miss');
+  }
+
+  function clearBoard() {
+    traceSeq++;
+    mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
+    if (trail) trail.setAttribute('points', '');
   }
 
   /** Make the board as big as the rows allow: start at the width cap, then
@@ -6107,19 +7118,20 @@ const Results = (() => {
       const n = data.size, g = Math.max(3, Math.round(sz * (n >= 6 ? .014 : .02)));
       const cell = (sz - g * (n + 1)) / n;
       box.style.setProperty('--mb', sz + 'px');
-      // The TV sizes the word pill off the board too, and the pill is a
-      // sibling of the board, not a child: hand it the same number.
-      if (isTV()) $('#rreveal').style.setProperty('--mb', sz + 'px');
+      // The word pill is sized off the board too, and it is a sibling of the
+      // board, not a child: hand it the same number.
+      $('#rreveal').style.setProperty('--mb', sz + 'px');
       box.style.setProperty('--mg', g + 'px');
       box.style.setProperty('--mf', Math.round(cell * .46) + 'px');
       box.style.setProperty('--mtr', Math.round(cell * .2) + 'px');
       box.style.setProperty('--mtd', Math.max(2, Math.round(cell * .07)) + 'px');
     };
     if (isTV()) {
-      // The left column belongs to the board: as big as fits under the phase
-      // label and over the word pill (and the finders hanging off it).
+      // The top of the screen belongs to the board: as big as fits between
+      // the phase label and the word pill (and the finders hanging off it),
+      // leaving the corners to the points card and the meter.
       const col = $('#rreveal'), vh = innerHeight / 100;
-      set(Math.max(120, Math.min(col.clientWidth * .9, col.clientHeight - 36 * vh)));
+      set(Math.max(120, Math.min(col.clientWidth * .34, col.clientHeight - 21 * vh)));
       return;
     }
     // About two thirds of the width: big enough to read, small enough that the
@@ -6127,23 +7139,35 @@ const Results = (() => {
     const cap = Math.min(Math.round(rows.clientWidth * .66), 270);
     set(cap);
     const deficit = rows.scrollHeight - rows.clientHeight;
-    if (deficit > 0) set(Math.max(140, cap - deficit));
+    // A short phone with a big lobby may go a little smaller still.
+    if (deficit > 0) set(Math.max(innerHeight < 700 ? 116 : 140, cap - deficit));
   }
   addEventListener('resize', () => { if (live.size) fitMini(); });
 
-  /** Light up the word's path on the mini board, one cell after another. */
+  /** Light up the word's path on the mini board, one cell after another --
+   *  and, with `typing`, spell the word into the pill in step with it. */
   let traceSeq = 0;
   const tilePop = t => replay(t, [
     { transform: 'scale(.86)' }, { transform: 'scale(1.24)', offset: .4 }, { transform: 'scale(1.06)' },
-  ], 360, 'cubic-bezier(.34,1.56,.64,1)');
+  ], 360, BACK);
 
-  function trace(r, ms) {
+  function trace(r, ms, typing) {
     const path = findPath(data.board, data.size, r.w) || [];
     const ts = ++traceSeq;
-    $('#rmini').classList.toggle('u', r.uniq);
+    const box = $('#rmini');
+    box.classList.toggle('u', !!r.uniq);
+    box.classList.toggle('miss', !!r.ghost);
     mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
-    if (!path.length) { trail.setAttribute('points', ''); return; }
+    const wn = typing ? $('#rword .w') : null;
+    if (!path.length) { trail.setAttribute('points', ''); if (wn) wn.textContent = r.w; return; }
+    const faces = path.map(i => data.board[i]);
     const n = data.size, step = path.length > 1 ? ms / (path.length - 1) : 0;
+    const pts = path.map(i => [(i % n) + .5, ((i / n) | 0) + .5]);
+    // A TV grows the line a cell at a time, with the letters: drawing it on
+    // smoothly animates stroke-dashoffset, which the compositor cannot do,
+    // so the svg was repainted on every frame of every word.
+    const tv = isTV();
+    if (tv) { trail.style.strokeDasharray = ''; trail.style.strokeDashoffset = ''; }
     // Each letter lands with its own pop and a rising pluck, like the word
     // being swiped again; then the whole word flashes once.
     const plucks = ms >= 180;
@@ -6151,23 +7175,24 @@ const Results = (() => {
       const go = () => {
         if (ts !== traceSeq) return;
         mini[i].classList.add('on');
+        if (tv) trail.setAttribute('points', pts.slice(0, k + 1).map(q => q.join(',')).join(' '));
+        if (wn) wn.textContent = faces.slice(0, k + 1).join('');
         if (ms > 0 && !RM) tilePop(mini[i]);
         if (plucks) Sound.trace(k);
       };
       if (k === 0 || !step) go(); else later(go, Math.round(k * step));
     });
+    if (tv) return;
+    // The closing flash: brightness() is a filter, an offscreen pass per
+    // tile, and a TV's tiles have just popped one by one anyway.
     if (ms > 0 && !RM) later(() => {
       if (ts !== traceSeq) return;
-      // brightness() is a filter, i.e. an offscreen pass per tile: fine on a
-      // phone, too much for a TV's GPU, which gets the bounce on its own.
-      const tv = isTV();
       path.forEach(i => replay(mini[i], [
-        tv ? { transform: 'scale(1.06)' } : { transform: 'scale(1.06)', filter: 'brightness(1)' },
-        tv ? { transform: 'scale(1.16)', offset: .4 } : { transform: 'scale(1.14)', filter: 'brightness(1.25)', offset: .4 },
-        tv ? { transform: 'scale(1.06)' } : { transform: 'scale(1.06)', filter: 'brightness(1)' },
+        { transform: 'scale(1.06)', filter: 'brightness(1)' },
+        { transform: 'scale(1.14)', filter: 'brightness(1.25)', offset: .4 },
+        { transform: 'scale(1.06)', filter: 'brightness(1)' },
       ], 300, 'ease-out'));
     }, ms + 90);
-    const pts = path.map(i => [(i % n) + .5, ((i / n) | 0) + .5]);
     trail.setAttribute('points', pts.map(q => q.join(',')).join(' '));
     let len = 0;
     for (let k = 1; k < pts.length; k++) len += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
@@ -6180,155 +7205,265 @@ const Results = (() => {
     }
   }
 
-  function showWord(r) {
-    const box = $('#rword');
-    box.classList.remove('empty');
-    box.classList.toggle('uniq', r.uniq);
-    const wn = $('.w', box);
-    wn.textContent = r.w;
-    // Shrink long words to fit beside the mini board instead of ellipsing
-    // them: the word is the whole point of the card.
+  /** Shrink a long word to fit beside the points rather than ellipsing it:
+   *  the word is the whole point of the card. Measured on the full text, so
+   *  a word that types itself in does not change size letter by letter. */
+  function fitWord(wn, text) {
+    wn.textContent = text;
     wn.style.fontSize = '';
+    // A TV's pill always has room for five letters beside the points: skip
+    // the measuring, which forces a layout on every word. (Six wide letters,
+    // MOTHER or WOMBAT, next to "+1,000 ×2" already need the shrink.)
+    if (isTV() && text.length <= 5) return;
     if (wn.scrollWidth > wn.clientWidth + 1) {
       wn.style.fontSize = Math.max(13, parseFloat(getComputedStyle(wn).fontSize) * wn.clientWidth / wn.scrollWidth - .5) + 'px';
     }
+  }
+
+  /** Put a word on the pill. With `typing`, the pill starts empty and the
+   *  trace spells it in; the points, the finders and the stamp wait for
+   *  tail(). `r.ghost`: a word nobody found. */
+  function showWord(r, typing) {
+    const box = $('#rword');
+    box.classList.remove('empty', 'award');
+    box.classList.toggle('uniq', !!r.uniq);
+    box.classList.toggle('ghost', !!r.ghost);
+    const wn = $('.w', box);
     const pe = $('.p', box);
-    pe.textContent = '+' + r.pts.toLocaleString() + (r.uniq ? ' ×2' : '');
+    pe.textContent = r.ghost ? 'worth ' + r.pts.toLocaleString() : '+' + r.pts.toLocaleString() + (r.uniq ? ' ×2' : '');
+    fitWord(wn, r.w);
 
     const f = $('.finders', box);
     f.innerHTML = '';
-    r.ids.forEach(id => { const L = live.get(id); if (L) f.appendChild(avatar(L.p, 28)); });
+    // Each player's face is built once and copied: building it parses the
+    // whole SVG again, on every word.
+    (r.ids || []).forEach(id => {
+      const L = live.get(id);
+      if (!L) return;
+      if (!L.fav) L.fav = avatar(L.p, 28);
+      f.appendChild(L.fav.cloneNode(true));
+    });
     const old = $('.stamp', box); if (old) old.remove();
     if (r.uniq) {
       // E1: a rubber stamp slams onto the pill for unique words.
       const L = live.get(r.ids[0]);
       if (L) {
         const me = L.p.id === G.me.id;
-        const st = el('span', 'stamp' + (me ? ' me' : ''), me ? 'Only you!' : 'Only ' + L.p.name);
-        box.appendChild(st);
-        replay(st, [
-          { opacity: 0, transform: 'rotate(-8deg) scale(2.6)' },
-          { opacity: 1, transform: 'rotate(-8deg) scale(.9)', offset: .55 },
-          { opacity: 1, transform: 'rotate(-8deg) scale(1)' },
-        ], 380, 'cubic-bezier(.2,.9,.3,1.2)');
-        replay(pe, [{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .4 }, { transform: 'scale(1)' }], 520,
-          'cubic-bezier(.34,1.56,.64,1)');
+        box.appendChild(el('span', 'stamp' + (me ? ' me' : ''), me ? 'Only you!' : 'Only ' + L.p.name));
       }
     }
-
-    replay(box, [
-      { opacity: 0, transform: 'translateY(10px) scale(.62) rotate(-3deg)' },
-      { opacity: 1, transform: 'translateY(0) scale(1.07) rotate(1deg)', offset: .55 },
+    if (!r.ghost) litScore(r.w.length);
+    box.classList.toggle('typing', !!typing);
+    if (typing) wn.textContent = '';
+    // A TV pops the pill by scale alone: fading it too, while the finders
+    // animate inside it, costs the GPU an offscreen pass on every word.
+    replay(box, isTV() ? [
+      { transform: 'translateY(8px) scale(.82)' },
+      { transform: 'scale(1.03)', offset: .6 },
+      { transform: 'none' },
+    ] : [
+      { opacity: 0, transform: 'translateY(8px) scale(.82)' },
+      { opacity: 1, transform: 'scale(1.03)', offset: .6 },
       { opacity: 1, transform: 'none' },
-    ], r.uniq ? 520 : 440, 'cubic-bezier(.34,1.56,.64,1)');
+    ], 260, BACK);
+    // The finders show up with the word, so it is clear whose word is being
+    // spelled; only the points and the stamp wait for the last letter.
+    if (typing) { f.dataset.in = '1'; replay(f, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], 300, BACK); }
+    else delete f.dataset.in;
+    if (!typing) tail(r, true);
   }
 
-  /** Send a copy of the word from the card to every finder's lane. Scores
-   *  only change when the copy lands. */
+  /** The word is spelled out: the points pop beside it, the stamp slams on,
+   *  the finders show up (unless they came in with the word). */
+  function tail(r, quiet) {
+    const box = $('#rword');
+    box.classList.remove('typing');
+    $('.w', box).textContent = r.w;
+    if (quiet) return;
+    replay($('.p', box), [
+      { opacity: 0, transform: 'scale(.3)' },
+      { opacity: 1, transform: 'scale(1.38)', offset: .45 },
+      { opacity: 1, transform: 'none' },
+    ], 380, BACK);
+    const st = $('.stamp', box);
+    if (st) {
+      replay(st, [
+        { opacity: 0, transform: 'rotate(-8deg) scale(2.6)' },
+        { opacity: 1, transform: 'rotate(-8deg) scale(.9)', offset: .55 },
+        { opacity: 1, transform: 'rotate(-8deg) scale(1)' },
+      ], 380, 'cubic-bezier(.2,.9,.3,1.2)');
+      Sound.ink(.2);                     // as it lands, just past halfway
+    }
+    const f = $('.finders', box);
+    if (f.dataset.in) delete f.dataset.in;
+    else replay(f, [
+      { opacity: 0, transform: 'translateY(-10px) scale(.6)' },
+      { opacity: 1, transform: 'none' },
+    ], 320, BACK);
+    pulse(box, r.uniq);
+  }
+
+  /** Fly a "+points" bubble from the pill to every finder's score. Scores
+   *  only change when a bubble lands. */
   function launch(r, ms) {
     const token = seq;
     const Ls = r.ids.map(id => live.get(id)).filter(Boolean);
     if (!Ls.length) return;
     let pending = Ls.length;
     const landed = (L, x, y) => {
-      if (token !== seq || skipped) return;
+      if (token !== seq || skipped || pinned) return;
       land(L, r, pending === Ls.length, x, y);
       if (--pending === 0) race();
     };
     // Hidden behind "Watch the TV" there is nothing to look at, and a flying
-    // chip is a fixed-position node that would sail right over the cover.
-    if (!CAN_WAAPI || RM || ms <= 0 || watching) { Ls.forEach(landed); return; }
+    // bubble is a fixed-position node that would sail right over the cover.
+    if (!CAN_WAAPI || RM || ms <= 0 || watching) { Ls.forEach(L => landed(L)); return; }
 
-    const rng = document.createRange(); rng.selectNodeContents($('#rword .w'));
-    const src = rng.getBoundingClientRect();
-    const sx = src.left + src.width / 2, sy = src.top + src.height / 2;
+    // Out of the pill's bottom rim rather than its middle, so the bubble
+    // never sits on the pill's own "+points" as it leaves.
+    const src = $('#rword .p').getBoundingClientRect();
+    const sx = src.left + src.width / 2, sy = src.bottom;
     const view = $('#rrows').getBoundingClientRect();
-    // All writes, then all reads, then all animations: one layout, not eight.
+    const label = '+' + r.pts.toLocaleString();
+    // All reads, then all writes, then all animations: one layout, not two.
+    const geo = Ls.map(L => (isTV() ? L.body : L.sc).getBoundingClientRect());
+    const rim = isTV() ? null : Ls.map(L => L.row.getBoundingClientRect().top);
     const flies = Ls.map(() => {
-      const n = el('div', 'lw rfly' + (r.uniq ? ' u' : ''), r.w);
+      const n = el('div', 'pfly' + (r.uniq ? ' u' : ''), label);
+      if (r.uniq) n.appendChild(el('b', null, '×2'));
       document.body.appendChild(n);
       return n;
     });
-    const geo = Ls.map((L, k) => [flies[k].offsetWidth, L.lane.getBoundingClientRect()]);
     const T = (x, y, sc, rot) => 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) rotate(' + (rot || 0) + 'deg) scale(' + sc + ')';
     Ls.forEach((L, k) => {
-      const n = flies[k], [w, lr] = geo[k];
-      const dx = lr.left + w / 2;
-      const dy = clamp(lr.top + lr.height / 2, view.top + 10, view.bottom - 10);
-      const mx = (sx + dx) / 2, my = Math.min(sy, dy) - 36, tilt = dx < sx ? -14 : 14;
+      const n = flies[k], lr = geo[k];
+      // Never on the number itself, which starts ticking up the moment a
+      // bubble lands, nor on the row's words: just over the row's top rim
+      // right above the score (phone), or just above the column (TV).
+      const dx = lr.left + lr.width / 2;
+      const dy = isTV() ? lr.top - innerHeight * .035 : clamp(rim[k] - 6, view.top + 6, view.bottom - 10);
+      const mx = (sx + dx) / 2, my = Math.min(sy, dy) - (isTV() ? innerHeight * .06 : 36), tilt = dx < sx ? -14 : 14;
       n.style.transform = T(dx, dy, 1);
       const a = n.animate([
-        { transform: T(sx, sy, 1.1), opacity: 0 },
-        { transform: T(sx, sy - 12, 1.6, -tilt / 3), opacity: 1, offset: .16 },
-        { transform: T(mx, my, 1.3, tilt), opacity: 1, offset: .55 },
-        { transform: T(dx, dy, 1), opacity: 1 },
+        { transform: T(sx, sy, .6), opacity: 0 },
+        { transform: T(sx, sy - 6, 1.3, -tilt / 3), opacity: 1, offset: .16 },
+        { transform: T(mx, my, 1.15, tilt), opacity: 1, offset: .55 },
+        { transform: T(dx, dy, .9), opacity: 1 },
       ], { duration: ms + 90 + k * 55, easing: 'cubic-bezier(.5,0,.25,1)' });
-      a.onfinish = () => { n.remove(); landed(L, dx, dy); };
-      a.oncancel = () => n.remove();
+      flights.add(a);
+      a.onfinish = () => {
+        flights.delete(a);
+        landed(L, dx, dy);
+        if (!isTV()) { n.remove(); return; }
+        // TV: the bubble hangs over the column for a beat, then drifts off.
+        const b = n.animate([
+          { transform: T(dx, dy, .9), opacity: 1 },
+          { transform: T(dx, dy - innerHeight * .045, .9), opacity: 0 },
+        ], { duration: 460, easing: 'ease-out' });
+        flights.add(b);
+        b.onfinish = b.oncancel = () => { flights.delete(b); n.remove(); };
+      };
+      a.oncancel = () => { flights.delete(a); n.remove(); };
     });
   }
 
-  /** One copy of a word arrives in one player's row. */
+  /** One bubble arrives at one player. */
   function land(L, r, first, x, y) {
     const from = L.score;
     L.score += r.pts; L.shown++;
     odometer(L.sc, from, L.score, Math.min(520, Math.max(180, gap * .85)));
-    L.sub.textContent = L.shown + (L.shown === 1 ? ' word' : ' words');
+    paintLeft(L);
 
-    const chip = el('div', 'lw' + (r.uniq ? ' u' : r.w.length >= 6 ? ' big' : ''), r.w);
-    L.lane.insertBefore(chip, L.lane.firstChild);
-    while (L.lane.childElementCount > 10) L.lane.lastChild.remove();
-    // Impact: the chip squashes in, the score jumps, a few sparks fly.
-    replay(chip, [
-      { opacity: .6, transform: 'scale(1.35,.7)' },
-      { opacity: 1, transform: 'scale(.9,1.12)', offset: .45 },
-      { opacity: 1, transform: 'scale(1)' },
-    ], 360, 'cubic-bezier(.34,1.56,.64,1)');
-    replay(L.sc, [{ transform: 'scale(1)' }, { transform: 'scale(1.28)', offset: .3 }, { transform: 'scale(1)' }], 420,
-      'cubic-bezier(.34,1.56,.64,1)');
+    // The word joins the player's lane quietly: the bubble was the show.
+    if (L.lane) {
+      const chip = el('div', 'lw' + (r.uniq ? ' u' : r.w.length >= 6 ? ' big' : ''), r.w);
+      L.lane.insertBefore(chip, L.lane.firstChild);
+      while (L.lane.childElementCount > 10) L.lane.lastChild.remove();
+      replay(chip, [{ opacity: 0, transform: 'translateX(-8px)' }, { opacity: 1, transform: 'none' }], 240);
+    }
+    replay(L.sc, [{ transform: 'scale(1)' }, { transform: 'scale(1.28)', offset: .3 }, { transform: 'scale(1)' }], 420, BACK);
+    hop(L, r.uniq || r.w.length >= 6);
     // Not on a TV: a handful of sparks nobody sees from the couch would wake
     // the full-screen confetti canvas on every single landing.
     if (x != null && !RM && !isTV()) FX.burst(x, y, r.uniq ? 12 : 7, 6.283, -1.57, r.uniq ? 4 : 3,
       r.uniq ? PALETTES[0] : ['#fffdf5', '#3ddc97', '#ffd23f']);
 
-    // Bars are scaled to the current leader, not the final one.
-    let max = 1;
-    live.forEach(X => { if (X.score > max) max = X.score; });
-    live.forEach(X => { X.fill.style.width = (100 * X.score / max) + '%'; });
-    pulse(L.row, r.uniq);
+    paintBars();
+    if (!isTV()) pulse(L.row, r.uniq);
 
-    // One sound per word, on the first landing.
-    if (first) {
-      if (r.uniq) Sound.coin(); else Sound.pop(Math.min(9, r.w.length - 2));
-      if (r.uniq && r.pts >= 1200) vib(12);
+    // The scoring ladder rang when the word was counted; a unique word
+    // cashes in with a coin as it lands.
+    if (first && r.uniq) {
+      Sound.coin();
+      if (r.pts >= 1200) vib(12);
     }
+    if (L.p.id === G.me.id) mine(r);
+  }
+
+  /** Avatars react: a hop on every landing, a bigger one with a wiggle for
+   *  a unique or long word. */
+  function hop(L, big) {
+    if (RM || !L.avw) return;
+    replay(L.avw, big ? [
+      { transform: 'none' },
+      { transform: 'translateY(-34%) rotate(-10deg) scale(1.12)', offset: .32 },
+      { transform: 'translateY(0) rotate(8deg) scale(1.08,.92)', offset: .62 },
+      { transform: 'rotate(-3deg)', offset: .82 },
+      { transform: 'none' },
+    ] : [
+      { transform: 'none' },
+      { transform: 'translateY(-20%) scale(.96,1.06)', offset: .35 },
+      { transform: 'translateY(0) scale(1.06,.94)', offset: .7 },
+      { transform: 'none' },
+    ], big ? 620 : 380, 'ease-out');
+  }
+
+  /** Knocked down the order: a little dizzy wobble. */
+  function dizzy(L) {
+    if (RM || !L.avw) return;
+    replay(L.avw, [
+      { transform: 'none' },
+      { transform: 'rotate(-14deg)', offset: .2 },
+      { transform: 'rotate(11deg)', offset: .45 },
+      { transform: 'rotate(-6deg)', offset: .7 },
+      { transform: 'none' },
+    ], 700, 'ease-in-out');
   }
 
   /** Re-sort after a word has fully landed: movement badges, crown, callout. */
   function race() {
     if (scorers < 2) { paintPositions(); return; }
-    const box = $('#rrows');
-    const before = new Map(Array.from(box.children).map((r, i) => [r, i]));
-    reorder();
-    const kids = Array.from(box.children);
-    kids.forEach((r, i) => {
-      const d = before.get(r) - i;
-      if (!d) return;
-      const L = live.get(r.dataset.id);
-      L.mv.textContent = (d > 0 ? '▲' : '▼') + Math.abs(d);
-      L.mv.className = 'mv ' + (d > 0 ? 'up' : 'dn');
-      replay(L.mv, [
-        { opacity: 0, transform: 'translateY(4px)' },
-        { opacity: 1, transform: 'none', offset: .12 },
-        { opacity: 1, transform: 'none', offset: .8 },
-        { opacity: 0, transform: 'none' },
-      ], 1500);
-    });
-    paintPositions();
+    if (!isTV()) {
+      const box = $('#rrows');
+      const before = new Map(Array.from(box.children).map((r, i) => [r, i]));
+      reorder();
+      Array.from(box.children).forEach((r, i) => {
+        const d = before.get(r) - i;
+        if (!d) return;
+        const L = live.get(r.dataset.id);
+        L.mv.textContent = (d > 0 ? '▲' : '▼') + Math.abs(d);
+        L.mv.className = 'mv ' + (d > 0 ? 'up' : 'dn');
+        replay(L.mv, [
+          { opacity: 0, transform: 'translateY(4px)' },
+          { opacity: 1, transform: 'none', offset: .12 },
+          { opacity: 1, transform: 'none', offset: .8 },
+          { opacity: 0, transform: 'none' },
+        ], 1500);
+        if (d < 0) dizzy(L);
+      });
+      paintPositions();
+    }
 
-    // The crown only moves on a strict lead; a tie leaves it where it was.
-    const A = live.get(kids[0].dataset.id), B = kids[1] && live.get(kids[1].dataset.id);
-    if (A.p.spect || !A.score || (B && !B.p.spect && B.score >= A.score) || leader === A) return;
+    // The crown only moves on a strict lead; a tie leaves it where it was --
+    // unless its wearer has dropped behind the pair now tied at the top.
+    const ranked = Array.from(live.values()).filter(X => !X.p.spect).sort((a, b) => b.score - a.score);
+    const A = ranked[0], B = ranked[1];
+    if (!A || !A.score) return;
+    if (B && B.score >= A.score) {
+      if (leader && leader.score < A.score) leader.row.classList.remove('lead');
+      return;
+    }
+    if (leader === A) { A.row.classList.add('lead'); return; }
     const prev = leader;
     if (prev) prev.row.classList.remove('lead');
     leader = A;
@@ -6341,6 +7476,7 @@ const Results = (() => {
         { opacity: 1, transform: 'none', offset: .82 },
         { opacity: 0, transform: 'translateX(-12px)' },
       ], 1700);
+      if (isTV()) dizzy(prev);
       Sound.lead(); vib([8, 30, 8]);
     }
   }
@@ -6386,13 +7522,29 @@ const Results = (() => {
     box.appendChild(who);
     ov.appendChild(box);
     document.body.appendChild(ov);
-    replay(ov, [{ opacity: 0 }, { opacity: 1 }], 220, 'ease-out');
-    replay(w, [
-      { opacity: 0, transform: 'scale(2.8) rotate(-8deg)' },
-      { opacity: 1, transform: 'scale(.94) rotate(-2deg)', offset: .5 },
-      { opacity: 1, transform: 'scale(1) rotate(0)' },
-    ], 640, 'cubic-bezier(.2,.9,.3,1.15)');
+    // The card says it all: the pill underneath would only show through as a
+    // double image.
+    const pill = $('#rword');
+    pill.classList.add('under');
+    // A TV fades the card, not the screen-sized overlay around it, and slams
+    // the card as a whole: fading the card while the word scales inside it
+    // made the GPU draw the card offscreen first, every frame.
+    const fade = isTV() ? box : ov;
+    if (isTV()) replay(box, [
+      { opacity: 0, transform: 'scale(1.45) rotate(-5deg)' },
+      { opacity: 1, transform: 'scale(.97) rotate(-1deg)', offset: .5 },
+      { opacity: 1, transform: 'none' },
+    ], 560, 'cubic-bezier(.2,.9,.3,1.15)');
+    else {
+      replay(ov, [{ opacity: 0 }, { opacity: 1 }], 220, 'ease-out');
+      replay(w, [
+        { opacity: 0, transform: 'scale(2.8) rotate(-8deg)' },
+        { opacity: 1, transform: 'scale(.94) rotate(-2deg)', offset: .5 },
+        { opacity: 1, transform: 'scale(1) rotate(0)' },
+      ], 640, 'cubic-bezier(.2,.9,.3,1.15)');
+    }
     buzz(len >= 8 ? [20, 50, 20, 50, 30] : [16, 40, 16]);
+    Sound.duck(1.8);
 
     const shots = len >= 8 ? 6 : 4;
     for (let k = 0; k < shots; k++) {
@@ -6406,9 +7558,10 @@ const Results = (() => {
     }
     await wait([2000, 1600, 1100][paceIdx] || 1600);
     if (!ov.isConnected) return;
-    if (skipped || !CAN_WAAPI) { ov.remove(); return; }
-    ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
-    later(() => ov.remove(), 250);
+    if (skipped || !CAN_WAAPI) { ov.remove(); pill.classList.remove('under'); return; }
+    fade.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+    // The pill comes back as the card goes, not under it.
+    later(() => { ov.remove(); pill.classList.remove('under'); }, 250);
   }
 
   /* ------------------------ E3: photo finish ----------------------------
@@ -6429,8 +7582,8 @@ const Results = (() => {
   async function photoFinish(K) {
     setPhase('Photo finish', K === 1 ? 'last word' : 'last ' + K + ' words', 'finish');
     if (!watching) $('#scr-results').classList.add('tense');
-    mini.forEach(t => { t.style.transitionDelay = ''; t.classList.remove('on'); });
-    trail.setAttribute('points', '');
+    clearBoard();
+    ribbon('Photo finish', 'finish');
     Sound.drumroll(1.25);
     vib([6, 60, 6, 50, 6, 40, 6, 30, 12]);
     await wait(1500);
@@ -6439,8 +7592,12 @@ const Results = (() => {
   async function revealPhase(token, list, title, sub, kind) {
     if (!list.length) return;
     setPhase(title, sub, kind);
-    await wait(kind === 'uniq' ? 1000 : 700);
-    const K = Math.min(3, list.length);
+    let hold = 700;
+    if (kind === 'uniq') { ribbon('Unique words ×2', 'uniq'); $('#rscore').classList.add('x2on'); hold = 1150; }
+    else if (kind === 'shared') { ribbon('Shared words', 'shared'); hold = 1000; }
+    await wait(hold);
+    // A photo finish needs a race to finish: at least one unique word before it.
+    const K = Math.min(3, list.length - 1);
     const tenseAt = kind === 'uniq' && scorers > 1 && list.length >= 2 && closeFinish(list, K) ? list.length - K : -1;
     for (let idx = 0; idx < list.length; idx++) {
       const r = list[idx];
@@ -6448,63 +7605,90 @@ const Results = (() => {
       if (skipped) break;
       if (idx === tenseAt) { await photoFinish(K); if (token !== seq) return; if (skipped) break; }
       const len = r.w.length, slow = tenseAt >= 0 && idx >= tenseAt ? 1.5 : 1;
-      showWord(r);
-      if (len >= 7) { await fireworks(r); if (token !== seq) return; if (skipped) break; }
-      // The trace and the flight are squeezed into the dwell; on the fastest
-      // paces the trace is dropped so chips are not queuing up behind it.
-      const traceMs = gap * slow >= 300 && !RM ? Math.min(560, gap * slow * .5) : 0;
-      const flyMs = clamp(gap * slow * .55, 240, 520);
-      trace(r, traceMs);
-      later(() => launch(r, flyMs), traceMs);
-      if (len === 6) sparkle(r);
-      // Linger on the long words; that is where the drama is.
-      await wait(slow * gap * (1 + Math.min(5, Math.max(0, len - 4)) * .09) + (len === 6 ? 220 : 0));
+      // The dwell, the spelling and the flight all scale off `gap`; on the
+      // fastest paces the spelling is dropped so bubbles do not queue up
+      // behind it.
+      const dwell = gap * weightOf(r) * slow + (len === 6 ? 160 : 0);
+      const stepMs = clamp(gap * .15, 45, 110) * slow;
+      const traceMs = gap * slow >= 250 && !RM ? Math.min(dwell * .6, (len - 1) * stepMs + 40) : 0;
+      const flyMs = clamp(dwell * .5, 240, 520);
+      showWord(r, traceMs > 0);
+      trace(r, traceMs, true);
+      if (len >= 7) {
+        // The big moment celebrates the finished word, so it waits for the
+        // last letter (firing first spoiled the word before it was spelled);
+        // the bubbles fly once the fireworks clear.
+        if (traceMs > 0) { await wait(traceMs); if (token !== seq) return; if (skipped) break; }
+        tail(r);
+        await fireworks(r);
+        if (token !== seq) return;
+        if (skipped) break;
+        meterTick(r); launch(r, flyMs);
+        await wait(Math.max(flyMs + 250, dwell - traceMs));
+        continue;
+      }
+      const done = () => { tail(r); meterTick(r); launch(r, flyMs); if (len === 6) sparkle(r); };
+      if (traceMs > 0) later(done, traceMs); else done();
+      await wait(dwell);
     }
     $('#scr-results').classList.remove('tense');
   }
 
   function applyFinalTotals() {
+    pinned = true;
     $('#rrows').classList.add('done');
-    let max = 1;
-    data.players.forEach(p => { if (p.score > max) max = p.score; });
     data.players.forEach(p => {
       const L = live.get(p.id); if (!L) return;
       L.score = p.score;
       odometer(L.sc, 0, 0, 0);            // drop any in-flight animation
       L.sc.textContent = p.score.toLocaleString();
-      L.fill.style.width = (100 * p.score / max) + '%';
       const uq = p.words.filter(w => w.u).length;
       L.sub.textContent = p.spect ? 'spectating'
         : p.words.length + (p.words.length === 1 ? ' word' : ' words') + (uq ? ' · ' + uq + ' unique' : '');
       // After a skip the lanes are half-filled; show the player's best words.
-      if (skipped || L.shown !== p.words.length) {
+      if (L.lane && (skipped || L.shown !== p.words.length)) {
         L.lane.innerHTML = '';
         p.words.slice().sort((a, b) => b.w.length - a.w.length || (b.u ? 1 : 0) - (a.u ? 1 : 0)).slice(0, 10)
           .forEach(w => L.lane.appendChild(el('div', 'lw' + (w.u ? ' u' : w.w.length >= 6 ? ' big' : ''), w.w)));
-        L.shown = p.words.length;
       }
+      L.shown = p.words.length;
+      L.row.classList.toggle('out', !p.spect);
     });
+    paintBars();
+    // After a Skip the rows are still in mid-race order.
+    reorder(); paintPositions();
+    meterFull(false);
+    paintMine();
   }
 
   /* ---------------------------- best word ------------------------------ */
-  function showBest() {
+  /** Everyone who found the best word (the host's payload names just one). */
+  function bestIds() {
+    const b = data && data.best;
+    if (!b || !b.w) return [];
+    const ids = data.players.filter(p => p.words.some(x => x.w === b.w)).map(p => p.id);
+    return ids.length ? ids : [b.id];
+  }
+
+  function showBest(quiet) {
     const b = data.best;
     const box = $('#rbest');
     if (!b || !b.w) { box.classList.add('hide'); return; }
-    if (isTV()) { tvBest(true); return; }
-    const who = data.players.find(p => p.id === b.id);
+    if (isTV()) { tvBest(!quiet); return; }
+    const names = bestIds().map(id => (data.players.find(p => p.id === id) || {}).name).filter(Boolean);
     box.innerHTML = '';
     const left = el('div');
     left.appendChild(el('div', 'k', b.uniq ? 'Best word · unique ×2' : 'Best word'));
     left.appendChild(el('div', 'w', b.w));
-    left.appendChild(el('div', 'who', 'found by ' + (who ? who.name : '?')));
+    left.appendChild(el('div', 'who', 'found by ' + (names.length ? names.join(' & ') : '?')));
     box.appendChild(left);
     box.appendChild(el('div', 'p', '+' + b.pts.toLocaleString()));
     box.classList.remove('hide');
     replay(box, [
       { opacity: 0, transform: 'translateY(18px) scale(.9)' },
       { opacity: 1, transform: 'none' },
-    ], 600, 'cubic-bezier(.34,1.56,.64,1)');
+    ], 600, BACK);
+    if (quiet) return;
     Sound.coin();
     const r = box.getBoundingClientRect();
     FX.burst(r.left + r.width / 2, r.top + r.height / 2, 30, 3.4, -1.57, 9);
@@ -6517,7 +7701,7 @@ const Results = (() => {
     if (!b || !b.w) return;
     setPhase('Best word', '', b.uniq ? 'uniq' : '');
     $('#rreveal').classList.remove('slim');
-    showWord({ w: b.w, pts: b.pts, uniq: !!b.uniq, ids: [b.id] });
+    showWord({ w: b.w, pts: b.pts, uniq: !!b.uniq, ids: bestIds() }, false);
     trace({ w: b.w, uniq: !!b.uniq }, loud ? 520 : 0);
     if (loud) {
       Sound.coin();
@@ -6526,10 +7710,124 @@ const Results = (() => {
     }
   }
 
+  /* ------------------------- the ones that got away ------------------------
+     The host sends the best words on the board that nobody found (an older
+     host sends none, and the beat is skipped). */
+  function missedList() {
+    const m = Array.isArray(data.missed) ? data.missed : [];
+    return m.filter(w => typeof w === 'string' && w.length >= (data.minLen | 0) && findPath(data.board, data.size, w)).slice(0, 2);
+  }
+
+  async function missedBeat(token) {
+    const list = missedList();
+    if (!list.length) return;
+    $('#rbest').classList.add('hide');
+    setPhase('Nobody found', list.length > 1 ? 'these two' : 'this one', 'miss');
+    for (const w of list) {
+      if (token !== seq) return;
+      if (skipped) break;                 // still clean the board up below
+      const r = { w, pts: wordPoints(w.length), uniq: false, ids: [], ghost: true };
+      showWord(r, false);
+      trace(r, RM ? 0 : Math.min(640, w.length * 85));
+      Sound.miss();
+      await wait([2000, 1600, 1150][paceIdx] || 1600);
+    }
+    // Clear the path first, or the last one turns from purple to green.
+    clearBoard();
+    $('#rmini').classList.remove('miss');
+  }
+
+  /* ------------------------------- awards --------------------------------
+     A few titles so the people who did not win still get a moment. Ties win
+     nothing; each player gets one before anyone gets a second. */
+  function computeAwards() {
+    const ps = data.players.filter(p => !p.spect && p.words.length);
+    if (ps.length < 2) return [];
+    const top = (f, min) => {
+      let who = null, v = -1, tie = false;
+      ps.forEach(p => { const x = f(p); if (x > v) { who = p; v = x; tie = false; } else if (x === v) tie = true; });
+      return who && !tie && v >= min ? { p: who, v } : null;
+    };
+    const C = [];
+    const lw = top(p => p.words.reduce((m, w) => Math.max(m, w.w.length), 0), 5);
+    // The best word already had its moment, and the longest word is nearly
+    // always it (or another of the same length by the same hand): no rerun.
+    if (lw && bestIds().indexOf(lw.p.id) < 0) {
+      const w = lw.p.words.filter(x => x.w.length === lw.v).sort((a, b) => b.p - a.p)[0].w;
+      C.push({ icon: '🦒', title: 'Longest word', p: lw.p, detail: w, word: w });
+    }
+    const lu = top(p => p.words.filter(w => w.u).length, 2);
+    if (lu) C.push({ icon: '🐺', title: 'Lone wolf', p: lu.p, detail: lu.v + ' unique words' });
+    const mw = top(p => p.words.length, 3);
+    if (mw) C.push({ icon: '📚', title: 'Word hoarder', p: mw.p, detail: mw.v + ' words' });
+    const ss = top(p => p.words.length >= 3 ? Math.round(p.score / p.words.length) : 0, 450);
+    if (ss) C.push({ icon: '🎯', title: 'Sharpshooter', p: ss.p, detail: ss.v.toLocaleString() + ' pts/word' });
+    const gm = top(p => p.words.filter(w => !w.u).length, 4);
+    if (gm) C.push({ icon: '👯', title: 'Great minds', p: gm.p, detail: gm.v + ' shared words' });
+    const out = [], got = new Set();
+    C.forEach(a => { if (out.length < 3 && !got.has(a.p.id)) { out.push(a); got.add(a.p.id); } });
+    C.forEach(a => { if (out.length < 2 && out.indexOf(a) < 0) out.push(a); });
+    return out;
+  }
+
+  function badge(a, loud) {
+    const L = live.get(a.p.id);
+    if (!L || !L.aw || a.shown) return;
+    a.shown = true;
+    const b = el('span', 'awb', a.icon);
+    b.title = a.title;
+    L.aw.appendChild(b);
+    if (loud) replay(b, [{ transform: 'scale(0) rotate(-40deg)' }, { transform: 'scale(1.5) rotate(10deg)', offset: .6 }, { transform: 'none' }], 520, BACK);
+  }
+
+  async function awardsBeat(token) {
+    if (!awardsList.length) return;
+    $('#rbest').classList.add('hide');
+    setPhase('Awards', '', 'award');
+    try {
+      for (const a of awardsList) {
+        if (token !== seq || skipped) return;
+        const box = $('#rword');
+        box.classList.remove('empty', 'ghost', 'typing', 'uniq');
+        box.classList.add('award');
+        // The detail first: the title is fitted into whatever room it leaves.
+        $('.p', box).textContent = a.detail;
+        fitWord($('.w', box), a.icon + ' ' + a.title);
+        const f = $('.finders', box);
+        f.innerHTML = '';
+        delete f.dataset.in;
+        f.appendChild(avatar(a.p, 28));
+        const old = $('.stamp', box); if (old) old.remove();
+        const me = a.p.id === G.me.id;
+        box.appendChild(el('span', 'stamp' + (me ? ' me' : ''), me ? 'You!' : a.p.name));
+        // The board steps back so the award is the thing to look at -- unless
+        // the award is about a word on it.
+        $('#rbox').classList.toggle('dim', !a.word);
+        if (a.word) trace({ w: a.word }, RM ? 0 : 480); else clearBoard();
+        replay(box, [
+          { opacity: 0, transform: 'translateY(10px) scale(.7) rotate(-2deg)' },
+          { opacity: 1, transform: 'scale(1.05) rotate(1deg)', offset: .6 },
+          { opacity: 1, transform: 'none' },
+        ], 460, BACK);
+        tail({ uniq: false, w: $('.w', box).textContent });
+        Sound.award();
+        badge(a, true);
+        const L = live.get(a.p.id);
+        if (L) hop(L, true);
+        await wait([2200, 1800, 1300][paceIdx] || 1800);
+      }
+    } finally {
+      // The pill keeps its award look until the next word replaces it:
+      // dropping it here re-fitted the last title mid-exit ("Sharpsho…").
+      $('#rbox').classList.remove('dim');
+    }
+  }
+
   /* ---------------------------- winner splash --------------------------- */
   async function winner(token) {
     const scored = data.players.filter(p => !p.spect).sort((a, b) => b.score - a.score);
     if (!scored.length) return;
+    Sound.bed(false, .5);
     // The TV has the splash; behind the cover just wait it out together.
     if (watching) { await sleep(skipped ? 1700 : 2500); return; }
     const top = scored[0];
@@ -6543,6 +7841,10 @@ const Results = (() => {
       box.appendChild(el('div', 'k', 'Round complete'));
       box.appendChild(el('div', 'nm', top.score.toLocaleString()));
       box.appendChild(el('div', 'sc', top.words.length + ' of ' + data.total + ' words'));
+    } else if (!top.score) {
+      // Nobody found a word: nobody wins (not just whoever sorts first).
+      box.appendChild(el('div', 'k', 'No winner this time'));
+      box.appendChild(el('div', 'nm', 'Nobody scored'));
     } else if (tie.length > 1) {
       box.appendChild(el('div', 'k', 'It\'s a tie!'));
       const row = el('div', 'row'); row.style.justifyContent = 'center';
@@ -6574,12 +7876,123 @@ const Results = (() => {
     setTimeout(() => ov.remove(), 500);
   }
 
+  /** TV finale: the ranks are stamped onto the columns (last place first)
+   *  under the board, then the board steps aside for a banner naming the
+   *  winner with a burst of confetti. No full-screen dimmer: on a TV that is
+   *  one more 1080p layer for the GPU, and the columns are the payoff anyway.
+   *  finaleMs() mirrors its timings. */
+  function bannerText() {
+    const scored = data.players.filter(p => !p.spect).sort((a, b) => b.score - a.score);
+    const top = scored[0];
+    if (!top) return null;
+    if (!top.score && scored.length > 1) return { head: 'Nobody scored', sub: 'No words this round' };
+    const tie = scored.filter(p => p.score === top.score && p.score > 0);
+    return {
+      head: scored.length === 1 ? 'Round complete' : tie.length > 1 ? 'It\'s a tie!' : top.name + ' wins!',
+      sub: (tie.length > 1 ? tie.map(p => p.name).join(' & ') + ' · ' : '') + top.score.toLocaleString() + ' points',
+    };
+  }
+
+  async function tvFinale(token) {
+    const t = bannerText();
+    if (!t) return;
+    $('#rscore').classList.add('gone');
+    await sleep(skipped ? 200 : 450);
+    if (token !== seq) return;
+    const st = stampCols(true);
+    await sleep(st + 300);
+    if (token !== seq) return;
+    $('#rreveal').classList.add('away');
+    const bn = $('#rbanner');
+    $('b', bn).textContent = t.head;
+    $('small', bn).textContent = t.sub;
+    bn.className = '';
+    replay(bn, [
+      { opacity: 0, transform: 'translate(-50%,-50%) scale(.3) rotate(-6deg)' },
+      { opacity: 1, transform: 'translate(-50%,-50%) scale(1.08) rotate(1deg)', offset: .6 },
+      { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(0)' },
+    ], 720, BACK);
+    Sound.bed(false, .5);
+    Sound.fanfare();
+    const r = bn.getBoundingClientRect();
+    FX.burst(r.left + r.width * .12, r.top + r.height / 2, 46, 2.4, -2.3, 12);
+    FX.burst(r.right - r.width * .12, r.top + r.height / 2, 46, 2.4, -.85, 12);
+    // Every winner jumps (a tie has several), not whoever led mid-race.
+    live.forEach(L => { if (L.row.classList.contains('lead')) hop(L, true); });
+    await sleep(skipped ? 1700 : 2800);
+    if (token !== seq) return;
+    // The banner tucks itself away before the board comes back, so the two
+    // never cross. It flies to the corner as a transform (FLIP) rather than
+    // by transitioning left/top/padding, which re-laid it out and repainted
+    // it on every frame of the move.
+    const a = bn.getBoundingClientRect();
+    bn.className = 'small';
+    if (CAN_WAAPI && !RM) {
+      const b = bn.getBoundingClientRect();
+      if (b.width > 0) {
+        const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
+        bn.animate([
+          { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + (a.width / b.width) + ')' },
+          { transform: 'none' },
+        ], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+      }
+    }
+    await sleep(450);
+    if (token !== seq) return;
+    $('#rreveal').classList.remove('away');
+  }
+
+  /** TV, after the show: the board keeps cycling the round's highlights --
+   *  the best word, then every other player's best word in finishing order
+   *  (their moment, which the show itself did not give them), then the best
+   *  ones nobody found -- until the host starts the next round. The first
+   *  change waits a while: right after the finale it would only look like a
+   *  replay. */
+  function hiStart() {
+    clearTimeout(hiTimer); hiTimer = 0;
+    const items = [];
+    const b = data.best;
+    if (b && b.w) items.push({ label: 'Best word', kind: b.uniq ? 'uniq' : '', r: { w: b.w, pts: b.pts, uniq: !!b.uniq, ids: bestIds() } });
+    data.players.filter(p => !p.spect && p.words.length).sort((x, y) => y.score - x.score).forEach(p => {
+      const w = p.words.reduce((m, x) => !m || x.p > m.p || (x.p === m.p && x.w.length > m.w.length) ? x : m, null);
+      if (!w || (b && w.w === b.w)) return;
+      items.push({ label: p.name + '’s best', kind: w.u ? 'uniq' : '', r: { w: w.w, pts: w.p, uniq: !!w.u, ids: [p.id] } });
+    });
+    missedList().forEach(w => items.push({ label: 'Nobody found', kind: 'miss', r: { w, pts: wordPoints(w.length), ids: [], ghost: true } }));
+    if (!items.length) return;
+    let i = 0;
+    const next = () => {
+      hiTimer = 0;
+      if (G.screen !== 'results') return;
+      const it = items[i++ % items.length];
+      setPhase(it.label, '', it.kind);
+      showWord(it.r, false);
+      // Lit all at once and without the plucks: this can run for minutes
+      // while people chat, and a word replayed letter by letter, with sound,
+      // every few seconds is noise (and work) for nothing.
+      trace(it.r, 0);
+      if (items.length > 1) hiTimer = setTimeout(next, i === 1 ? 7000 : 6000);
+    };
+    next();
+  }
+
   /* ------------------------------- tabs -------------------------------- */
   function renderTab() {
     const box = $('#rrows');
     $$('#rtabs button').forEach(b => b.classList.toggle('sel', b.dataset.t === tab));
 
-    if (tab === 'rank') { box.innerHTML = ''; live.forEach(L => box.appendChild(L.row)); reorder(); paintRanks(); return; }
+    if (tab === 'rank') {
+      // Straight into finishing order, no FLIP: rebuilding in join order and
+      // then re-sorting flashed the old order as the winner splash faded.
+      const cur = Array.from(box.children);
+      const at = L => { const i = cur.indexOf(L.row); return i < 0 ? 1e9 : i; };
+      const rows = Array.from(live.values()).sort((A, B) =>
+        (A.p.spect ? 1 : 0) - (B.p.spect ? 1 : 0) || B.score - A.score || at(A) - at(B));
+      box.innerHTML = '';
+      rows.forEach(L => box.appendChild(L.row));
+      paintRanks();
+      return;
+    }
 
     box.innerHTML = '';
     if (tab === 'words') {
@@ -6651,19 +8064,29 @@ const Results = (() => {
     $('#rspeed').classList.add('hide');
     $('#btnSkip').classList.add('hide');
     finished = true;
+    Sound.bed(false, .8);
     if (isTV()) {
-      // The TV holds the final standings, with the best word on the board,
-      // until the host starts the next round or goes back to the lobby.
+      // The TV holds the final standings, cycling the round's highlights on
+      // the board, until the host starts the next round or goes back to the
+      // lobby.
       tab = 'rank';
-      reorder(); paintRanks();
+      paintRanks();
+      const t = bannerText(), bn = $('#rbanner');
+      if (t) { $('b', bn).textContent = t.head; $('small', bn).textContent = t.sub; bn.className = 'small'; }
+      $('#rscore').classList.add('gone');
+      $('#rreveal').classList.remove('away');
       const host = roster().find(p => p.host);
       $('#rtvwait').textContent = 'Waiting for ' + (host ? host.name : 'the host') + ' to start the next round…';
       $('#rtvwait').classList.remove('hide');
+      hiStart();
       return;
     }
     watch(false);
     $('#rreveal').classList.add('hide');
     $('#rtabs').classList.remove('hide');
+    // The missed-words and awards beats borrowed the stage; the best word
+    // card comes back for the final screen.
+    if (data.best && data.best.w && $('#rbest').childElementCount) $('#rbest').classList.remove('hide');
     tab = 'rank';
     renderTab();
     Chal.paintOutcome();
@@ -6691,11 +8114,26 @@ const Results = (() => {
   async function play(p, instant) {
     const token = ++seq;
     skipped = false; resolvers = []; allWords = null; data = p;
+    pinned = false; inFinale = false;
+    clearTimeout(hiTimer); hiTimer = 0;
+
+    // The host's results usually land a split second after time is up: let
+    // the "Time's up!" beat (tiles falling away, a tip) play out on the game
+    // screen first -- the same on every device, since each one's clock ran
+    // out at the same moment.
+    const held = !instant && G.timeUpAt ? 2300 - (performance.now() - G.timeUpAt) : 0;
+    G.timeUpAt = 0;
+    if (held > 0) { await sleep(held); if (token !== seq) return; }
+    const stg = $('#rstage'); if (stg) stg.remove();
+    const win = $('#rwin'); if (win) win.remove();
+    document.querySelectorAll('.rx').forEach(n => n.remove()); floats = 0;
+    FX.clear();
 
     show('results');
     $('#rbest').classList.add('hide');
     $('#rtabs').classList.add('hide');
-    $('#rreveal').classList.remove('hide');
+    $('#rreveal').classList.remove('hide', 'away');
+    $('#rbox').classList.remove('dim');
     $('#rspeed').classList.remove('hide');
     $('#btnSkip').classList.remove('hide');
     $('#btnAgain').classList.add('hide');
@@ -6704,71 +8142,128 @@ const Results = (() => {
     $('#chalBar').classList.add('hide');
     $('#againMsg').textContent = '';
     $('#rtvwait').classList.add('hide');
+    $('#rbanner').className = 'hide';
+    // Reactions need someone to see them: another player, or a TV.
+    $('#rreact').classList.toggle('hide', !((G.mode === 'host' || G.mode === 'guest') &&
+      (p.players.length > 1 || (p.screens | 0) > 0)));
     finished = false;
     $('#rsub').textContent = p.size + '×' + p.size + ' · ' + p.minLen + '+ letters' +
       (p.lang ? ' · ' + optLabel('lang', p.lang) : '');
     // A phone in a lobby with a TV runs the show hidden: the TV is the stage.
-    // (After the header text is in, so the cover lines up under it.)
-    watch(!isTV() && (p.screens | 0) > 0 && !G.watchHere && (G.mode === 'host' || G.mode === 'guest'));
+    // (After the header text is in, so the cover lines up under it.) Count
+    // the TVs now rather than when the payload left the host: one may have
+    // gone during the time's-up hold.
+    const tvs = isTV() ? (p.screens | 0) : (G.screenCount | 0);
+    watch(!isTV() && tvs > 0 && !G.watchHere && (G.mode === 'host' || G.mode === 'guest'));
 
     killFx();
     leader = null;
+    scorers = data.players.filter(x => !x.spect).length;
+    topFinal = Math.max(1, ...data.players.map(x => x.score || 0));
     buildRows();
     buildMini();
-    fitMini();
-
     const plan = buildPlan();
-    wordCount = plan.shared.length + plan.unique.length;
-    paceIdx = p.pace != null ? p.pace : G.settings.pace;
+    const order = plan.shared.concat(plan.unique);
+    wordCount = order.length;
+    weightSum = order.reduce((s, r) => s + weightOf(r), 0);
+    buildMeter(plan);
+    buildScore();
+    awardsList = computeAwards();
+    fitMini();
+    // A pace change that arrived during the hold is newer than the payload's.
+    paceIdx = held > 0 && G.settings.pace != null ? G.settings.pace : p.pace != null ? p.pace : G.settings.pace;
     recomputeGap();
     paintSpeed();
-    scorers = data.players.filter(x => !x.spect).length;
+    paintMine();
 
     if (instant) {
       skipped = true;
+      $('#rscore').classList.add('gone');
       applyFinalTotals();
       if (isTV()) tvBest(false); else showBest();
       setPhase('Final standings', '', 'final');
       reorder(); paintRanks();
+      awardsList.forEach(a => badge(a, false));
       const top = Math.max(0, ...data.players.filter(x => !x.spect).map(x => x.score));
       live.forEach(L => L.row.classList.toggle('lead', scorers > 1 && !L.p.spect && top > 0 && L.score === top));
       finish();
       return;
     }
 
-    setPhase('Time!', wordCount ? '' : 'nobody found a thing', '');
-    await wait(1200);
+    const found = scorers > 1
+      ? wordCount + (wordCount === 1 ? ' word' : ' words') + ' found' + (p.total ? ' · ' + p.total + ' on the board' : '')
+      : wordCount + ' of ' + (p.total || wordCount) + ' words found';
+    setPhase('Scoring', wordCount ? found : 'nobody found a thing', '');
+    Sound.bed(true);
+    const t0 = performance.now();
+    const built = await introScore(token);
+    if (token !== seq) return;
+    // With a TV in the lobby every screen runs this show in step, so the
+    // intro lasts the same everywhere, whether the card built up or not.
+    const synced = tvs > 0;
+    await wait(synced ? Math.max(300, 2100 - (performance.now() - t0)) : built ? 500 : 1100);
     if (token !== seq) return;
 
     if (scorers <= 1) {
-      await revealPhase(token, plan.shared.concat(plan.unique), isTV() ? 'Words found' : 'Your words', '', '');
+      await revealPhase(token, order, isTV() ? 'Words found' : 'Your words', '', '');
     } else {
-      await revealPhase(token, plan.shared, 'Shared words', '', '');
+      await revealPhase(token, plan.shared, 'Shared words', '', 'shared');
       if (token !== seq) return;
-      await revealPhase(token, plan.unique, 'Unique words', '', 'uniq');
+      await revealPhase(token, plan.unique, 'Unique words', 'double points', 'uniq');
     }
     if (token !== seq) return;
 
-    // Let the last word's copies land before the totals are pinned.
+    // Let the last word's bubbles land before the totals are pinned.
     if (!skipped) await wait(700);
     if (token !== seq) return;
     killFx();
     applyFinalTotals();
-    showBest();
+    $('#rscore').classList.remove('x2on');
+    // When the best word is the one that just scored (usually the last, big
+    // unique word), replaying it right away is a rerun: the TV relabels the
+    // word already on its board, the phone's card comes in quietly.
+    const last = order[order.length - 1];
+    const rerun = !skipped && !!(last && data.best && last.w === data.best.w);
+    if (rerun && isTV()) { setPhase('Best word', '', data.best.uniq ? 'uniq' : ''); $('#rword').classList.remove('empty'); }
+    else showBest(rerun);
     // Skipping should still leave the best word on screen long enough to read.
-    await (skipped ? sleep(1200) : wait(1600));
+    await (skipped ? sleep(1200) : wait(rerun ? 900 : 1600));
     if (token !== seq) return;
+    if (!skipped) await missedBeat(token);
+    if (token !== seq) return;
+    if (!skipped) await awardsBeat(token);
+    if (token !== seq) return;
+    awardsList.forEach(a => badge(a, false));
 
-    // The race has been live all along; this beat pins it down with medals.
-    setPhase('Final standings', '', 'final');
-    Sound.whoosh();
-    reorder(); paintRanks();
+    // The race has been live all along; this beat pins it down. From here on
+    // there is nothing left to skip or retune.
+    inFinale = true;
+    $('#rspeed').classList.add('hide');
+    $('#btnSkip').classList.add('hide');
+    if (watching) placeCover();          // the header just got shorter
     const topScore = Math.max(0, ...data.players.filter(x => !x.spect).map(x => x.score));
     live.forEach(L => L.row.classList.toggle('lead', scorers > 1 && !L.p.spect && topScore > 0 && L.score === topScore));
-    await sleep(skipped ? 900 : 1500);
-    if (token !== seq) return;
-
-    await winner(token);
+    if (isTV()) {
+      // The closing beat keeps the best word on the board, not whatever the
+      // awards or the missed words left there.
+      tvBest(false);
+      setPhase('Final standings', '', 'final');
+      Sound.whoosh();
+      await tvFinale(token);
+    } else {
+      setPhase('Final standings', '', 'final');
+      Sound.whoosh();
+      reorder(); paintRanks();
+      if (watching) {
+        // Behind the cover, lift it when the TV's finale is over, not before:
+        // the phones would give the ending away.
+        await sleep(finaleMs());
+      } else {
+        await sleep(skipped ? 900 : 1500);
+        if (token !== seq) return;
+        await winner(token);
+      }
+    }
     if (token !== seq) return;
     finish();
   }
@@ -6789,7 +8284,7 @@ const Results = (() => {
     // A guest's speed bar is locked anyway; behind the cover it is just noise.
     const guest = !canControl();
     if (watching && guest) { $('#btnSkip').classList.add('hide'); $('#rspeed').classList.add('hide'); }
-    else if (!watching && !finished && data) { $('#btnSkip').classList.remove('hide'); $('#rspeed').classList.remove('hide'); }
+    else if (!watching && !finished && !inFinale && data) { $('#btnSkip').classList.remove('hide'); $('#rspeed').classList.remove('hide'); }
     if (watching) { placeCover(); scr.classList.remove('tense'); }
   }
 
@@ -6801,11 +8296,90 @@ const Results = (() => {
 
   addEventListener('resize', () => { if (watching) placeCover(); });
 
+  /** The cover's line about your own words, kept current as they land. */
+  function paintMine() {
+    const box = $('#rwmine'), L = live.get(G.me.id);
+    if (!L || L.p.spect || !L.p.words.length) { box.textContent = ''; return; }
+    box.textContent = 'Your words: ' + L.shown + '/' + L.p.words.length + ' · ' + L.score.toLocaleString() + ' points';
+  }
+
+  /** One of your words just scored. Behind the cover, the big ones also get
+   *  a nudge -- the one buzz a watching phone allows itself -- so you know to
+   *  look up. */
+  function mine(r) {
+    paintMine();
+    if (!watching || !(r.uniq || r.w.length >= 6)) return;
+    buzz([10, 50, 14]);
+    replay($('#rwatch .art'), [{ transform: 'scale(1)' }, { transform: 'scale(1.08) rotate(-2deg)', offset: .35 }, { transform: 'none' }], 520, BACK);
+    replay($('#rwmine'), [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: .35 }, { transform: 'none' }], 420, BACK);
+  }
+
+  /* ------------------------------- reactions -------------------------------
+     A small emoji pad on the phones: on the "Watch the TV" cover, and under
+     the show when it plays on the phone itself. A tap floats the emoji up
+     from your avatar on every screen in the lobby (the host relays it). */
+  const EMO = ['👏', '😂', '😮', '🔥', '😭'];
+  let lastReact = 0;
+
+  function sendReact(k, btn) {
+    const now = performance.now();
+    if (now - lastReact < 300) return;
+    lastReact = now;
+    replay(btn, [{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .4 }, { transform: 'scale(1)' }], 300, BACK);
+    buzz(6);
+    react(G.me.id, k);
+    if (G.mode === 'host') Net.broadcast({ t: 'react', id: G.me.id, e: k });
+    else if (G.mode === 'guest') Net.toHost({ t: 'react', e: k });
+  }
+
+  /** Float someone's reaction up from their avatar (behind the cover, or on
+   *  a tab without the rows: up from the pad). */
+  function react(id, k) {
+    const e = EMO[k | 0];
+    if (!e || G.screen !== 'results') return;
+    if (floats >= (isTV() ? 14 : 10)) return;
+    const L = live.get(id);
+    if (!L) return;                     // not in this round
+    let x, y, r = null;
+    if (!watching) { r = (L.avw || L.row).getBoundingClientRect(); if (!r.width) r = null; }
+    if (r) { x = r.left + r.width / 2; y = r.top + r.height * .3; }
+    else {
+      const q = (watching ? $('#rwatch .rpad') : $('#rreact')).getBoundingClientRect();
+      if (!q.width) return;
+      x = q.left + q.width * (.12 + Math.random() * .76); y = q.top;
+    }
+    const n = el('div', 'rx', e);
+    n.style.left = x + 'px'; n.style.top = y + 'px';
+    document.body.appendChild(n);
+    floats++;
+    const done = () => { if (n.isConnected) { n.remove(); floats--; } };
+    Sound.react();
+    if (!CAN_WAAPI || RM) { setTimeout(done, 900); return; }
+    const dx = Math.round((Math.random() - .5) * innerHeight * .08), rise = Math.round(innerHeight * (isTV() ? .24 : .2));
+    const a = n.animate([
+      { transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 },
+      { transform: 'translate(-50%,-50%) translateY(' + (-rise * .2) + 'px) scale(1.3)', opacity: 1, offset: .16 },
+      { transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + (-rise * .7) + 'px) scale(1)', opacity: 1, offset: .7 },
+      { transform: 'translate(-50%,-50%) translate(' + dx * 1.4 + 'px,' + (-rise) + 'px) scale(.9)', opacity: 0 },
+    ], { duration: 1800, easing: 'cubic-bezier(.22,1,.36,1)' });
+    a.onfinish = a.oncancel = done;
+  }
+
+  [$('#rwatch .rpad'), $('#rreact')].forEach(box => {
+    EMO.forEach((e, k) => {
+      const b = el('button', 'rxb', e);
+      b.setAttribute('aria-label', 'React ' + e);
+      b.onclick = () => sendReact(k, b);
+      box.appendChild(b);
+    });
+  });
+
   $('#btnWatchHere').onclick = () => {
     G.watchHere = true;                 // for the rest of this lobby
     watch(false);
     Sound.tick(3);
     fitMini();
+    syncSound();
   };
 
   $$('#rtabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; Sound.tick(4); renderTab(); });
@@ -6824,6 +8398,12 @@ const Results = (() => {
     if (G.mode === 'host' || G.mode === 'guest' || G.mode === 'tv') { toast('Leave the lobby first', 'bad'); return; }
     G.mode = 'solo';
     G.challenge = null;
+    // Set up exactly as a solo lobby would, so "New board" afterwards plays a
+    // real solo round rather than one with nobody in it.
+    G.sharedBoard = null; G.sharedOut = false; G.round = null;
+    G.me.id = 'me';
+    G.players.clear();
+    G.players.set('me', { id: 'me', name: G.me.name || 'You', color: G.me.color, av: G.me.av, host: true, found: 0 });
     const size = pick([4, 5, 6]), minLen = 3, lang = G.settings.lang | 0;
     await useLang(lang);
     const board = makeBoard(size, minLen, lang).board;
@@ -6864,17 +8444,36 @@ const Results = (() => {
     });
 
     const payload = { t: 'results', rid: 'demo', players, best, multi: true, pace: G.settings.pace,
-      total: all.length, board, size, minLen, lang };
+      total: all.length, board, size, minLen, lang, missed: missedWords(all, seenBy) };
     Diag.log('dev', 'demo results: ' + size + 'x' + size + ', ' + players.map(p => p.name + ' ' + p.score).join(', '));
     G.results = payload;
     play(payload);
   }
 
   /** The TV went away: put the show back on this phone. */
-  function unwatch() { if (watching) { watch(false); fitMini(); } }
+  function unwatch() {
+    if (!watching) return;
+    watch(false); fitMini();
+    syncSound();
+  }
 
-  return { play, stop, skip, setPace, paintSpeed, demo, fitMini, unwatch, get watching() { return watching; } };
+  /** Bring the results music back if the show is still running here (after
+   *  the cover lifts, or the sound button turns sound back on). */
+  function syncSound() {
+    if (G.screen === 'results' && data && !finished && !inFinale && !skipped && !watching) Sound.bed(true);
+  }
+
+  return { play, stop, skip, setPace, paintSpeed, demo, fitMini, unwatch, react, syncSound, get watching() { return watching; } };
 })();
+
+/** The best words on the board that nobody found, longest first: what the
+ *  results show's "Nobody found" beat puts on the board. `found` is anything
+ *  with has(word). */
+function missedWords(all, found, n) {
+  return (all || []).filter(w => !found.has(w))
+    .sort((a, b) => b.length - a.length || a.localeCompare(b))
+    .slice(0, n || 2);
+}
 
 /* ==== 55_lan.js ==== */
 /* =====================================================================
@@ -7329,11 +8928,13 @@ const TV = (() => {
 
   /** Drop everything the last lobby left running. */
   function reset() {
-    cancelAnimationFrame(timerRaf);
+    stopTimer();
     Sound.stopMusic(0);
     Results.stop();
     FX.clear();
     clearTimeout(flashTimer);
+    clearStreaks();
+    corner(false);
     $('#tvflash').classList.remove('on');
     ['#cd', '#rstage'].forEach(s => { const n = $(s); if (n) n.remove(); });
     G.round = null; G.results = null;
@@ -7424,15 +9025,18 @@ const TV = (() => {
         beginRound(m, false);
         break;
       case 'act': {
+        // Only a count that went up is a new word (a repeated frame is not).
         const p = G.players.get(m.id);
-        if (p) { p.found = m.n | 0; renderPlayers(m.id); }
+        if (p) { const up = (m.n | 0) > (p.found | 0); p.found = m.n | 0; renderPlayers(up ? m.id : null); }
         break;
       }
       case 'flash':
         flash(m.len | 0);
         break;
       case 'results':
-        if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); Sound.stopMusic(.2); }
+        // Results can beat this screen's own time-up by a hair: end the
+        // round properly, so its "Time's up!" beat runs in step.
+        if (G.round && !G.round.ended) endRound();
         clearTimeout(flashTimer); $('#tvflash').classList.remove('on');
         // Keep who the host is: the results roster does not say.
         setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av })));
@@ -7444,6 +9048,9 @@ const TV = (() => {
         break;
       case 'skip':
         Results.skip();
+        break;
+      case 'react':
+        Results.react(m.id, m.e | 0);
         break;
       case 'kick':
         goneWhy = 'This TV was removed from the lobby.';
@@ -7533,12 +9140,51 @@ const TV = (() => {
     // Same players as last round would otherwise look "already drawn" and
     // leave the box empty for the whole round.
     delete box.dataset.ids;
+    clearStreaks();
     renderPlayers();
+  }
+
+  /** "On a roll": three new words inside six seconds lights a flame on the
+   *  player's card for a few seconds. Built only from the word counts the
+   *  cards already show, so it gives nothing away. */
+  const streaks = new Map();             // id -> {times, timer, hot}
+  function streak(id, card) {
+    const now = performance.now();
+    let s = streaks.get(id);
+    if (!s) streaks.set(id, s = { times: [], timer: 0, hot: false });
+    s.times = s.times.filter(t => now - t < 6000).concat(now);
+    if (s.times.length < 3) return;
+    s.hot = true;
+    card.classList.add('hot');
+    clearTimeout(s.timer);
+    // Looked up again when it ends: the card may have been rebuilt meanwhile.
+    s.timer = setTimeout(() => {
+      s.hot = false;
+      const k = cards.get(id);
+      if (k) k.c.classList.remove('hot');
+    }, 3200);
+  }
+  function clearStreaks() {
+    streaks.forEach(s => clearTimeout(s.timer));
+    streaks.clear();
+  }
+
+  /** The "scan to join" corner, through rounds and results. */
+  function corner(on) {
+    const box = $('#tvqr');
+    const show = !!on && !!room;
+    box.classList.toggle('hide', !show);
+    if (!show) return;
+    $('#tvqrRoom').textContent = room;
+    const qr = $('#tvqrCode');
+    if (qr.dataset.code !== room) { qr.dataset.code = room; Lan.paintQR(joinUrl(room), '#tvqrCode', true); }
   }
 
   /** The live player cards beside the board: avatar, name, words so far.
    *  Join order, not ranked -- the counts are there, the drama is saved for
-   *  the results show. */
+   *  the results show. Each card's parts are kept by id, so a word found
+   *  touches that one card rather than querying and rewriting all eight. */
+  let cards = new Map();                 // id -> {c, b, small, plus, n}
   function renderPlayers(flashId) {
     const box = $('#tvplayers');
     const ps = roster();
@@ -7547,6 +9193,7 @@ const TV = (() => {
     if (box.dataset.ids !== ids || box.childElementCount !== ps.length) {
       box.dataset.ids = ids;
       box.innerHTML = '';
+      cards = new Map();
       ps.forEach(p => {
         const c = el('div', 'tvp');
         c.dataset.id = p.id;
@@ -7554,30 +9201,42 @@ const TV = (() => {
         c.appendChild(avatar(p, 0));
         c.appendChild(el('div', 'nm', p.name));
         const ct = el('div', 'ct');
-        ct.appendChild(el('b', 'mono', String(p.found || 0)));
-        ct.appendChild(el('small', null, 'words'));
+        const b = el('b', 'mono', String(p.found || 0)), small = el('small', null, 'words');
+        ct.appendChild(b);
+        ct.appendChild(small);
         c.appendChild(ct);
-        c.appendChild(el('i', 'plus', '+1'));
+        const plus = el('i', 'plus', '+1');
+        c.appendChild(plus);
+        c.appendChild(el('span', 'fl', '🔥'));
+        // A player joining mid-round rebuilds every card: keep the flames.
+        const s = streaks.get(p.id);
+        if (s && s.hot) c.classList.add('hot');
         box.appendChild(c);
+        cards.set(p.id, { c, b, small, plus, n: -1 });
       });
     }
     ps.forEach(p => {
-      const c = box.querySelector('.tvp[data-id="' + CSS.escape(p.id) + '"]');
-      if (!c) return;
+      const k = cards.get(p.id);
       const n = p.found || 0;
-      $('b', c).textContent = n;
-      $('small', c).textContent = n === 1 ? 'word' : 'words';
+      if (!k || k.n === n) return;
+      k.n = n;
+      k.b.textContent = n;
+      k.small.textContent = n === 1 ? 'word' : 'words';
     });
     if (flashId) {
-      const c = box.querySelector('.tvp[data-id="' + CSS.escape(flashId) + '"]');
-      if (c && c.animate) {
-        $('.plus', c).animate([
+      const k = cards.get(flashId);
+      if (k) streak(flashId, k.c);
+      // Whose word it was, by their character's voice; never which word.
+      const p = ps.find(x => x.id === flashId);
+      if (p) Sound.voice(Av.norm(p.av, p.id || p.name));
+      if (k && k.c.animate) {
+        k.plus.animate([
           { opacity: 0, transform: 'translateY(.6vh) scale(.6)' },
           { opacity: 1, transform: 'translateY(-.4vh) scale(1.15)', offset: .25 },
           { opacity: 1, transform: 'translateY(-1vh) scale(1)', offset: .7 },
           { opacity: 0, transform: 'translateY(-2.2vh) scale(.95)' },
         ], { duration: 900, easing: 'cubic-bezier(.22,1,.36,1)' });
-        $('b', c).animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .35 }, { transform: 'scale(1)' }],
+        k.b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .35 }, { transform: 'scale(1)' }],
           { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
       }
     }
@@ -7602,9 +9261,14 @@ const TV = (() => {
     }
     Sound.sparkle();
     if (len >= 9) Sound.firework(.1);
-    const r = box.getBoundingClientRect();
-    FX.burst(r.left + r.width * .1, r.top + r.height / 2, 22, 2.4, -2.4, 8, ['#ffd23f', '#fff4c2', '#ff9f43']);
-    FX.burst(r.right - r.width * .1, r.top + r.height / 2, 22, 2.4, -.7, 8, ['#ffd23f', '#fff4c2', '#3ddc97']);
+    // Measured in the next frame, where the layout happens anyway, rather
+    // than forcing one in the middle of handling the message.
+    requestAnimationFrame(() => {
+      if (!box.classList.contains('on')) return;
+      const r = box.getBoundingClientRect();
+      FX.burst(r.left + r.width * .1, r.top + r.height / 2, 22, 2.4, -2.4, 8, ['#ffd23f', '#fff4c2', '#ff9f43']);
+      FX.burst(r.right - r.width * .1, r.top + r.height / 2, 22, 2.4, -.7, 8, ['#ffd23f', '#fff4c2', '#3ddc97']);
+    });
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => box.classList.remove('on'), 3400);
   }
@@ -7780,13 +9444,14 @@ const TV = (() => {
       });
       return { id: p.id, name: p.name, color: p.color, av: p.av, score: words.reduce((s, x) => s + x.p, 0), words, spect: false };
     });
-    const payload = { t: 'results', rid: 'demo', players, best, multi: true, pace: 2, total: all.length, board, size, minLen: 3, lang: 0, screens: 2 };
+    const payload = { t: 'results', rid: 'demo', players, best, multi: true, pace: 2, total: all.length, board, size, minLen: 3, lang: 0, screens: 2,
+      missed: missedWords(all, seen) };
     G.results = payload;
     Results.play(payload);
   }
 
   return {
-    boot, join, lost, onMessage, renderPlayers, roundStarted, flash, demo,
+    boot, join, lost, onMessage, renderPlayers, roundStarted, flash, demo, corner,
     get room() { return room; },
     get code() { return tvCode; },
   };
