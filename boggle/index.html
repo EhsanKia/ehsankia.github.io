@@ -694,6 +694,31 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   text-underline-offset:3px;opacity:.85}
 .linkbtn:active{opacity:1}
 
+/* --------------------------- joining a lobby ---------------------------
+   Invite links, QR codes and typed codes all land here straight away: the
+   code, what is happening, and what went wrong if anything did. */
+#scr-join .jn{gap:16px;max-width:400px}
+.jn-label{font-size:13px;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim);text-align:center}
+.jn-code{display:flex;gap:10px;margin:2px 0 10px}
+.jn-code b{display:grid;place-items:center;width:clamp(52px,16vw,66px);height:clamp(58px,18vw,74px);border-radius:16px;
+  font-size:clamp(30px,10vw,40px);font-weight:900;color:var(--tile-ink);
+  background:linear-gradient(170deg,#fffdf5,var(--tile) 46%,var(--tile-lo));
+  box-shadow:0 5px 0 #b9ad91,0 14px 24px -8px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,255,255,.9);
+  animation:codePop .5s var(--ease-back) both}
+.jn-code b:nth-child(even){background:linear-gradient(170deg,#ffe793,var(--gold) 46%,var(--gold-deep));
+  box-shadow:0 5px 0 #a86f00,0 14px 24px -8px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,255,255,.7)}
+/* While connecting the tiles hop one after another, like a held breath. */
+#scr-join[data-state="wait"] .jn-code b{animation:codePop .5s var(--ease-back) both,jnHop 1.5s ease-in-out infinite}
+@keyframes jnHop{0%,55%,100%{transform:none}25%{transform:translateY(-10px)}}
+#scr-join[data-state="err"] .jn-code b{opacity:.55}
+.jn-ask,.jn-wait,.jn-err{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px}
+#scr-join:not([data-state="ask"]) .jn-ask,#scr-join:not([data-state="wait"]) .jn-wait,
+#scr-join:not([data-state="err"]) .jn-err{display:none}
+.jn-msg{font-size:15px;font-weight:800;color:var(--ink-dim);text-align:center;line-height:1.45}
+.jn-msg.bad{color:var(--rose)}
+.jn-ask .btn,.jn-err .btn{width:100%}
+#jnBack{margin-top:4px;min-width:150px}
+
 /* "Show it on a TV": same shape as the avatar sheet */
 #tvsheet{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:12px;
   background:rgba(6,3,16,.82)}
@@ -921,6 +946,36 @@ body.tv #rwin .nm{font-size:11vh}
 body.tv #rwin .k{font-size:2.8vh;margin-top:1vh}
 body.tv #rwin .sc{font-size:6vh;margin-top:2.4vh}
 
+/* TV performance. A TV's GPU is phone-class but has to redraw every
+   composited layer, every frame, at 1080p. Measured at 1920x1080, the
+   results show was drawing ~5 screens' worth of pixels per frame. So, on a
+   TV only:
+   - no screen-sized layer outlives its entrance (fill-mode 'both' kept the
+     current screen composited for good, as a second full-screen layer);
+   - the backdrop is painted into the root rather than being a full-screen
+     layer of its own;
+   - no CSS filters: each is an offscreen pass, redone whenever the thing
+     under it changes (the trace glow redid one on every letter). */
+body.tv .screen.in{animation:tvIn .35s ease-out backwards}
+@keyframes tvIn{from{opacity:0}}
+body.tv #bg{display:none}
+body.tv{background:
+  radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/3px 3px,
+  radial-gradient(42vmax 42vmax at 6% 2%,rgba(124,58,237,.5),transparent 60%),
+  radial-gradient(36vmax 36vmax at 98% 20%,rgba(219,39,119,.42),transparent 60%),
+  radial-gradient(32vmax 32vmax at 20% 106%,rgba(14,165,233,.36),transparent 60%),
+  radial-gradient(24vmax 24vmax at 94% 98%,rgba(245,158,11,.24),transparent 60%),
+  radial-gradient(120% 90% at 50% -10%,var(--bg2) 0%,var(--bg1) 45%,var(--bg0) 100%) var(--bg0)}
+body.tv #fx{width:100%;height:100%}
+/* #app is position:fixed, which composites it; on a TV that made it a
+   second full-screen layer. The page never scrolls, so absolute is the same
+   box without the layer. Likewise the trace's overflow:visible svg, once it
+   is composited over a popping tile, became a layer the size of the screen. */
+body.tv #app{position:absolute}
+body.tv #rmini svg{overflow:hidden}
+body.tv #cd b,body.tv #rstage .slam,body.tv #rbig .w,body.tv .av.crown::after,body.tv .rrow .crown,
+body.tv #rmini svg,body.tv #rmini.u svg{filter:none}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
 }
@@ -971,6 +1026,30 @@ body.tv #rwin .sc{font-size:6vh;margin-top:2.4vh}
         </div>
         <button class="linkbtn" id="btnTvMode">📺 Use this screen as a TV</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ JOINING A LOBBY ============ -->
+  <section id="scr-join" class="screen center" data-state="wait">
+    <div class="wrap center jn">
+      <div class="jn-label" id="jnLabel">Joining lobby</div>
+      <div class="jn-code" id="jnCode"></div>
+      <div class="jn-ask">
+        <p class="jn-msg">Pick a name and a character. That's what everyone else will see.</p>
+        <div class="row" style="gap:10px;width:100%">
+          <button class="av" id="jnAv" style="--sz:56px" title="Choose your character"></button>
+          <label class="field" style="flex:1"><input id="jnName" maxlength="14" placeholder="Your name" autocomplete="nickname" spellcheck="false" enterkeyhint="go"></label>
+        </div>
+        <button class="btn grape" id="jnGo">Join the lobby</button>
+      </div>
+      <div class="jn-wait">
+        <div class="row" style="gap:12px"><div class="spinner"></div><div class="jn-msg" id="jnMsg">Connecting to the host…</div></div>
+      </div>
+      <div class="jn-err">
+        <p class="jn-msg bad" id="jnErrMsg"></p>
+        <button class="btn grape" id="jnRetry">Try again</button>
+      </div>
+      <button class="btn ghost sm" id="jnBack">Cancel</button>
     </div>
   </section>
 
@@ -1955,12 +2034,13 @@ const Lex = (() => {
   /** Remember a payload so `ensure()` can decode it the first time it is needed. */
   function register(lang, payload) { payloads[lang] = payload; }
 
-  /** Resolves once `lang` is decoded. Decoding happens at most once. */
-  function ensure(lang) {
+  /** Resolves once `lang` is decoded. Decoding happens at most once, so a
+   *  round starting while boot is still decoding just waits for it. */
+  function ensure(lang, onProg) {
     if (sets[lang]) return Promise.resolve();
     if (!pending[lang]) {
       if (!payloads[lang]) return Promise.reject(new Error('No dictionary for ' + lang));
-      pending[lang] = load(payloads[lang], null, lang).finally(() => { delete pending[lang]; });
+      pending[lang] = load(payloads[lang], onProg || null, lang).finally(() => { delete pending[lang]; });
     }
     return pending[lang];
   }
@@ -2192,13 +2272,196 @@ const Sound = (() => {
   const SC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31];   // pentatonic ladder
   const hz = semi => 261.63 * Math.pow(2, semi / 12);
 
+  /* ----------------------------- round music -----------------------------
+     An original bouncy lounge groove for the round: swung eighths at 116 BPM,
+     I-vi-ii-V in F with a D7 for colour, a marimba hook, a bass that pops up
+     an octave and walks into each chord -- and up a key for the last ten
+     seconds. Synthesised like everything else and scheduled a little ahead
+     on the audio clock. Every device counts its beats from the round's own
+     start, so phones in one room play in step, and a TV that joins halfway
+     picks the tune up mid-bar. */
+  const BPM = 116, BEAT = 60 / BPM, BAR = 4 * BEAT, SWING = .6;
+  /** Seconds from the top of the loop to eighth-note step k (swung). */
+  const stepAt = k => Math.floor(k / 2) * BEAT + (k % 2 ? SWING * BEAT : 0);
+  const mhz = m => 440 * Math.pow(2, (m - 69) / 12);
+  const PC = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, Bb: 10, B: 11 };
+  const midi = n => { const m = /^([A-G][#b]?)(\d)$/.exec(n); return 12 * (+m[2] + 1) + PC[m[1]]; };
+  // One bar each: bass root and a three-note voicing; bar 7 changes chord on beat 3.
+  const SONG = [
+    { r: 41, c: [57, 60, 64] },                               // Fmaj7
+    { r: 38, c: [57, 60, 65] },                               // Dm7
+    { r: 43, c: [58, 62, 65] },                               // Gm7
+    { r: 36, c: [58, 64, 67] },                               // C7
+    { r: 41, c: [57, 60, 64] },                               // Fmaj7
+    { r: 38, c: [57, 60, 66] },                               // D7
+    { r: 43, c: [58, 62, 65], r2: 36, c2: [58, 64, 67] },     // Gm7 | C7
+    { r: 41, c: [57, 62, 65] },                               // F6
+  ];
+  // The hook, one token per swung eighth; the last bar climbs back into the top.
+  const HOOK = ('C5 . A4 C5 . F5 E5 .   D5 . . C5 A4 . F4 .   Bb4 . D5 F5 . D5 . Bb4   C5 . . . G4 A4 Bb4 . ' +
+                'C5 . A4 C5 . F5 E5 .   D5 . A4 D5 . F#5 . A5   G5 . F5 D5 . E5 . C5   F5 . . . . A4 Bb4 B4')
+    .trim().split(/\s+/).map(x => (x === '.' ? 0 : midi(x)));
+
+  /** The band, playing into `out` on context `c` (live, or offline for tests). */
+  function band(c, out) {
+    const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const gain = (dest, v) => { const g = c.createGain(); if (v != null) g.gain.value = v; g.connect(dest); return g; };
+    const env = (g, t, peak, dec, atk) => {
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(peak, t + atk);
+      g.gain.exponentialRampToValueAtTime(.0004, t + atk + dec);
+    };
+    const osc = (type, f, t, dur, dest) => {
+      const o = c.createOscillator();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      o.connect(dest); o.start(t); o.stop(t + dur + .06);
+      return o;
+    };
+    const filt = (type, f, dest, q) => { const b = c.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q) b.Q.value = q; b.connect(dest); return b; };
+    const hiss = (t, dur, dest) => { const s = c.createBufferSource(); s.buffer = nb; s.connect(dest); s.start(t, Math.random() * .5, dur); };
+    return {
+      kick(t, v) {
+        const g = gain(out); env(g, t, v, .26, .002);
+        osc('sine', 130, t, .3, g).frequency.exponentialRampToValueAtTime(42, t + .14);
+      },
+      clap(t, v) {
+        // Three quick slaps and a short tail: a hand clap, not a snare.
+        const g = gain(filt('bandpass', 1500, out, .9));
+        g.gain.setValueAtTime(0, t);
+        [0, .011, .022].forEach(d => { g.gain.setValueAtTime(v, t + d); g.gain.exponentialRampToValueAtTime(v * .2, t + d + .009); });
+        g.gain.setValueAtTime(v * .6, t + .031);
+        g.gain.exponentialRampToValueAtTime(.0004, t + .17);
+        hiss(t, .19, g);
+      },
+      hat(t, v, open) {
+        const g = gain(filt('highpass', 7200, out)); env(g, t, v, open ? .2 : .04, .001);
+        hiss(t, open ? .24 : .06, g);
+      },
+      bass(t, m, dur, v) {
+        const f = filt('lowpass', 1400, out, 3);
+        f.frequency.setValueAtTime(1400, t);
+        f.frequency.exponentialRampToValueAtTime(360, t + dur);
+        const g = gain(f); env(g, t, v, dur, .006);
+        osc('sawtooth', mhz(m), t, dur, g);
+        osc('sine', mhz(m - 12), t, dur, gain(g, .7));     // weight, for a TV's speakers
+      },
+      stab(t, notes, dur, v) {
+        // A soft electric-piano chord: triangle bodies with a quiet bell an octave up.
+        const g = gain(out); env(g, t, v, dur, .008);
+        const bell = gain(g, .22);
+        notes.forEach(m => { osc('triangle', mhz(m), t, dur, g); osc('sine', mhz(m) * 2.003, t, dur, bell); });
+      },
+      mallet(t, m, v) {
+        const f0 = mhz(m);
+        const g = gain(out); env(g, t, v, .42, .002);
+        osc('sine', f0, t, .45, g);
+        osc('triangle', f0, t, .45, gain(g, .25));
+        const tok = gain(out); env(tok, t, v * .4, .06, .001);
+        osc('sine', f0 * 4, t, .08, tok);                    // the woody "tok" of a marimba bar
+      },
+    };
+  }
+
+  /** Everything the band plays on loop step k, at audio time t. */
+  function playStep(B, k, t, hurry, tNext) {
+    const bar = Math.floor(k / 8) % 8, s = k % 8, C = SONG[bar], up = hurry ? 2 : 0;
+    const pickup = bar === 3 || bar === 7;
+    // Drums: kick on 1 and 3 (and a push into bars 5 and 1), claps on 2 and 4.
+    if (s === 0 || s === 4 || (s === 7 && pickup)) B.kick(t, .64);
+    if (s === 2 || s === 6) B.clap(t, 1.6);
+    B.hat(t, s % 2 ? .17 : .1, s === 7 && bar % 2 === 1 && !pickup);
+    // Sixteenths once the clock is running out.
+    if (hurry) B.hat(t + (tNext - t) / 2, .1, false);
+    // Bass: root, octave pop on the "and" of 2, fifth (or the new chord) on 3,
+    // then a chromatic step into the next bar's root.
+    const r = s >= 4 && C.r2 ? C.r2 : C.r;
+    if (s === 0) B.bass(t, r + up, .3, .38);
+    else if (s === 3) B.bass(t, r + 12 + up, .15, .28);
+    else if (s === 4) B.bass(t, (C.r2 ? r : r + 7) + up, .3, .34);
+    else if (s === 7) B.bass(t, SONG[(bar + 1) % 8].r - 1 + up, .15, .28);
+    // Chords: Charleston stabs on 1 and the "and" of 2 (on 3 when the chord moves there).
+    const v = notes => notes.map(m => m + up);
+    if (s === 0) B.stab(t, v(C.c), .2, .15);
+    if (s === 3 && !C.c2) B.stab(t, v(C.c), .38, .13);
+    if (s === 4 && C.c2) B.stab(t, v(C.c2), .38, .13);
+    const m = HOOK[k % HOOK.length];
+    if (m) B.mallet(t, m + up, .22);
+  }
+
+  let bus = null, pumpT = 0, mk = 0, mt0 = 0, mEnd = 0, mUp = Infinity, mBand = null, mKey = null;
+
+  /** Start the round music. fromMs/toMs are the round's start and end on the
+   *  performance.now() clock -- the same numbers this device's timer uses.
+   *  Calling it again for the same `key` while it plays is a no-op. */
+  function music(fromMs, toMs, key) {
+    if (bus && key != null && key === mKey) return;
+    stopMusic(0);
+    if (!on || hush) return;
+    init();
+    if (!ctx) return;
+    const nowP = performance.now(), nowA = ctx.currentTime;
+    mt0 = nowA + (fromMs - nowP) / 1000;
+    mEnd = nowA + (toMs - nowP) / 1000;
+    // Up a key for the last ten seconds, from the bar line nearest that mark.
+    mUp = mt0 + Math.max(0, Math.round((mEnd - 10 - mt0) / BAR)) * BAR;
+    // Joining late: begin at the first step still ahead of us.
+    mk = Math.max(0, Math.floor((nowA - mt0) / BEAT) * 2);
+    while (mt0 + stepAt(mk) < nowA + .04) mk++;
+    bus = ctx.createGain();
+    bus.gain.value = TV_MODE ? .62 : .46;
+    bus.connect(master);
+    mBand = band(ctx, bus);
+    mKey = key;
+    pump();
+  }
+
+  function pump() {
+    if (!bus) return;
+    const now = ctx.currentTime;
+    for (;;) {
+      const t = mt0 + stepAt(mk);
+      if (t > mEnd - .03) return;                       // time's up: the end sting takes over
+      if (t > now + .3) break;
+      // After a stall (a backgrounded tab), skip what is gone rather than
+      // playing it all at once.
+      if (t >= now - .05) playStep(mBand, mk, t, t >= mUp - .001, mt0 + stepAt(mk + 1));
+      mk++;
+    }
+    pumpT = setTimeout(pump, 90);
+  }
+
+  function stopMusic(fade) {
+    clearTimeout(pumpT); pumpT = 0;
+    mKey = null;
+    if (!bus) return;
+    const b = bus; bus = null;
+    const f = fade == null ? .25 : fade;
+    try {
+      const t = ctx.currentTime;
+      b.gain.cancelScheduledValues(t);
+      b.gain.setValueAtTime(b.gain.value, t);
+      b.gain.linearRampToValueAtTime(0, t + Math.max(.01, f));
+    } catch (e) { }
+    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, (f + .5) * 1000);
+  }
+
   return {
     init,
     get on() { return on; },
     /** False until the browser lets audio play (usually after a tap or key). */
     get ready() { return !!ctx && ctx.state === 'running'; },
-    hush(v) { hush = !!v; },
-    toggle() { on = !on; try { localStorage.setItem('sb.sound', on ? '1' : '0'); } catch (e) { } if (on) { init(); this.tick(2); } return on; },
+    hush(v) { hush = !!v; if (hush) stopMusic(.2); },
+    toggle() {
+      on = !on;
+      try { localStorage.setItem('sb.sound', on ? '1' : '0'); } catch (e) { }
+      if (on) { init(); this.tick(2); } else stopMusic(.15);
+      return on;
+    },
+    music, stopMusic,
+    get playing() { return !!bus; },
+    /** Tests: the band and score, to render offline. */
+    _jingle: { band, playStep, stepAt, BAR, steps: HOOK.length },
     /** Switch on for this page only. A TV has no mute button, and a phone
      *  muted on this same browser some other day must not leave it silent. */
     forceOn() { on = true; },
@@ -2285,14 +2548,24 @@ const LOW_END = (() => {
 const FX = (() => {
   const cv = $('#fx'), cx = cv.getContext('2d');
   const CAP = LOW_END ? 110 : 300, SCALE = LOW_END ? .45 : 1;
+  // A TV's canvas would be a full 1080p layer redrawn every frame: draw it at
+  // half resolution (CSS stretches it back), and take it off the screen
+  // altogether between bursts so the compositor has nothing to draw.
+  const RES = TV_MODE ? .5 : 1;
   let parts = [], raf = 0, W = 0, H = 0, sized = false;
 
-  function size() { W = innerWidth; H = innerHeight; cv.width = W; cv.height = H; sized = true; }
-  function release() { cv.width = cv.height = 0; sized = false; }
+  function size() {
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.ceil(W * RES); cv.height = Math.ceil(H * RES);
+    sized = true;
+    if (TV_MODE) cv.style.display = '';
+  }
+  function release() { cv.width = cv.height = 0; sized = false; if (TV_MODE) cv.style.display = 'none'; }
+  if (TV_MODE) cv.style.display = 'none';
   addEventListener('resize', () => { if (sized) size(); });
 
   function loop() {
-    cx.clearRect(0, 0, W, H);
+    cx.clearRect(0, 0, cv.width, cv.height);
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
       p.vy += p.g; p.vx *= p.d; p.vy *= p.d;
@@ -2302,8 +2575,8 @@ const FX = (() => {
         // swap in was already stepped this frame.
         parts[i] = parts[parts.length - 1]; parts.pop(); continue;
       }
-      const sn = Math.sin(p.a), cs = Math.cos(p.a);
-      cx.setTransform(cs, sn, -sn, cs, p.x, p.y);
+      const sn = Math.sin(p.a) * RES, cs = Math.cos(p.a) * RES;
+      cx.setTransform(cs, sn, -sn, cs, p.x * RES, p.y * RES);
       cx.globalAlpha = p.life < 34 ? p.life / 34 : 1;
       cx.fillStyle = p.c;
       if (p.sh) cx.fillRect(p.s * -.5, p.s * -.22, p.s, p.s * .44);
@@ -4231,6 +4504,17 @@ const FLASH_MIN = 7;
  *  half a beat apart. Swipe sounds stay -- they are personal. */
 const tvNearby = () => (G.mode === 'host' || G.mode === 'guest') && G.screenCount > 0;
 
+/** Round music plays wherever the room is listening: on the TV when there is
+ *  one, otherwise on every phone -- all in step, since each counts its beats
+ *  from the round's own start. Called whenever that answer can change: GO!,
+ *  joining mid-round, a TV arriving or leaving, the sound button. */
+function syncMusic() {
+  const R = G.round;
+  const live = !!R && !R.ended && G.screen === 'game' && R.endAt > performance.now();
+  if (live && (G.mode === 'tv' || !tvNearby())) Sound.music(R.endAt - R.dur * 1000, R.endAt, R);
+  else Sound.stopMusic();
+}
+
 /** The host's view of the lobby, as every guest and TV needs it. */
 function lobbyMsg() {
   return { t: 'lobby', players: rosterWire(), settings: G.settings, screens: G.screens.size, phase: G.phase };
@@ -4479,6 +4763,7 @@ function hostStartRound() {
 function beginRound(p, spectate) {
   Results.stop();
   FX.clear();
+  Sound.stopMusic(0);
   cancelAnimationFrame(timerRaf);
   G.round = {
     rid: p.rid, board: p.board, size: p.size, minLen: p.minLen, dur: p.dur, lang: p.lang | 0,
@@ -4522,6 +4807,7 @@ function beginRound(p, spectate) {
     Board.lock(true);
     G.round.endAt = performance.now() + (p.remain != null ? p.remain : p.dur * 1000);
     runTimer();
+    syncMusic();
     if (!tv) toast('Round already started — you\'re in next one!', null, 3200);
     return;
   }
@@ -4536,6 +4822,7 @@ function beginRound(p, spectate) {
     Board.lock(tv);                        // a TV only ever watches
     G.round.endAt = performance.now() + p.dur * 1000;
     runTimer();
+    syncMusic();
   });
 }
 
@@ -4574,15 +4861,22 @@ function runTimer() {
   const R = G.round, ring = $('#ring'), bar = $('#ringBar'), num = $('#ringNum');
   const C = 2 * Math.PI * 25;
   bar.style.strokeDasharray = C;
-  let lastSec = -1;
+  let lastSec = -1, drawn = 0;
+  // A TV moves the ring 10 times a second rather than every frame: on a TV
+  // every repaint is a full-screen recomposite, and at that size a tenth of
+  // a second of arc is still a smooth sweep.
+  const every = G.mode === 'tv' ? 100 : 0;
   cancelAnimationFrame(timerRaf);
 
   const tick = () => {
     if (!G.round || G.round !== R || R.ended) return;
-    const left = Math.max(0, R.endAt - performance.now());
-    const frac = clamp(left / (R.dur * 1000), 0, 1);
-    bar.style.strokeDashoffset = C * (1 - frac);
+    const now = performance.now();
+    const left = Math.max(0, R.endAt - now);
     const sec = Math.ceil(left / 1000);
+    if (now - drawn >= every || sec !== lastSec) {
+      drawn = now;
+      bar.style.strokeDashoffset = C * (1 - clamp(left / (R.dur * 1000), 0, 1));
+    }
     if (sec !== lastSec) {
       lastSec = sec;
       num.textContent = sec;
@@ -4601,6 +4895,7 @@ function endRound() {
   if (!R || R.ended) return;
   R.ended = true;
   cancelAnimationFrame(timerRaf);
+  Sound.stopMusic(.2);
   Board.lock(true);
   Board.cancel();
   if (!tvNearby()) Sound.end();
@@ -4810,7 +5105,7 @@ function handleMessage(from, m) {
       break;
     }
     case 'results':
-      if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); }
+      if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); Sound.stopMusic(.2); }
       setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: false })));
       applyResults(m);
       break;
@@ -4880,6 +5175,8 @@ function noteScreens(n, force) {
   else if (n < before) toast('📺 TV disconnected');
   // The last TV went away mid-show: bring the show back to this phone.
   if (!n && Results.watching) Results.unwatch();
+  // The music moves to the TV, or comes back to this phone.
+  syncMusic();
   if (G.screen === 'lobby') renderLobby();
   TVSheet.paint();
 }
@@ -5020,11 +5317,118 @@ async function createRoom() {
   } finally { btn.disabled = false; btn.innerHTML = '✨ Create a lobby'; }
 }
 
+/* --------------------------- joining screen ---------------------------
+   Joining takes a moment -- the broker, then the peer connection, then the
+   host's welcome -- and waiting on the home screen looked like nothing was
+   happening at all. Every way in (an invite link, a QR code on a TV, a typed
+   code) now goes straight to this screen: the code, what is going on, and a
+   failure that stays on screen with Try again. */
+const Join = (() => {
+  const scr = $('#scr-join');
+  let code = '', seq = 0, slowT = 0;
+
+  function paint(c) {
+    const box = $('#jnCode');
+    if (box.dataset.code === c) return;
+    box.dataset.code = c;
+    box.innerHTML = '';
+    c.split('').forEach((ch, i) => {
+      const b = el('b', null, ch);
+      b.style.animationDelay = (i * .07) + 's, ' + (.55 + i * .14) + 's';
+      box.appendChild(b);
+    });
+  }
+
+  function set(state, label, back) {
+    clearTimeout(slowT);
+    scr.dataset.state = state;
+    $('#jnLabel').textContent = label;
+    $('#jnBack').textContent = back;
+  }
+
+  /** A first visit from an invite: there is no name yet, so ask here. */
+  function ask(c) {
+    code = c; seq++;
+    paint(c);
+    $('#jnName').value = $('#nameIn').value;
+    paintAvatar();
+    set('ask', "You're invited to lobby", 'Back to menu');
+    show('join');
+  }
+
+  /** Connecting now. Returns a token: a result for an older token is stale. */
+  function wait(c) {
+    code = c;
+    paint(c);
+    set('wait', 'Joining lobby', 'Cancel');
+    note('Connecting to the host…');
+    show('join');
+    const my = ++seq;
+    slowT = setTimeout(() => {
+      if (my === seq) note('Still connecting… some networks take a few seconds.');
+    }, 6000);
+    return my;
+  }
+
+  function note(msg) { $('#jnMsg').textContent = msg; }
+
+  function fail(msg) {
+    seq++;
+    set('err', "Couldn't join", 'Back to menu');
+    $('#jnErrMsg').textContent = msg;
+    show('join');
+    const box = $('#jnCode');
+    if (box.animate) {
+      box.animate([{ transform: 'none' }, { transform: 'translateX(-11px)' }, { transform: 'translateX(9px)' },
+        { transform: 'translateX(-6px)' }, { transform: 'translateX(3px)' }, { transform: 'none' }],
+      { duration: 420, easing: 'ease-in-out' });
+    }
+    Sound.bad();
+  }
+
+  function back() {
+    const dialling = scr.dataset.state === 'wait';
+    seq++;
+    clearTimeout(slowT);
+    $('#codeIn').value = code;
+    // Connected but not welcomed yet: a proper goodbye, which also goes home.
+    if (G.mode === 'guest') { leaveRoom(); return; }
+    // Still dialling: this cancels the join (it rejects as superseded).
+    if (dialling) Net.destroy();
+    history.replaceState(null, '', location.pathname);
+    goHome();
+  }
+
+  function go() {
+    const n = $('#jnName').value.trim();
+    if (!n) { toast('Pick a name first', 'bad'); $('#jnName').focus(); return; }
+    $('#nameIn').value = n;
+    joinRoom(code);
+  }
+
+  $('#jnBack').onclick = back;
+  $('#jnRetry').onclick = () => joinRoom(code);
+  $('#jnGo').onclick = go;
+  $('#jnName').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  $('#jnAv').onclick = () => Picker.open(false);
+
+  return { ask, wait, note, fail, current: t => t === seq };
+})();
+
+/** The home screen -- but an invite link skips the loading screen, so make
+ *  sure the dictionary behind it has finished first. */
+function goHome() {
+  if (!G.dict || G.dictOk) { show('home'); return; }
+  show('load');
+  G.dict.then(() => { if (G.screen === 'load') show('home'); }, () => { });
+}
+
 async function joinRoom(code) {
-  readProfile();
   code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (code.length !== 4) { toast('Enter the 4-character code', 'bad'); return; }
-  const btn = $('#btnJoin'); btn.disabled = true; btn.textContent = '…';
+  readProfile();
+  const my = Join.wait(code);
+  if (navigator.onLine === false) { Join.fail("You're offline. Lobbies need an internet connection; solo play still works."); return; }
   try {
     await Net.join(code);
     G.mode = 'guest';
@@ -5033,21 +5437,30 @@ async function joinRoom(code) {
     Net.toHost({ t: 'hello', name: G.me.name, color: G.me.color, av: G.me.av });
     history.replaceState(null, '', location.pathname + '?r=' + code);
     $('#lobbyState').textContent = 'Connected';
-    show('lobby'); renderLobby();
+    // The lobby appears with the host's welcome (see handleMessage). Until
+    // then this screen keeps saying so -- and gives up if it never comes.
+    Join.note('Connected! Saying hi to the host…');
+    setTimeout(() => {
+      if (Join.current(my) && G.screen === 'join' && G.mode === 'guest') {
+        leaveRoom("The host isn't answering. Try again in a moment.");
+      }
+    }, 10000);
     CastLink.follow();
   } catch (e) {
-    // Cancelled by opening a lobby of our own meanwhile: nothing went wrong.
-    if (e && e.superseded) return;
-    modal("Couldn't join", (e && e.message) || 'Something went wrong.', [{ label: 'OK', cls: 'grape' }]);
-  } finally { btn.disabled = false; btn.textContent = 'Join'; }
+    // Cancelled (Back, or opening a lobby of our own meanwhile): not a failure.
+    if ((e && e.superseded) || !Join.current(my)) return;
+    Join.fail((e && e.message) || 'Something went wrong.');
+  }
 }
 
 function leaveRoom(why) {
+  const joining = G.screen === 'join';
   // A host that leaves on purpose says so, so guests and TVs can tell a
   // closed lobby from a dropped connection (a TV retries the latter).
   if (G.mode === 'host') { Net.broadcast({ t: 'bye' }); Net.destroy(300); }
   else Net.destroy();
   cancelAnimationFrame(timerRaf);
+  Sound.stopMusic();
   const cd = $('#cd'); if (cd) cd.remove();
   G.mode = 'solo'; G.round = null; G.results = null;
   G.screens.clear(); G.screenCount = 0; G.phase = 'lobby'; G.watchHere = false;
@@ -5055,7 +5468,10 @@ function leaveRoom(why) {
   Results.stop();
   FX.clear();
   history.replaceState(null, '', location.pathname);
-  show('home');
+  // Turned away before ever reaching the lobby (full, closed, no answer):
+  // say so on the joining screen, which has Try again.
+  if (joining && why) { Join.fail(why); return; }
+  goHome();
   if (why) modal('Disconnected', why, [{ label: 'Back to menu', cls: 'grape' }]);
 }
 
@@ -5589,15 +6005,17 @@ const Results = (() => {
    *  rows swap places for no visible reason mid-race. */
   function reorder() {
     const box = $('#rrows');
-    flip(box, () => {
-      const at = new Map(Array.from(box.children).map((r, i) => [r, i]));
-      const rows = Array.from(box.children).sort((a, b) => {
-        const A = live.get(a.dataset.id), B = live.get(b.dataset.id);
-        if (A.p.spect !== B.p.spect) return A.p.spect ? 1 : -1;
-        return B.score - A.score || at.get(a) - at.get(b);
-      });
-      rows.forEach(r => box.appendChild(r));
+    const cur = Array.from(box.children);
+    const at = new Map(cur.map((r, i) => [r, i]));
+    const rows = cur.slice().sort((a, b) => {
+      const A = live.get(a.dataset.id), B = live.get(b.dataset.id);
+      if (A.p.spect !== B.p.spect) return A.p.spect ? 1 : -1;
+      return B.score - A.score || at.get(a) - at.get(b);
     });
+    // Most words change nobody's place: skip the FLIP, whose position reads
+    // force a full layout of the rows right after every landing.
+    if (rows.every((r, i) => r === cur[i])) return;
+    flip(box, () => rows.forEach(r => box.appendChild(r)));
   }
 
   /** Plain position numbers while the race is on; medals come at the end. */
@@ -5740,10 +6158,13 @@ const Results = (() => {
     });
     if (ms > 0 && !RM) later(() => {
       if (ts !== traceSeq) return;
+      // brightness() is a filter, i.e. an offscreen pass per tile: fine on a
+      // phone, too much for a TV's GPU, which gets the bounce on its own.
+      const tv = isTV();
       path.forEach(i => replay(mini[i], [
-        { transform: 'scale(1.06)', filter: 'brightness(1)' },
-        { transform: 'scale(1.14)', filter: 'brightness(1.25)', offset: .4 },
-        { transform: 'scale(1.06)', filter: 'brightness(1)' },
+        tv ? { transform: 'scale(1.06)' } : { transform: 'scale(1.06)', filter: 'brightness(1)' },
+        tv ? { transform: 'scale(1.16)', offset: .4 } : { transform: 'scale(1.14)', filter: 'brightness(1.25)', offset: .4 },
+        tv ? { transform: 'scale(1.06)' } : { transform: 'scale(1.06)', filter: 'brightness(1)' },
       ], 300, 'ease-out'));
     }, ms + 90);
     const pts = path.map(i => [(i % n) + .5, ((i / n) | 0) + .5]);
@@ -5865,7 +6286,9 @@ const Results = (() => {
     ], 360, 'cubic-bezier(.34,1.56,.64,1)');
     replay(L.sc, [{ transform: 'scale(1)' }, { transform: 'scale(1.28)', offset: .3 }, { transform: 'scale(1)' }], 420,
       'cubic-bezier(.34,1.56,.64,1)');
-    if (x != null && !RM) FX.burst(x, y, r.uniq ? 12 : 7, 6.283, -1.57, r.uniq ? 4 : 3,
+    // Not on a TV: a handful of sparks nobody sees from the couch would wake
+    // the full-screen confetti canvas on every single landing.
+    if (x != null && !RM && !isTV()) FX.burst(x, y, r.uniq ? 12 : 7, 6.283, -1.57, r.uniq ? 4 : 3,
       r.uniq ? PALETTES[0] : ['#fffdf5', '#3ddc97', '#ffd23f']);
 
     // Bars are scaled to the current leader, not the final one.
@@ -6907,6 +7330,7 @@ const TV = (() => {
   /** Drop everything the last lobby left running. */
   function reset() {
     cancelAnimationFrame(timerRaf);
+    Sound.stopMusic(0);
     Results.stop();
     FX.clear();
     clearTimeout(flashTimer);
@@ -7008,7 +7432,7 @@ const TV = (() => {
         flash(m.len | 0);
         break;
       case 'results':
-        if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); }
+        if (G.round && !G.round.ended) { G.round.ended = true; cancelAnimationFrame(timerRaf); Board.lock(true); Sound.stopMusic(.2); }
         clearTimeout(flashTimer); $('#tvflash').classList.remove('on');
         // Keep who the host is: the results roster does not say.
         setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av })));
@@ -7104,7 +7528,11 @@ const TV = (() => {
   function roundStarted() {
     clearTimeout(flashTimer);
     $('#tvflash').classList.remove('on');
-    $('#tvplayers').innerHTML = '';
+    const box = $('#tvplayers');
+    box.innerHTML = '';
+    // Same players as last round would otherwise look "already drawn" and
+    // leave the box empty for the whole round.
+    delete box.dataset.ids;
     renderPlayers();
   }
 
@@ -7116,7 +7544,7 @@ const TV = (() => {
     const ps = roster();
     const ids = ps.map(p => p.id).join('|');
     box.classList.toggle('two', ps.length > 5);
-    if (box.dataset.ids !== ids) {
+    if (box.dataset.ids !== ids || box.childElementCount !== ps.length) {
       box.dataset.ids = ids;
       box.innerHTML = '';
       ps.forEach(p => {
@@ -7651,7 +8079,7 @@ function paintSound() {
 ['#btnSound', '#btnSound2', '#btnRSound'].forEach(s => {
   // Doubling as the dev-mode gesture (ten taps) costs the button nothing:
   // an even number of toggles leaves the sound exactly where it started.
-  const b = $(s); if (b) b.onclick = () => { Sound.toggle(); paintSound(); Dev.tap(); };
+  const b = $(s); if (b) b.onclick = () => { Sound.toggle(); paintSound(); syncMusic(); Dev.tap(); };
 });
 paintSound();
 Dev.init();
@@ -7674,9 +8102,11 @@ G.me.color = store.get('color', COLORS[0]);
 G.me.av = Av.norm(store.get('av', ''), 'me');
 
 function paintAvatar() {
-  const b = $('#avbtn');
-  b.style.setProperty('--c', G.me.color);
-  b.innerHTML = Av.svg(G.me.av);
+  ['#avbtn', '#jnAv'].forEach(sel => {
+    const b = $(sel);
+    b.style.setProperty('--c', G.me.color);
+    b.innerHTML = Av.svg(G.me.av);
+  });
 }
 
 /* --------------------------- avatar picker ---------------------------- */
@@ -7991,40 +8421,43 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
     CastRecv.start();
     return;
   }
+  // French is decoded on first use (picking it in a lobby, or a French
+  // round or challenge arriving), so English-only players never pay for it.
+  // English goes through ensure() too, so anything that needs it before it
+  // is ready (an invite link races ahead of it) waits instead of failing.
+  Lex.register('fr', DICT_FR_B64);
+  Lex.register('en', DICT_B64);
+  G.dict = Lex.ensure('en', (p, m) => {
+    bar.style.width = Math.round(p * 100) + '%';
+    if (m) msg.textContent = m;
+  });
+  G.dict.then(() => { G.dictOk = true; }, () => { });
+
+  // An invite -- a shared link or the QR code on a TV -- skips the home
+  // screen and starts joining at once, with the dictionary still decoding
+  // behind it. Someone who has played before goes straight in (the lobby
+  // lets them change name or character); a first visit picks a name first.
+  const c = params.get('c');
+  const r = String(params.get('r') || '').toUpperCase();
+  const invite = !c && /^[A-Z0-9]{4}$/.test(r);
+  if (invite) {
+    $('#codeIn').value = r;
+    if ($('#nameIn').value.trim()) joinRoom(r); else Join.ask(r);
+  }
+
   try {
-    // French is decoded on first use (picking it in a lobby, or a French
-    // round or challenge arriving), so English-only players never pay for it.
-    Lex.register('fr', DICT_FR_B64);
-    await Lex.load(DICT_B64, (p, m) => {
-      bar.style.width = Math.round(p * 100) + '%';
-      if (m) msg.textContent = m;
-    });
+    await G.dict;
   } catch (e) {
+    show('load');
     msg.textContent = (e && e.message) || 'Could not load the dictionary.';
     return;
   }
-  await sleep(220);
-  show('home');
+  if (!invite) { await sleep(220); show('home'); }
   if (G.settings.lang) preloadLang();
 
   // A challenge link drops straight into the offer, so the letters stay
   // hidden until the player actually starts the clock.
-  const c = params.get('c');
-  if (c && Chal.fromUrl(c)) {
-    history.replaceState(null, '', location.pathname);
-    return;
-  }
-
-  const r = params.get('r');
-  if (r && /^[A-Z0-9]{4}$/i.test(r)) {
-    $('#codeIn').value = r.toUpperCase();
-    // Someone who scanned the code on a TV (or tapped an invite link) and
-    // has played before goes straight in; the lobby lets them change their
-    // name or character once they are there.
-    if (navigator.onLine === false) toast('Offline — you can still play solo', 'bad');
-    else if (!$('#nameIn').value) { $('#nameIn').focus(); toast('Enter a name, then tap Join'); }
-    else joinRoom(r);
-  }
+  if (c && Chal.fromUrl(c)) history.replaceState(null, '', location.pathname);
 })();
 
 </script>
