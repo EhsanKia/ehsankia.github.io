@@ -2250,7 +2250,19 @@ const Sound = (() => {
   };
 })();
 
-const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
+/** This device is somebody's TV: the Cast receiver page, or a ?tv page.
+ *  56_tv.js, 57_cast.js and 60_boot.js read it too. */
+const TV_MODE = typeof window !== 'undefined' && typeof location !== 'undefined' &&
+  (!!window.CAST_RECEIVER || /(?:^|[?&])tv(?:[=&]|$)/.test(location.search));
+
+/* Never on a TV. A TV has nothing to shake, and worse: the Google TV Cast
+   runtime (Mediashell) ships navigator.vibrate without the Java half behind
+   it, so one call kills the whole receiver with a native SIGILL that no
+   try/catch can stop (Google TV Streamer, 2026-10). */
+const buzz = ms => {
+  if (TV_MODE) return;
+  try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { }
+};
 
 /* ============================ PARTICLES ===========================
    Confetti, deliberately cheap:
@@ -6752,8 +6764,7 @@ const Lan = (() => {
      - a Cast session (57_cast.js) or a ?tv&r=CODE link hands it the code.
    ===================================================================== */
 
-const TV_MODE = typeof window !== 'undefined' && (!!window.CAST_RECEIVER ||
-  /(?:^|[?&])tv(?:[=&]|$)/.test(location.search));
+// TV_MODE (am I a TV?) is defined in 10_core.js, where buzz() needs it.
 
 const TV = (() => {
   let room = '';                 // the lobby this screen is showing ('' = none)
