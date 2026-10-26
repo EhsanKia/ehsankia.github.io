@@ -451,7 +451,7 @@ h2.hd{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--i
   70%{opacity:1;transform:scale(1) rotate(-3deg)}
   100%{opacity:0;transform:scale(1.5) rotate(-3deg)}}
 /* time's up: a tip while the scores come in */
-#rstage .tip{position:absolute;left:50%;bottom:15%;max-width:min(88vw,520px);padding:10px 18px;border-radius:99px;
+#rstage .tip{position:absolute;left:50%;bottom:15%;width:max-content;max-width:min(88vw,520px);padding:10px 18px;border-radius:20px;
   font-size:14px;font-weight:800;line-height:1.35;color:var(--ink);text-align:center;
   background:rgba(20,10,46,.88);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14);
   opacity:0;transform:translateX(-50%);animation:tipIn 2.7s var(--ease-out) forwards}
@@ -593,6 +593,11 @@ body.hurry #hurry{display:block}
   box-shadow:0 5px 0 #1d1240,0 16px 30px -12px rgba(139,92,246,.6),inset 0 1px 0 rgba(255,255,255,.3)}
 #rword.award .w{letter-spacing:.02em}
 #rword.award .p{font-size:clamp(14px,4.2vw,19px);color:var(--gold);opacity:1}
+/* on a phone the title gets a line of its own: beside "4 unique words" it
+   was squeezed down to "Lone w" */
+body:not(.tv) #rword.award{flex-wrap:wrap;justify-content:center;gap:0 14px;padding-top:5px;padding-bottom:6px}
+body:not(.tv) #rword.award .w{flex:1 1 100%;font-size:clamp(20px,6.4vw,28px)}
+body:not(.tv) #rword.award .p{line-height:1.15}
 #rmini.miss i.on{background:linear-gradient(168deg,#ece6ff,#a78bfa 48%,#7c5ce0);color:#1d1240;
   box-shadow:0 var(--mtd,4px) 0 #4c35a0,0 0 22px 2px rgba(167,139,250,.6),inset 0 2px 0 rgba(255,255,255,.5)}
 #rmini.miss polyline{stroke-dasharray:.25 .2!important}
@@ -888,7 +893,7 @@ body.hurry #hurry{display:block}
    Sized in vh so one layout reads the same on a 720p Chromecast, a 1080p
    laptop and a 4K browser. Couch distance: nothing smaller than ~1.5vh. */
 body.tv .tvchrome{display:block}
-body.tv.tvplay .tvchrome{display:none}
+body.tv.tvplay .tvchrome .tvfull{display:none}
 body.tv .screen{padding:5vh 4.5vw}
 body.tv.idle,body.tv.idle *{cursor:none!important}
 body.tv #toasts{top:3vh;max-width:80vw}
@@ -1140,7 +1145,7 @@ body.tv #rbanner b{font-size:9vh;font-weight:900;line-height:1.05;color:#3a1d00;
   overflow:hidden;text-overflow:ellipsis;max-width:70vw}
 body.tv #rbanner .st{font-size:6vh;color:#fff8d6}
 body.tv #rbanner small{flex:1 0 100%;font-size:3vh;font-weight:900;color:#5a3a00;letter-spacing:.06em}
-body.tv #rbanner.small{left:0;top:0;transform:none;max-width:30vw;padding:1.4vh 2.6vh 1.2vh;gap:0 1vh}
+body.tv #rbanner.small{left:3vw;top:4vh;transform:none;max-width:30vw;padding:1.4vh 2.6vh 1.2vh;gap:0 1vh}
 body.tv #rbanner.small b{font-size:3.6vh;max-width:24vw}
 body.tv #rbanner.small .st{font-size:2.6vh}
 body.tv #rbanner.small small{font-size:1.9vh}
@@ -1154,7 +1159,7 @@ body.tv #tvqr.hide{display:none}
 #tvqr b{font-size:4vh;font-weight:900;letter-spacing:.18em;color:var(--gold);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 body.tv #hurry b:nth-child(1),body.tv #hurry b:nth-child(2){height:1.3vh}
 body.tv #hurry b:nth-child(3),body.tv #hurry b:nth-child(4){width:1.3vh}
-body.tv #rstage .tip{font-size:3vh;padding:1.6vh 4vh;max-width:70vw;bottom:auto;top:66vh}
+body.tv #rstage .tip{font-size:3vh;padding:1.6vh 4vh;max-width:70vw;bottom:auto;top:66vh;border-radius:2.4vh}
 /* round: a player on a roll gets a flame */
 .tvp .fl{position:absolute;left:-.8vh;top:-1.8vh;font-size:3.6vh;line-height:1;opacity:0;transform:scale(.4) rotate(-20deg);
   transition:opacity .25s,transform .35s var(--ease-back);pointer-events:none}
@@ -1502,8 +1507,8 @@ body.tv #scr-results.tense::after{display:none}
         <div class="p"></div>
         <div class="finders"></div>
       </div>
-      <div id="rtvwait" class="hide"></div>
     </div>
+    <div id="rtvwait" class="hide"></div>
     <div id="rbanner" class="hide"><span class="st">★</span><b></b><span class="st">★</span><small></small></div>
     <div id="rbest" class="hide"></div>
     <div id="rtabs" class="hide">
@@ -2020,7 +2025,8 @@ const Diag = (() => {
     let last = '', stamped = 0;
     const every = typeof TV_MODE !== 'undefined' && TV_MODE ? 5000 : 1000;
     const iv = setInterval(() => {
-      if (!pc || pc.signalingState === 'closed') { clearInterval(iv); return; }
+      // Stop once the connection is over: closed, or failed for good.
+      if (!pc || pc.signalingState === 'closed' || pc.connectionState === 'closed' || pc.connectionState === 'failed') { clearInterval(iv); return; }
       pc.getStats().then(s => {
         const cand = new Map();
         s.forEach(r => { if (r.type === 'local-candidate' || r.type === 'remote-candidate') cand.set(r.id, r); });
@@ -2511,6 +2517,17 @@ const Sound = (() => {
   // Tests render sound effects offline (see _offline): OFF shifts their start
   // time, and `offline` skips the checks that only make sense live.
   let OFF = 0, offline = false;
+  // Every effect goes through this bus rather than straight to master, so
+  // cutFx() can silence what is already queued (a clock tick scheduled for
+  // the next second, the tail of a fanfare) when its moment has gone.
+  let sfx = null;
+  const fxOut = () => { if (!sfx) { sfx = ctx.createGain(); sfx.connect(master); } return sfx; };
+  function cutFx() {
+    if (!ctx || !sfx) return;
+    const b = sfx; sfx = null;
+    try { const t = ctx.currentTime; b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + .03); } catch (e) { }
+    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, 150);
+  }
   try { on = localStorage.getItem('sb.sound') !== '0'; } catch (e) { }
 
   function init() {
@@ -2538,7 +2555,7 @@ const Sound = (() => {
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(vol, t + atk);
     g.gain.exponentialRampToValueAtTime(.0008, t + dur);
-    o.connect(g); g.connect(master);
+    o.connect(g); g.connect(fxOut());
     o.start(t); o.stop(t + dur + .04);
   }
   /** One second of white noise. Every hiss, slam and drumroll plays a slice
@@ -2561,7 +2578,7 @@ const Sound = (() => {
     const g = ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.linearRampToValueAtTime(0, t + dur);
-    s.connect(f); f.connect(g); g.connect(master);
+    s.connect(f); f.connect(g); g.connect(fxOut());
     s.start(t, Math.random() * (1 - dur), dur);
   }
 
@@ -2653,7 +2670,7 @@ const Sound = (() => {
     if (!nbuf) nbuf = noiseBuf(ctx);
     const T = t0() + at;
     const bus = ctx.createGain(), bp1 = ctx.createBiquadFilter(), bp2 = ctx.createBiquadFilter();
-    bus.gain.value = vol; bus.connect(master);
+    bus.gain.value = vol; bus.connect(fxOut());
     bp1.type = 'bandpass'; bp1.frequency.value = 950; bp1.Q.value = .9; bp1.connect(bus);
     bp2.type = 'bandpass'; bp2.frequency.value = 1750; bp2.Q.value = 1.1; bp2.connect(bus);
     const n = Math.round(dur * 55);
@@ -2686,8 +2703,11 @@ const Sound = (() => {
        - a plucky bass with an octave harmonic, so phone speakers (nothing
          much under 200 Hz) still hear every note, and a sub for TVs;
        - a dry rim snap on 2 and 4 instead of a burst of noise;
-       - for the last ten seconds: up a minor third with sixteenth shakers
-         (the clock ticks over it: see Sound.clock).
+       - for the last ten seconds: up a fourth, to D minor / F major, with
+         sixteenth shakers (the clock ticks over it: see Sound.clock). A
+         fourth because that key still holds every note of the C pentatonic
+         chimes; up a minor third, they rang E and A against its E-flat and
+         A-flat right at the climax.
      Synthesised like everything else and scheduled a little ahead on the
      audio clock. Every device counts its beats from the round's own start,
      so phones in one room play in step, and a TV that joins halfway picks
@@ -2809,7 +2829,7 @@ const Sound = (() => {
 
   /** Everything the band plays on loop step k, at audio time t. */
   function playStep(B, k, t, hurry, tNext) {
-    const bar = Math.floor(k / 8) % 8, s = k % 8, C = SONG[bar], up = hurry ? 3 : 0;
+    const bar = Math.floor(k / 8) % 8, s = k % 8, C = SONG[bar], up = hurry ? 5 : 0;
     const turn = bar === 3 || bar === 7;
     // Drums: kick on 1 and 3, the "and" of 2 in every other bar and a push
     // into each turnaround; rim snap on 2 and 4, with a ruff before bars 5 and 1.
@@ -2885,7 +2905,10 @@ const Sound = (() => {
     // Not allowed to play yet: wait, then pick the groove up wherever the
     // round has got to (the audio clock stood still meanwhile).
     if (ctx.state !== 'running') { mWait = true; pumpT = setTimeout(pump, TICK); return; }
-    if (mWait) { mWait = false; anchor(); }
+    // Re-anchor after a wait, or whenever the audio clock has fallen out of
+    // step with the round's own (a phone locked mid-round and woken again).
+    const drift = (performance.now() - mFrom) / 1000 - (ctx.currentTime - mt0);
+    if (mWait || Math.abs(drift) > .2) { mWait = false; anchor(); }
     const now = ctx.currentTime;
     for (;;) {
       const t = mt0 + stepAt(mk);
@@ -3003,11 +3026,13 @@ const Sound = (() => {
     get on() { return on; },
     /** False until the browser lets audio play (usually after a tap or key). */
     get ready() { return !!ctx && ctx.state === 'running'; },
-    hush(v) { hush = !!v; if (hush) { stopMusic(.2); stopBed(.2); } },
+    hush(v) { hush = !!v; if (hush) { stopMusic(.2); stopBed(.2); cutFx(); } },
+    /** Silence the effects already queued (see cutFx). */
+    cut: cutFx,
     toggle() {
       on = !on;
       try { localStorage.setItem('sb.sound', on ? '1' : '0'); } catch (e) { }
-      if (on) { init(); this.tick(2); } else { stopMusic(.15); stopBed(.15); }
+      if (on) { init(); this.tick(2); } else { stopMusic(.15); stopBed(.15); cutFx(); }
       return on;
     },
     music, stopMusic,
@@ -3022,9 +3047,10 @@ const Sound = (() => {
     /** Tests: run `fn(at)` with every sound going into `out` on the offline
      *  context `oc`; `at(sec)` sets where the next sounds start. */
     _offline(oc, out, fn) {
-      const keep = [ctx, master, on, hush, nbuf, vNext];
-      ctx = oc; master = out; on = true; hush = false; nbuf = null; vNext = 0; offline = true;
-      try { fn(sec => { OFF = sec; }); } finally { [ctx, master, on, hush, nbuf, vNext] = keep; OFF = 0; offline = false; }
+      const keep = [ctx, master, on, hush, nbuf, vNext, sfx, bBus];
+      ctx = oc; master = out; on = true; hush = false; nbuf = null; vNext = 0; sfx = null; bBus = null; offline = true;
+      try { fn(sec => { if (sec < OFF) vNext = 0; OFF = sec; }); }
+      finally { [ctx, master, on, hush, nbuf, vNext, sfx, bBus] = keep; OFF = 0; offline = false; }
     },
     _voices: () => Object.keys(VOICES),
     /** Switch on for this page only. A TV has no mute button, and a phone
@@ -3088,7 +3114,7 @@ const Sound = (() => {
       const now = t0(), t = Math.max(now, vNext);
       if (t - now > .45) return;
       vNext = t + .15;
-      voiceAt(ctx, master, t, VOICES[key] || VOICES.cat);
+      voiceAt(ctx, fxOut(), t, VOICES[key] || VOICES.cat);
     },
     pop(i) { init(); tone(hz(SC[Math.min(i, 9)] + 24), .09, { type: 'sine', vol: .22 }); },
     // A word cashing in: the "ka" of a till drawer, then the "ching".
@@ -4365,7 +4391,9 @@ const Cloud = (() => {
       const guard = setTimeout(() => fail(new Error('Timed out reaching the matchmaking server.')), 15000);
 
       p.on('open', () => {
-        if (settled) return;
+        // Back on the broker after a 'disconnected' (see wireHost): say so,
+        // or the lobby reads "Reconnecting…" for the rest of the session.
+        if (settled) { if (peer === p) H.statusChange('connected'); return; }
         settled = true; clearTimeout(guard);
         peer = p; isHost = true; code = c; me = p.id; open = true;
         Diag.log('peer', 'host: broker open, lobby code ' + c);
@@ -5408,7 +5436,8 @@ function hostStartRound() {
 
   // Yield first so the button state paints before the (blocking) solve.
   setTimeout(async () => {
-    await useLang(s.lang);
+    try { await useLang(s.lang); }
+    catch (e) { toast(e.message, 'bad'); $('#btnStart').disabled = false; $('#btnAgain').disabled = false; return; }
     // If a board was rolled early and handed to a friend, play that one --
     // but only while the settings still match what they were given.
     const pre = G.sharedBoard;
@@ -5479,11 +5508,19 @@ function beginRound(p, spectate) {
 
   const wrap = $('#boardwrap');
   if (spectate) {
-    wrap.classList.remove('veil');
     Board.lock(true);
     G.round.endAt = performance.now() + (p.remain != null ? p.remain : p.dur * 1000);
-    runTimer();
-    syncMusic();
+    // Joined during someone else's 3-2-1: the letters stay veiled (and the
+    // clock full) until their GO!, rather than showing early.
+    const early = (p.remain != null ? p.remain : 0) - p.dur * 1000, R0 = G.round;
+    const go = () => {
+      if (G.round !== R0 || R0.ended) return;
+      wrap.classList.remove('veil');
+      if (early > 50) { Board.mount(p.board, p.size); if (!tvNearby()) Sound.deal(p.size); }
+      runTimer();
+      syncMusic();
+    };
+    if (early > 50) { wrap.classList.add('veil'); setTimeout(go, early); } else go();
     if (!tv) toast('Round already started — you\'re in next one!', null, 3200);
     return;
   }
@@ -5491,8 +5528,10 @@ function beginRound(p, spectate) {
   // so keep the board out of sight and deal it in on "GO!".
   wrap.classList.add('veil');
   Board.lock(true);
+  const R1 = G.round;
   countdownThen(p, async () => {
     await langReady;
+    if (G.round !== R1 || R1.ended) return;   // left, or another round began meanwhile
     wrap.classList.remove('veil');
     Board.mount(p.board, p.size);          // replays the deal animation
     if (!tvNearby()) Sound.deal(p.size);
@@ -5590,6 +5629,7 @@ function endRound() {
   Sound.stopMusic(.2);
   Board.lock(true);
   Board.cancel();
+  Sound.cut();
   if (!tvNearby()) Sound.end();
   buzz([26, 60, 26]);
 
@@ -5599,7 +5639,9 @@ function endRound() {
   const mine = Array.from(R.words.keys());
 
   if (G.mode === 'guest') {
-    Net.toHost({ t: 'done', rid: R.rid, words: mine });
+    // Someone who joined mid-round only watched: say so, so the host stops
+    // waiting for us without counting us as a player who scored nothing.
+    Net.toHost(R.spectate ? { t: 'done', rid: R.rid, spect: true } : { t: 'done', rid: R.rid, words: mine });
     showWaitingForResults();
   } else if (G.mode === 'host') {
     // Players only: a TV never sends a word list, and waiting on one would
@@ -5650,7 +5692,9 @@ function showWaitingForResults() {
   const tiles = $$('#board .tile');
   const n = Math.round(Math.sqrt(tiles.length)) || 1;
   const RMo = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!tiles.length || RMo || !tiles[0].animate) return;
+  if (!tiles.length) return;
+  // Without the animation the letters would sit right under "Time's up!".
+  if (RMo || !tiles[0].animate) { tiles.forEach(t => { t.style.opacity = '0'; }); return; }
   tiles.forEach((t, i) => t.animate([
     { transform: 'none', opacity: 1 },
     { transform: 'translateY(-6%) scale(1.06)', opacity: 1, offset: .25 },
@@ -5788,7 +5832,7 @@ function handleMessage(from, m) {
       case 'done': {
         if (!G.round || m.rid !== G.round.rid) break;
         G.doneWords = G.doneWords || new Map();
-        G.doneWords.set(from, Array.isArray(m.words) ? m.words.slice(0, 400) : []);
+        if (!m.spect) G.doneWords.set(from, Array.isArray(m.words) ? m.words.slice(0, 400) : []);
         if (G.pendingDone) {
           G.pendingDone.delete(from);
           if (!G.pendingDone.size) finaliseResults();
@@ -5850,7 +5894,7 @@ function handleMessage(from, m) {
       // anyway, so the "Time's up!" beat (and the hold in Results.play) runs
       // in step with everyone else.
       if (G.round && !G.round.ended) endRound();
-      setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av, host: false })));
+      setPlayersFrom(m.players.map(p => ({ id: p.id, name: p.name, color: p.color, av: p.av })));
       applyResults(m);
       break;
     case 'pace':
@@ -6049,6 +6093,9 @@ async function createRoom() {
   readProfile();
   const btn = $('#btnHost'); btn.disabled = true; btn.textContent = 'Opening lobby…';
   try {
+    // An old copy of the game updates first, and opens the lobby from the new one.
+    await Update.before({ a: 'host' }, m => { btn.textContent = m; });
+    btn.textContent = 'Opening lobby…';
     const code = await Net.host();
     G.mode = 'host';
     G.screens.clear(); G.screenCount = 0; G.phase = 'lobby'; G.watchHere = false;
@@ -6110,11 +6157,17 @@ const Join = (() => {
     set('wait', 'Joining lobby', 'Cancel');
     note('Connecting to the host…');
     show('join');
-    const my = ++seq;
+    return ++seq;
+  }
+
+  /** The connecting itself, once any update is out of the way: a word of
+   *  comfort if it drags on. */
+  function dial(my) {
+    note('Connecting to the host…');
+    clearTimeout(slowT);
     slowT = setTimeout(() => {
       if (my === seq) note('Still connecting… some networks take a few seconds.');
     }, 6000);
-    return my;
   }
 
   function note(msg) { $('#jnMsg').textContent = msg; }
@@ -6137,6 +6190,8 @@ const Join = (() => {
     const dialling = scr.dataset.state === 'wait';
     seq++;
     clearTimeout(slowT);
+    // An update caught mid-swap still reloads the page: it must not rejoin.
+    Update.forget();
     $('#codeIn').value = code;
     // Connected but not welcomed yet: a proper goodbye, which also goes home.
     if (G.mode === 'guest') { leaveRoom(); return; }
@@ -6159,7 +6214,7 @@ const Join = (() => {
   $('#jnName').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   $('#jnAv').onclick = () => Picker.open(false);
 
-  return { ask, wait, note, fail, current: t => t === seq };
+  return { ask, wait, dial, note, fail, current: t => t === seq };
 })();
 
 /** The home screen -- but an invite link skips the loading screen, so make
@@ -6176,6 +6231,10 @@ async function joinRoom(code) {
   readProfile();
   const my = Join.wait(code);
   if (navigator.onLine === false) { Join.fail("You're offline. Lobbies need an internet connection; solo play still works."); return; }
+  // An old copy of the game updates first, and joins from the new one.
+  await Update.before({ a: 'join', code }, Join.note, () => Join.current(my));
+  if (!Join.current(my)) return;
+  Join.dial(my);
   try {
     await Net.join(code);
     G.mode = 'guest';
@@ -6612,6 +6671,8 @@ const Results = (() => {
     $('#rword').classList.remove('under');
     $('#scr-results').classList.remove('tense');
     $('#rword').classList.remove('hot');
+    const rb = $('#rribbon');
+    if (rb) { if (rb.getAnimations) rb.getAnimations().forEach(a => a.cancel()); rb.style.opacity = ''; }
   }
 
   /* --------------------------- skippable waits ------------------------- */
@@ -6629,7 +6690,7 @@ const Results = (() => {
   // Skipping is about getting past the word-by-word recap; once the closing
   // beat has begun there is nothing left to skip (and a TV following the
   // host's Skip would lose its rank stamps).
-  function skip() { if (inFinale) return; skipped = true; flushWaits(); killFx(); }
+  function skip() { if (inFinale) return; skipped = true; flushWaits(); killFx(); Sound.cut(); }
 
   function stop() {
     seq++; traceSeq++; skipped = true; flushWaits(); killFx();
@@ -6643,10 +6704,7 @@ const Results = (() => {
     document.querySelectorAll('.rx').forEach(n => n.remove());
     floats = 0;
     $('#rbanner').className = 'hide';
-    // The rows (avatars and all) would otherwise sit hidden behind the next
-    // round for its whole length.
-    $('#rrows').innerHTML = '';
-    live = new Map();
+    Sound.cut();
     FX.clear();
   }
 
@@ -6976,7 +7034,12 @@ const Results = (() => {
     const r = $('#rribbon');
     r.className = kind || '';
     $('span', r).textContent = text;
-    if (RM || !CAN_WAAPI) return;
+    if (RM || !CAN_WAAPI) {
+      r.style.opacity = '1';
+      later(() => { r.style.opacity = ''; }, 1000);
+      Sound.slam();
+      return;
+    }
     const T = (x, s) => 'translate(' + x + ',-50%) rotate(-7deg) scale(' + s + ')';
     r.animate([
       { opacity: 0, transform: T('-50%', 2.3) },
@@ -7280,6 +7343,7 @@ const Results = (() => {
    *  the finders show up (unless they came in with the word). */
   function tail(r, quiet) {
     const box = $('#rword');
+    const typed = box.classList.contains('typing');
     box.classList.remove('typing');
     $('.w', box).textContent = r.w;
     if (quiet) return;
@@ -7303,7 +7367,8 @@ const Results = (() => {
       { opacity: 0, transform: 'translateY(-10px) scale(.6)' },
       { opacity: 1, transform: 'none' },
     ], 320, BACK);
-    pulse(box, r.uniq);
+    // Only after spelling: a pill that just popped in would lose its entrance.
+    if (typed) pulse(box, r.uniq);
   }
 
   /** Fly a "+points" bubble from the pill to every finder's score. Scores
@@ -7463,7 +7528,7 @@ const Results = (() => {
     const A = ranked[0], B = ranked[1];
     if (!A || !A.score) return;
     if (B && B.score >= A.score) {
-      if (leader && leader.score < A.score) leader.row.classList.remove('lead');
+      if (leader && leader.score < A.score) { leader.row.classList.remove('lead'); leader = null; }
       return;
     }
     if (leader === A) { A.row.classList.add('lead'); return; }
@@ -7506,7 +7571,7 @@ const Results = (() => {
   async function fireworks(r) {
     // Behind the cover, keep the beat (so this phone stays in step with the
     // TV) but draw nothing.
-    if (watching) { await wait([2000, 1600, 1100][paceIdx] || 1600); return; }
+    if (watching) { await wait(([2000, 1600, 1100][paceIdx] || 1600) + 250); return; }
     if (RM) { sparkle(r); return; }
     const len = r.w.length;
     const ov = el('div'); ov.id = 'rbig';
@@ -7561,10 +7626,12 @@ const Results = (() => {
     }
     await wait([2000, 1600, 1100][paceIdx] || 1600);
     if (!ov.isConnected) return;
-    if (skipped || !CAN_WAAPI) { ov.remove(); pill.classList.remove('under'); return; }
-    fade.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
-    // The pill comes back as the card goes, not under it.
-    later(() => { ov.remove(); pill.classList.remove('under'); }, 250);
+    // The pill comes back as the card goes, not under it -- and only then
+    // gets its stamp (see revealPhase). The fade is waited out, drawn or
+    // not, so every screen stays in step.
+    if (!skipped && CAN_WAAPI) fade.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+    await wait(250);
+    ov.remove(); pill.classList.remove('under');
   }
 
   /* ------------------------ E3: photo finish ----------------------------
@@ -7593,12 +7660,13 @@ const Results = (() => {
   }
 
   async function revealPhase(token, list, title, sub, kind) {
-    if (!list.length) return;
+    if (skipped || !list.length) return;
     setPhase(title, sub, kind);
     let hold = 700;
     if (kind === 'uniq') { ribbon('Unique words ×2', 'uniq'); $('#rscore').classList.add('x2on'); hold = 1150; }
     else if (kind === 'shared') { ribbon('Shared words', 'shared'); hold = 1000; }
     await wait(hold);
+    if (token !== seq || skipped) return;
     // A photo finish needs a race to finish: at least one unique word before it.
     const K = Math.min(3, list.length - 1);
     const tenseAt = kind === 'uniq' && scorers > 1 && list.length >= 2 && closeFinish(list, K) ? list.length - K : -1;
@@ -7613,7 +7681,7 @@ const Results = (() => {
       // behind it.
       const dwell = gap * weightOf(r) * slow + (len === 6 ? 160 : 0);
       const stepMs = clamp(gap * .15, 45, 110) * slow;
-      const traceMs = gap * slow >= 250 && !RM ? Math.min(dwell * .6, (len - 1) * stepMs + 40) : 0;
+      const traceMs = gap * slow >= 250 && !RM ? Math.round(Math.min(dwell * .6, (len - 1) * stepMs + 40)) : 0;
       const flyMs = clamp(dwell * .5, 240, 520);
       showWord(r, traceMs > 0);
       trace(r, traceMs, true);
@@ -7622,10 +7690,13 @@ const Results = (() => {
         // last letter (firing first spoiled the word before it was spelled);
         // the bubbles fly once the fireworks clear.
         if (traceMs > 0) { await wait(traceMs); if (token !== seq) return; if (skipped) break; }
-        tail(r);
+        // The card shows the points and who found it; the pill's own stamp
+        // (and its thud) wait until the card has gone and the pill is back.
+        tail(r, true);
         await fireworks(r);
         if (token !== seq) return;
         if (skipped) break;
+        tail(r);
         meterTick(r); launch(r, flyMs);
         await wait(Math.max(flyMs + 250, dwell - traceMs));
         continue;
@@ -7864,12 +7935,15 @@ const Results = (() => {
     ov.appendChild(box);
     document.body.appendChild(ov);
 
-    Sound.fanfare();
-    buzz([18, 60, 18, 60, 30]);
-    FX.rain(150);
-    const w = innerWidth, h = innerHeight;
-    FX.burst(w * .18, h * .62, 34, 2.2, -1.2, 15);
-    FX.burst(w * .82, h * .62, 34, 2.2, -1.9, 15);
+    if (!solo && !top.score) Sound.miss();   // nobody scored: no fanfare, no confetti
+    else {
+      Sound.fanfare();
+      buzz([18, 60, 18, 60, 30]);
+      FX.rain(150);
+      const w = innerWidth, h = innerHeight;
+      FX.burst(w * .18, h * .62, 34, 2.2, -1.2, 15);
+      FX.burst(w * .82, h * .62, 34, 2.2, -1.9, 15);
+    }
 
     // Not skippable: skipping is about getting past the word-by-word recap,
     // not about blowing through the payoff in a single frame.
@@ -7916,10 +7990,12 @@ const Results = (() => {
       { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(0)' },
     ], 720, BACK);
     Sound.bed(false, .5);
-    Sound.fanfare();
-    const r = bn.getBoundingClientRect();
-    FX.burst(r.left + r.width * .12, r.top + r.height / 2, 46, 2.4, -2.3, 12);
-    FX.burst(r.right - r.width * .12, r.top + r.height / 2, 46, 2.4, -.85, 12);
+    if (data.players.some(p => !p.spect && p.score > 0)) {
+      Sound.fanfare();
+      const r = bn.getBoundingClientRect();
+      FX.burst(r.left + r.width * .12, r.top + r.height / 2, 46, 2.4, -2.3, 12);
+      FX.burst(r.right - r.width * .12, r.top + r.height / 2, 46, 2.4, -.85, 12);
+    } else Sound.miss();                 // nobody scored: no fanfare, no confetti
     // Every winner jumps (a tie has several), not whoever led mid-race.
     live.forEach(L => { if (L.row.classList.contains('lead')) hop(L, true); });
     await sleep(skipped ? 1700 : 2800);
@@ -7935,9 +8011,9 @@ const Results = (() => {
       if (b.width > 0) {
         const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
         bn.animate([
-          { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + (a.width / b.width) + ')' },
+          { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + (a.width / b.width) + ',' + (a.height / b.height) + ')' },
           { transform: 'none' },
-        ], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+        ], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' });
       }
     }
     await sleep(450);
@@ -7968,6 +8044,14 @@ const Results = (() => {
       hiTimer = 0;
       if (G.screen !== 'results') return;
       const it = items[i++ % items.length];
+      // The best word is already on the board from the finale, under "Final
+      // standings": the first beat leaves both up for a while rather than
+      // relabelling it the moment the podium comes back.
+      if (i === 1 && b && b.w) {
+        $('#rword').classList.remove('empty');
+        hiTimer = items.length > 1 ? setTimeout(next, 7000) : 0;
+        return;
+      }
       setPhase(it.label, '', it.kind);
       showWord(it.r, false);
       // Lit all at once and without the plucks: this can run for minutes
@@ -8064,6 +8148,7 @@ const Results = (() => {
 
   /* ------------------------------- finish ------------------------------- */
   function finish() {
+    if (finished) return;
     $('#rspeed').classList.add('hide');
     $('#btnSkip').classList.add('hide');
     finished = true;
@@ -8156,7 +8241,7 @@ const Results = (() => {
     // (After the header text is in, so the cover lines up under it.) Count
     // the TVs now rather than when the payload left the host: one may have
     // gone during the time's-up hold.
-    const tvs = isTV() ? (p.screens | 0) : (G.screenCount | 0);
+    const tvs = isTV() ? (p.screens | 0) : Math.min(p.screens | 0, G.screenCount | 0);
     watch(!isTV() && tvs > 0 && !G.watchHere && (G.mode === 'host' || G.mode === 'guest'));
 
     killFx();
@@ -8222,6 +8307,10 @@ const Results = (() => {
     killFx();
     applyFinalTotals();
     $('#rscore').classList.remove('x2on');
+    litScore(0);
+    // A phone skipped mid-word would otherwise keep a half-spelled word and
+    // a half-lit board above the best-word card.
+    if (skipped && !isTV()) { clearBoard(); $('#rword').classList.add('empty'); }
     // When the best word is the one that just scored (usually the last, big
     // unique word), replaying it right away is a rerun: the TV relabels the
     // word already on its board, the phone's card comes in quietly.
@@ -8383,6 +8472,9 @@ const Results = (() => {
     Sound.tick(3);
     fitMini();
     syncSound();
+    // The TV is mid-finale: there is no show left to watch here, so go
+    // straight to the final screen instead of a half-built one.
+    if (inFinale && !finished && data) finish();
   };
 
   $$('#rtabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; Sound.tick(4); renderTab(); });
@@ -8458,6 +8550,7 @@ const Results = (() => {
     if (!watching) return;
     watch(false); fitMini();
     syncSound();
+    if (inFinale && !finished && data) finish();
   }
 
   /** Bring the results music back if the show is still running here (after
@@ -8841,14 +8934,20 @@ const TV = (() => {
     if (navigator.onLine === false) {
       setStatus('This screen is offline. TV mode needs an internet connection.', true);
     }
-    listen();
-    const r = String(params.get('r') || '').toUpperCase();
-    if (isCode(r)) join(r);
-    // The TV code has to stay reachable for as long as the TV is on: after a
-    // network drop (or a broker hiccup that reconnecting did not fix), take
-    // the code again.
-    addEventListener('online', () => { if (!Net.tvAlive) listen(); });
-    setInterval(() => { if (!Net.tvAlive && navigator.onLine !== false) listen(); }, 15000);
+    // An old copy updates itself before it takes its code, so a phone pairing
+    // it a moment later never lands on a TV that is about to reload.
+    let said = false;
+    Update.before(null, m => { said = true; setStatus(m); }).then(() => {
+      if (said) setStatus('');
+      listen();
+      const r = String(params.get('r') || '').toUpperCase();
+      if (isCode(r)) join(r);
+      // The TV code has to stay reachable for as long as the TV is on: after a
+      // network drop (or a broker hiccup that reconnecting did not fix), take
+      // the code again.
+      addEventListener('online', () => { if (!Net.tvAlive) listen(); });
+      setInterval(() => { if (!Net.tvAlive && navigator.onLine !== false) listen(); }, 15000);
+    });
   }
 
   /** Register this screen's own code with the broker so a phone can send it
@@ -9030,7 +9129,14 @@ const TV = (() => {
       case 'act': {
         // Only a count that went up is a new word (a repeated frame is not).
         const p = G.players.get(m.id);
-        if (p) { const up = (m.n | 0) > (p.found | 0); p.found = m.n | 0; renderPlayers(up ? m.id : null); }
+        if (p) {
+          const up = (m.n | 0) > (p.found | 0);
+          p.found = m.n | 0;
+          // A word that arrives after our own time's up still counts, but
+          // makes no voice or flame over the end of the round.
+          const live = G.screen === 'game' && G.round && !G.round.ended;
+          renderPlayers(up && live ? m.id : null);
+        }
         break;
       }
       case 'flash':
@@ -9087,8 +9193,10 @@ const TV = (() => {
   }
 
   function showLobby() {
-    // Coming back from the results: stop the show (and its sounds) first.
-    if (G.screen === 'results') Results.stop();
+    // Coming back from the results: stop the show (and its sounds) first --
+    // including one still waiting out the time's-up hold, which would
+    // otherwise wake up later and pull us out of the lobby.
+    Results.stop();
     show('tvlobby');
     renderLobby();
   }
@@ -9880,8 +9988,7 @@ $('#btnStart').onclick = hostStartRound;
 $('#btnTvMode').onclick = () => { location.href = location.pathname + '?tv'; };
 
 /* ------------------------------- LAN -------------------------------- */
-$('#btnLan').onclick = () => {
-  Sound.init(); Sound.whoosh();
+function openLan() {
   $('#lanCamNote').textContent = Lan.canScan() ? ''
     : 'This browser has no QR scanner, so you will be swapping codes as text.';
   // Be straight about the one thing that does leave the device when online.
@@ -9892,6 +9999,15 @@ $('#btnLan').onclick = () => {
     : 'Offline — the codes will carry local addresses only, so you must be on the same network.';
   Lan.panel('lanPick');
   show('lan');
+}
+$('#btnLan').onclick = async () => {
+  Sound.init(); Sound.whoosh();
+  // Online, an old copy updates first (and opens LAN play from the new one).
+  const b = $('#btnLan'), label = b.innerHTML;
+  b.disabled = true;
+  await Update.before({ a: 'lan' }, m => { b.textContent = m; });
+  b.disabled = false; b.innerHTML = label;
+  openLan();
 };
 $('#lanBack').onclick = () => { Sound.back(); Lan.back(); };
 $('#lanBeHost').onclick = () => { Sound.init(); Lan.beginHost(); };
@@ -10001,6 +10117,106 @@ Net.handlers.statusChange = s => {
 addEventListener('pagehide', () => { try { Net.destroy(); Net.stopTv(); } catch (e) { } });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) Sound.init(); });
 
+/* -------------------------- staying up to date -------------------------
+   The service worker serves whatever this device cached last time, so
+   someone who played weeks ago and now scans a lobby's QR code opens that
+   old copy -- and used to be asked to update only once they were in the
+   lobby. Now everything that goes online (joining by link, QR code or typed
+   code; opening a lobby; LAN play; a TV starting up) first asks the server
+   whether there is a newer version and, if there is, installs it, reloads
+   into it and carries on from there. A slow or failed check never stands in
+   the way: the game goes ahead on the copy it has. */
+
+/** This build's name: the `boggle-<hash>` its service worker caches under,
+ *  stamped in by build.py. A new worker checks the page it downloads for it
+ *  (see sw.js). */
+const BUILD = 'boggle-c1c0184595df';
+
+const Update = (() => {
+  let regP = null;              // the worker registration, from pwa() below
+  let busy = false;             // forcing an update: pwa() offers nothing meanwhile
+  let freshAt = -Infinity;      // when a check last found nothing newer
+  const KEY = 'sb.resume';
+
+  const within = (p, ms) => new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('timeout')), ms);
+    Promise.resolve(p).then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); });
+  });
+
+  /** Resolves true once worker `w` has finished installing, false if it failed. */
+  function installed(w) {
+    return new Promise(res => {
+      const look = () => {
+        if (w.state === 'installing') return;
+        w.removeEventListener('statechange', look);
+        res(w.state !== 'redundant');
+      };
+      w.addEventListener('statechange', look);
+      look();
+    });
+  }
+
+  /** Call before going online. Resolves when it is fine to carry on (this is
+   *  the latest version, or there was no telling); never resolves when the
+   *  page is reloading into a newer version instead. `resume` is what the new
+   *  page should then do (see resumed()); `say` shows how it is going;
+   *  `alive()` turning false means the player gave up waiting. */
+  async function before(resume, say, alive) {
+    const sw = navigator.serviceWorker;
+    // Not served by a worker (a first visit, or no worker at all): the page
+    // came from the server, so it is already the latest.
+    if (!regP || !sw || !sw.controller || navigator.onLine === false) return;
+    if (performance.now() - freshAt < 60e3) return;
+    const reg = await within(regP, 3000).catch(() => null);
+    if (!reg) return;
+    busy = true;
+    const slow = setTimeout(() => say('Checking for updates…'), 400);   // a quick answer goes unannounced
+    try {
+      await within(reg.update(), 5000).catch(() => { });
+      const next = reg.installing || reg.waiting;
+      if (!next) { freshAt = performance.now(); return; }
+      clearTimeout(slow);
+      say('Updating the game…');
+      // The new copy is downloading. If that fails, or crawls, play on this one.
+      if (!(await within(installed(next), 30e3).catch(() => false))) return;
+      const w = reg.waiting;
+      if (!w || (alive && !alive())) return;
+      if (resume) {
+        try { sessionStorage.setItem(KEY, JSON.stringify(Object.assign({ at: Date.now() }, resume))); } catch (e) { }
+      }
+      const swapped = new Promise(res => sw.addEventListener('controllerchange', res, { once: true }));
+      w.postMessage('skip-waiting');
+      // pwa() reloads the page on the swap: stay put until it goes.
+      if (await within(swapped, 10e3).then(() => true, () => false)) return new Promise(() => { });
+      forget();
+    } finally {
+      clearTimeout(slow);
+      busy = false;
+    }
+  }
+
+  /** What the page before this one was in the middle of when it reloaded to
+   *  update ({a:'join', code}, {a:'host'} or {a:'lan'}), or null. Read once. */
+  function resumed() {
+    let r = null;
+    try { r = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (e) { }
+    forget();
+    // Only straight after that reload: a leftover must not join a lobby the
+    // next time this tab is opened.
+    if (!r || !(Date.now() - (r.at || 0) < 60e3)) return null;
+    freshAt = performance.now();      // just updated: no need to ask again
+    return r;
+  }
+
+  function forget() { try { sessionStorage.removeItem(KEY); } catch (e) { } }
+
+  return {
+    attach(p) { regP = p; },
+    before, resumed, forget,
+    get busy() { return busy; },
+  };
+})();
+
 /* --------------------------- install / offline ------------------------ */
 (function pwa() {
   /* Lobbies need the PeerJS signalling server; solo play is entirely local,
@@ -10038,6 +10254,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   let offered = false;
   function offer(reg) {
     if (offered || !reg.waiting) return;
+    // Update.before is already putting it in, on its way online.
+    if (Update.busy) return;
     // A TV nobody is watching yet just takes the update; there is no one
     // to ask and it would otherwise run the old version until someone
     // reloads it by hand.
@@ -10062,7 +10280,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
 
   // updateViaCache:'none' keeps the worker script out of the HTTP cache, so an
   // update is never hidden behind GitHub Pages' max-age.
-  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+  const regP = navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+  Update.attach(regP);
+  regP.then(reg => {
     if (reg.waiting) watch(reg);
     reg.addEventListener('updatefound', () => {
       const sw = reg.installing;
@@ -10071,6 +10291,18 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
         if (sw.state === 'installed' && navigator.serviceWorker.controller) watch(reg);
       });
     });
+    // The browser looks for a new version when the page is opened, and a page
+    // left open (a TV on its join screen, a phone on the home screen) is never
+    // opened again. Look every half hour while idle, and on coming back into
+    // view; what turns up is offered as above.
+    let lookedAt = Date.now();
+    const look = () => {
+      if (Date.now() - lookedAt < 30 * 60e3 || (G.screen !== 'home' && G.screen !== 'tvjoin')) return;
+      lookedAt = Date.now();
+      reg.update().catch(() => { });
+    };
+    setInterval(look, 5 * 60e3);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) look(); });
   }).catch(e => console.warn('sw registration failed', e));
 })();
 
@@ -10105,12 +10337,16 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   // screen and starts joining at once, with the dictionary still decoding
   // behind it. Someone who has played before goes straight in (the lobby
   // lets them change name or character); a first visit picks a name first.
+  // Back from updating halfway into a lobby, it carries on where it was.
+  const resume = Update.resumed();
+  Diag.log('app', 'build ' + BUILD + (resume ? ', updated on the way to ' + resume.a : ''));
   const c = params.get('c');
-  const r = String(params.get('r') || '').toUpperCase();
+  const r = resume && resume.a === 'join' ? String(resume.code || '')
+    : String(params.get('r') || '').toUpperCase();
   const invite = !c && /^[A-Z0-9]{4}$/.test(r);
   if (invite) {
     $('#codeIn').value = r;
-    if ($('#nameIn').value.trim()) joinRoom(r); else Join.ask(r);
+    if ($('#nameIn').value.trim() || resume) joinRoom(r); else Join.ask(r);
   }
 
   try {
@@ -10122,6 +10358,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) Soun
   }
   if (!invite) { await sleep(220); show('home'); }
   if (G.settings.lang) preloadLang();
+  if (resume && resume.a === 'host' && !invite) createRoom();
+  if (resume && resume.a === 'lan' && !invite) openLan();
 
   // A challenge link drops straight into the offer, so the letters stay
   // hidden until the player actually starts the clock.
